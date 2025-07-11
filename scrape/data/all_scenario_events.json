@@ -1,0 +1,102 @@
+[
+    {
+      "name": "UMA Final",
+      "imageUrl": "https://gametora.com/images/umamusume/scenarios/bnr_ico_001.png",
+      "events": [
+        {
+          "event": "Exhilarating! What a Scoop!",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Stamina +10",
+              "bond": {
+                "name": "Etsuko Otonashi",
+                "effect": "+5"
+              }
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Guts +10",
+              "bond": {
+                "name": "Etsuko Otonashi",
+                "effect": "+5"
+              }
+            }
+          ]
+        },
+        {
+          "event": "A Trainer's Knowledge",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Power +10",
+              "bond": {
+                "name": "Etsuko Otonashi",
+                "effect": "+5"
+              }
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Speed +10",
+              "bond": {
+                "name": "Etsuko Otonashi",
+                "effect": "+5"
+              }
+            }
+          ]
+        },
+        {
+          "event": "Best Foot Forward!",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Energy -10\nPower +20\nGuts +20",
+              "skill": {
+                "name": "Beeline Burst",
+                "effect": "hint +1"
+              }
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Energy +30\nStamina +20",
+              "skill": {
+                "name": "Breath of Fresh Air",
+                "effect": "hint +1"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "New Scenario Example",
+      "events": [
+        {
+          "event": "Sự kiện khởi đầu mới",
+          "choices": [
+            {
+              "choice": "Lựa chọn A",
+              "effect": "Speed +15"
+            },
+            {
+              "choice": "Lựa chọn B",
+              "effect": "Stamina +15"
+            }
+          ]
+        },
+        {
+          "event": "Thử thách giữa kỳ",
+          "choices": [
+            {
+              "choice": "Tập luyện chăm chỉ",
+              "effect": "All Stats +5\nEnergy -10"
+            },
+            {
+              "choice": "Nghỉ ngơi",
+              "effect": "Energy +20"
+            }
+          ]
+        }
+      ]
+    }
+  ]
