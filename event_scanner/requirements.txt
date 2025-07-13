@@ -1,0 +1,17 @@
+# Core dependencies
+opencv-python>=4.8.0
+Pillow>=10.2.0
+pyautogui>=0.9.50
+pytesseract>=0.3.10
+numpy>=1.24.0
+
+# OCR with GPU support
+easyocr>=1.7.2
+
+# PyTorch with CUDA 11.8 (Stable + GPU support)
+torch==2.7.1+cu118
+torchvision==0.22.1+cu118
+torchaudio==2.7.1+cu118
+
+# Use CUDA wheel source for GPU acceleration
+--extra-index-url https://download.pytorch.org/whl/cu118

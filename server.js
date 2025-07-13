@@ -9,6 +9,9 @@ const PORT = process.env.PORT || 3001;
 // Store active processes
 const activeProcesses = new Map();
 
+// Store event scanner process
+let eventScannerProcess = null;
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -245,6 +248,168 @@ app.get('/api/active-processes', (req, res) => {
 // Test endpoint
 app.get('/api/test', (req, res) => {
   res.json({ message: 'Server is running!' });
+});
+
+// Event Scanner API endpoints - Direct integration
+app.post('/api/start-event-scanner', async (req, res) => {
+  try {
+    const data = req.body || {};
+    console.log('[SERVER] Starting event scanner with data:', data);
+    
+    // Check if scanner is already running
+    if (eventScannerProcess && eventScannerProcess.exitCode === null) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Event scanner is already running' 
+      });
+    }
+    
+    // Save context data
+    const contextData = {
+      character: data.character,
+      scenario: data.scenario,
+      cards: data.cards || [],
+      timestamp: data.timestamp
+    };
+    
+    const contextPath = path.join(__dirname, 'event_scanner', 'scanner_context.json');
+    require('fs').writeFileSync(contextPath, JSON.stringify(contextData, null, 2), 'utf8');
+    
+    // Start Python event scanner
+    const scannerPath = path.join(__dirname, 'event_scanner', 'event_scanner.py');
+    
+    // Try different Python commands for Windows compatibility
+    const pythonCommands = ['python', 'py', 'python3'];
+    let pythonCommand = null;
+    
+    for (const cmd of pythonCommands) {
+      try {
+        console.log(`[SERVER] Trying Python command: ${cmd}`);
+        const proc = spawn(cmd, [scannerPath], {
+          cwd: path.join(__dirname, 'event_scanner'),
+          stdio: ['pipe', 'pipe', 'pipe'],
+          env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
+        });
+
+        let errored = false;
+        proc.stderr.once('data', (data) => {
+          const msg = data.toString();
+          if (msg.includes('Python was not found')) {
+            errored = true;
+            proc.kill();
+          }
+        });
+
+        // Đợi 500ms để kiểm tra lỗi
+        await new Promise(resolve => setTimeout(resolve, 500));
+        if (!errored && proc.pid) {
+          eventScannerProcess = proc;
+          pythonCommand = cmd;
+          console.log(`[SERVER] Successfully started with command: ${cmd}`);
+          break;
+        }
+      } catch (error) {
+        console.log(`[SERVER] Failed with command ${cmd}:`, error.message);
+        continue;
+      }
+    }
+    
+    if (!eventScannerProcess || !eventScannerProcess.pid) {
+      throw new Error('Could not start Python process. Please ensure Python is installed and accessible.');
+    }
+    
+    console.log(`[SERVER] Event scanner started with PID: ${eventScannerProcess.pid} using command: ${pythonCommand}`);
+    
+    // Handle scanner output
+    eventScannerProcess.stdout.on('data', (data) => {
+      console.log('[EVENT SCANNER]', data.toString().trim());
+    });
+    
+    eventScannerProcess.stderr.on('data', (data) => {
+      console.error('[EVENT SCANNER ERROR]', data.toString().trim());
+    });
+    
+    eventScannerProcess.on('exit', (code, signal) => {
+      console.log(`[SERVER] Event scanner exited with code: ${code}, signal: ${signal}`);
+      eventScannerProcess = null;
+      
+      // Clean up context file
+      if (require('fs').existsSync(contextPath)) {
+        require('fs').unlinkSync(contextPath);
+      }
+    });
+    
+    eventScannerProcess.on('error', (error) => {
+      console.error('[SERVER] Event scanner process error:', error);
+      eventScannerProcess = null;
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Event scanner started successfully',
+      pid: eventScannerProcess.pid,
+      pythonCommand: pythonCommand
+    });
+    
+  } catch (error) {
+    console.error('[SERVER] Error starting event scanner:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+app.post('/api/stop-event-scanner', async (req, res) => {
+  try {
+    if (!eventScannerProcess) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Event scanner is not running' 
+      });
+    }
+    
+    console.log('[SERVER] Stopping event scanner...');
+    eventScannerProcess.kill('SIGTERM');
+    
+    // Wait a bit for graceful shutdown
+    setTimeout(() => {
+      if (eventScannerProcess && eventScannerProcess.exitCode === null) {
+        console.log('[SERVER] Force killing event scanner...');
+        eventScannerProcess.kill('SIGKILL');
+      }
+    }, 5000);
+    
+    eventScannerProcess = null;
+    
+    // Clean up context file
+    const contextPath = path.join(__dirname, 'event_scanner', 'scanner_context.json');
+    if (require('fs').existsSync(contextPath)) {
+      require('fs').unlinkSync(contextPath);
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Event scanner stopped successfully' 
+    });
+    
+  } catch (error) {
+    console.error('[SERVER] Error stopping event scanner:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+app.get('/api/scanner-status', (req, res) => {
+  const isRunning = eventScannerProcess && eventScannerProcess.exitCode === null;
+  
+  res.json({
+    scanning: isRunning,
+    process_running: isRunning,
+    pid: isRunning ? eventScannerProcess.pid : null
+  });
 });
 
 // Serve React app for all other routes (only if build exists)

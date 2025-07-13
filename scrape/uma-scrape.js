@@ -1,6 +1,14 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 
+function cleanEventName(rawName) {
+    // Chỉ giữ lại chữ cái, số, dấu cách, dấu câu cơ bản
+    return rawName
+        .replace(/[^A-Za-z0-9 .,!?'"-]/g, '') // Xóa mọi ký tự không thuộc whitelist
+        .replace(/\s+/g, ' ') // Chuẩn hóa khoảng trắng
+        .trim();
+}
+
 (async () => {
   console.log('🚀 Starting Uma Musume character scraping...');
   
@@ -139,11 +147,11 @@ const fs = require('fs');
           console.log(`✅ Character: ${character.name}`);
 
           // Get list of event names first
-          const eventNames = await page.evaluate(() => {
+          const eventNames = (await page.evaluate(() => {
             return Array.from(document.querySelectorAll('[class*="compatibility_viewer_item"]'))
               .map(div => div.innerText.trim())
               .filter(name => name.length > 0);
-          });
+          }))
           console.log(`   Found ${eventNames.length} events to scrape.`);
 
           const events = [];
@@ -287,6 +295,7 @@ const fs = require('fs');
 
               }, eventName);
 
+              eventDetail.event = cleanEventName(eventDetail.event);
               events.push(eventDetail);
 
             } catch (e) {

@@ -111,7 +111,7 @@
         ]
       },
       {
-        "event": "Banana Fiend ♪",
+        "event": "Banana Fiend",
         "choices": [
           {
             "choice": "Top Option",
@@ -233,7 +233,7 @@
         ]
       },
       {
-        "event": "After the Takarazuka Kinen: The Top",
+        "event": "After the Takarazuka Kinen The Top",
         "choices": [
           {
             "choice": "No Choice",
@@ -474,7 +474,7 @@
         ]
       },
       {
-        "event": "Operation: Execute Orders",
+        "event": "Operation Execute Orders",
         "choices": [
           {
             "choice": "Top Option",
@@ -491,7 +491,7 @@
         ]
       },
       {
-        "event": "Operation: Extra Classes",
+        "event": "Operation Extra Classes",
         "choices": [
           {
             "choice": "Top Option",
@@ -508,7 +508,7 @@
         ]
       },
       {
-        "event": "Operation: Excursion Trouble",
+        "event": "Operation Excursion Trouble",
         "choices": [
           {
             "choice": "Top Option",
@@ -619,7 +619,7 @@
         ]
       },
       {
-        "event": "Operation: Dance Fever",
+        "event": "Operation Dance Fever",
         "choices": [
           {
             "choice": "Top Option",
@@ -636,7 +636,7 @@
         ]
       },
       {
-        "event": "Operation: Festival Fun",
+        "event": "Operation Festival Fun",
         "choices": [
           {
             "choice": "Top Option",
@@ -653,7 +653,7 @@
         ]
       },
       {
-        "event": "After the Japanese Derby: The SecondCrown",
+        "event": "After the Japanese Derby The SecondCrown",
         "choices": [
           {
             "choice": "No Choice",
@@ -667,7 +667,7 @@
         ]
       },
       {
-        "event": "After the Kikuka Sho: Triple CrownChampion",
+        "event": "After the Kikuka Sho Triple CrownChampion",
         "choices": [
           {
             "choice": "No Choice",
@@ -681,7 +681,7 @@
         ]
       },
       {
-        "event": "Mission / Specification",
+        "event": "Mission Specification",
         "choices": [
           {
             "choice": "No Choice",
@@ -692,7 +692,7 @@
         ]
       },
       {
-        "event": "Error / Disarray",
+        "event": "Error Disarray",
         "choices": [
           {
             "choice": "No Choice",
@@ -703,7 +703,7 @@
         ]
       },
       {
-        "event": "Solution / Winning Drive",
+        "event": "Solution Winning Drive",
         "choices": [
           {
             "choice": "No Choice",
@@ -714,7 +714,7 @@
         ]
       },
       {
-        "event": "Record / Courage",
+        "event": "Record Courage",
         "choices": [
           {
             "choice": "No Choice",
@@ -725,7 +725,7 @@
         ]
       },
       {
-        "event": "Request / Strength",
+        "event": "Request Strength",
         "choices": [
           {
             "choice": "No Choice",
@@ -769,7 +769,7 @@
         ]
       },
       {
-        "event": "Difficulty Level: Maximum",
+        "event": "Difficulty Level Maximum",
         "choices": [
           {
             "choice": "No Choice",
@@ -791,7 +791,7 @@
         ]
       },
       {
-        "event": "Operation: Change of Pace",
+        "event": "Operation Change of Pace",
         "choices": [
           {
             "choice": "No Choice",
@@ -962,7 +962,7 @@
         ]
       },
       {
-        "event": "Battle of Kings: The Great Ramen War",
+        "event": "Battle of Kings The Great Ramen War",
         "choices": [
           {
             "choice": "Top Option",
@@ -1328,7 +1328,7 @@
         ]
       },
       {
-        "event": "Karaoke Connoisseur ♪",
+        "event": "Karaoke Connoisseur",
         "choices": [
           {
             "choice": "Top Option",
@@ -1573,7 +1573,7 @@
         ]
       },
       {
-        "event": "Forecast: Gloomy",
+        "event": "Forecast Gloomy",
         "choices": [
           {
             "choice": "No Choice",
@@ -1711,7 +1711,7 @@
         ]
       },
       {
-        "event": "Umadol ☆ Special Class!",
+        "event": "Umadol Special Class!",
         "choices": [
           {
             "choice": "Top Option",
@@ -2000,7 +2000,7 @@
         ]
       },
       {
-        "event": "Forecast: Gloomy...",
+        "event": "Forecast Gloomy...",
         "choices": [
           {
             "choice": "No Choice",
@@ -2331,7 +2331,7 @@
         ]
       },
       {
-        "event": "After the Kikuka Sho: Triple CrownChampion!",
+        "event": "After the Kikuka Sho Triple CrownChampion!",
         "choices": [
           {
             "choice": "No Choice",
@@ -2488,7 +2488,7 @@
         ]
       },
       {
-        "event": "Teio's Got This ♪",
+        "event": "Teio's Got This",
         "choices": [
           {
             "choice": "No Choice",
@@ -2611,7 +2611,7 @@
         ]
       },
       {
-        "event": "Let's Play ♪",
+        "event": "Let's Play",
         "choices": [
           {
             "choice": "Top Option",
@@ -2628,7 +2628,7 @@
         ]
       },
       {
-        "event": "A Lady's Style ☆",
+        "event": "A Lady's Style",
         "choices": [
           {
             "choice": "Top Option",
@@ -2699,7 +2699,7 @@
         ]
       },
       {
-        "event": "Nostalgia Fever ☆",
+        "event": "Nostalgia Fever",
         "choices": [
           {
             "choice": "Top Option",
@@ -2773,7 +2773,7 @@
         ]
       },
       {
-        "event": "Meeting New People Is Trendy ☆",
+        "event": "Meeting New People Is Trendy",
         "choices": [
           {
             "choice": "Top Option",
@@ -2790,7 +2790,7 @@
         ]
       },
       {
-        "event": "The Fun Never Stops ♪",
+        "event": "The Fun Never Stops",
         "choices": [
           {
             "choice": "Top Option",
@@ -2928,7 +2928,7 @@
         ]
       },
       {
-        "event": "A Totally Bomb ☆ New Feeling",
+        "event": "A Totally Bomb New Feeling",
         "choices": [
           {
             "choice": "No Choice",
@@ -3220,7 +3220,7 @@
         ]
       },
       {
-        "event": "天皇賞（春）にて",
+        "event": "",
         "choices": [
           {
             "choice": "No Choice",
@@ -3231,7 +3231,7 @@
         ]
       },
       {
-        "event": "At the Tenno Sho (Spring)",
+        "event": "At the Tenno Sho Spring",
         "choices": [
           {
             "choice": "No Choice",
@@ -3242,7 +3242,7 @@
         ]
       },
       {
-        "event": "At the Tenno Sho (Spring)",
+        "event": "At the Tenno Sho Spring",
         "choices": [
           {
             "choice": "No Choice",
@@ -3672,7 +3672,7 @@
         ]
       },
       {
-        "event": "Silence Suzuka: Awakening 1",
+        "event": "Silence Suzuka Awakening 1",
         "choices": [
           {
             "choice": "No Choice",
@@ -3683,7 +3683,7 @@
         ]
       },
       {
-        "event": "Silence Suzuka: Awakening 2",
+        "event": "Silence Suzuka Awakening 2",
         "choices": [
           {
             "choice": "No Choice",
@@ -3694,7 +3694,7 @@
         ]
       },
       {
-        "event": "Silence Suzuka: Awakening 3",
+        "event": "Silence Suzuka Awakening 3",
         "choices": [
           {
             "choice": "No Choice",
@@ -3705,7 +3705,7 @@
         ]
       },
       {
-        "event": "Silence Suzuka: Awakening 4",
+        "event": "Silence Suzuka Awakening 4",
         "choices": [
           {
             "choice": "No Choice",
@@ -4569,7 +4569,7 @@
         ]
       },
       {
-        "event": "After the Kikuka Sho: Three CrownsAttained",
+        "event": "After the Kikuka Sho Three CrownsAttained",
         "choices": [
           {
             "choice": "No Choice",
@@ -4809,7 +4809,7 @@
         ]
       },
       {
-        "event": "Sweet & Lively Joy",
+        "event": "Sweet Lively Joy",
         "choices": [
           {
             "choice": "Top Option",
@@ -5319,7 +5319,7 @@
         ]
       },
       {
-        "event": "Summer Camp (Year 3) Ends",
+        "event": "Summer Camp Year 3 Ends",
         "choices": [
           {
             "choice": "No Choice",
@@ -5438,7 +5438,7 @@
         ]
       },
       {
-        "event": "After the Takarazuka Kinen: Keyword 2",
+        "event": "After the Takarazuka Kinen Keyword 2",
         "choices": [
           {
             "choice": "Top Option",
@@ -5510,7 +5510,7 @@
         ]
       },
       {
-        "event": "The Seven Wonders of Golshi (Pending)",
+        "event": "The Seven Wonders of Golshi Pending",
         "choices": [
           {
             "choice": "No Choice",
@@ -5521,7 +5521,7 @@
         ]
       },
       {
-        "event": "Golshi the Fickle Maiden ☆",
+        "event": "Golshi the Fickle Maiden",
         "choices": [
           {
             "choice": "No Choice",
@@ -5859,7 +5859,7 @@
         ]
       },
       {
-        "event": "After the Tulip Sho: Preliminary Victory",
+        "event": "After the Tulip Sho Preliminary Victory",
         "choices": [
           {
             "choice": "No Choice",
@@ -5870,7 +5870,7 @@
         ]
       },
       {
-        "event": "After the Tulip Sho: Preliminary Defeat",
+        "event": "After the Tulip Sho Preliminary Defeat",
         "choices": [
           {
             "choice": "No Choice",
@@ -5881,7 +5881,7 @@
         ]
       },
       {
-        "event": "After the Oka Sho: Red-Hot Afterglow",
+        "event": "After the Oka Sho Red-Hot Afterglow",
         "choices": [
           {
             "choice": "No Choice",
@@ -5892,7 +5892,7 @@
         ]
       },
       {
-        "event": "After the Oka Sho: A Lost Loser",
+        "event": "After the Oka Sho A Lost Loser",
         "choices": [
           {
             "choice": "No Choice",
@@ -5903,7 +5903,7 @@
         ]
       },
       {
-        "event": "After the Japanese Derby: A MajorAchievement!",
+        "event": "After the Japanese Derby A MajorAchievement!",
         "choices": [
           {
             "choice": "No Choice",
@@ -5914,7 +5914,7 @@
         ]
       },
       {
-        "event": "After the Japanese Derby: Towards aComeback",
+        "event": "After the Japanese Derby Towards aComeback",
         "choices": [
           {
             "choice": "No Choice",
@@ -5925,7 +5925,7 @@
         ]
       },
       {
-        "event": "After the Shuka Sho: Drunk on Victory",
+        "event": "After the Shuka Sho Drunk on Victory",
         "choices": [
           {
             "choice": "No Choice",
@@ -5936,7 +5936,7 @@
         ]
       },
       {
-        "event": "After the Shuka Sho: Bad Dreamin'",
+        "event": "After the Shuka Sho Bad Dreamin'",
         "choices": [
           {
             "choice": "No Choice",
@@ -5947,7 +5947,7 @@
         ]
       },
       {
-        "event": "After the Queen Elizabeth II Cup:Tyrannical Queen!",
+        "event": "After the Queen Elizabeth II CupTyrannical Queen!",
         "choices": [
           {
             "choice": "No Choice",
@@ -5958,7 +5958,7 @@
         ]
       },
       {
-        "event": "After the Queen Elizabeth II Cup:Tsundere Queen",
+        "event": "After the Queen Elizabeth II CupTsundere Queen",
         "choices": [
           {
             "choice": "No Choice",
@@ -5969,7 +5969,7 @@
         ]
       },
       {
-        "event": "After the Arima Kinen: Hollow Victory",
+        "event": "After the Arima Kinen Hollow Victory",
         "choices": [
           {
             "choice": "No Choice",
@@ -5980,7 +5980,7 @@
         ]
       },
       {
-        "event": "After the Arima Kinen: Veering offCourse",
+        "event": "After the Arima Kinen Veering offCourse",
         "choices": [
           {
             "choice": "No Choice",
@@ -5991,7 +5991,7 @@
         ]
       },
       {
-        "event": "After the Yasuda Kinen: Pedal to theMetal!",
+        "event": "After the Yasuda Kinen Pedal to theMetal!",
         "choices": [
           {
             "choice": "No Choice",
@@ -6005,7 +6005,7 @@
         ]
       },
       {
-        "event": "After the Yasuda Kinen: ConsecutiveCelebration",
+        "event": "After the Yasuda Kinen ConsecutiveCelebration",
         "choices": [
           {
             "choice": "No Choice",
@@ -6437,7 +6437,7 @@
         ]
       },
       {
-        "event": "After the Tulip Sho: Embrace the Rage",
+        "event": "After the Tulip Sho Embrace the Rage",
         "choices": [
           {
             "choice": "No Choice",
@@ -6448,7 +6448,7 @@
         ]
       },
       {
-        "event": "After the Tulip Sho: Ticked Off!",
+        "event": "After the Tulip Sho Ticked Off!",
         "choices": [
           {
             "choice": "No Choice",
@@ -6459,7 +6459,7 @@
         ]
       },
       {
-        "event": "After the Oka Sho: For the OakenPlaque",
+        "event": "After the Oka Sho For the OakenPlaque",
         "choices": [
           {
             "choice": "No Choice",
@@ -6470,7 +6470,7 @@
         ]
       },
       {
-        "event": "After the Oka Sho: Still Out of Reach",
+        "event": "After the Oka Sho Still Out of Reach",
         "choices": [
           {
             "choice": "No Choice",
@@ -6492,7 +6492,7 @@
         ]
       },
       {
-        "event": "After the Shuka Sho: Obviously!",
+        "event": "After the Shuka Sho Obviously!",
         "choices": [
           {
             "choice": "No Choice",
@@ -6503,7 +6503,7 @@
         ]
       },
       {
-        "event": "After the Shuka Sho: Aching Legs",
+        "event": "After the Shuka Sho Aching Legs",
         "choices": [
           {
             "choice": "No Choice",
@@ -6514,7 +6514,7 @@
         ]
       },
       {
-        "event": "After the Tenno Sho (Autumn): TheyHaven't Changed",
+        "event": "After the Tenno Sho Autumn TheyHaven't Changed",
         "choices": [
           {
             "choice": "No Choice",
@@ -7387,7 +7387,7 @@
         ]
       },
       {
-        "event": "ルチャリブレ魂",
+        "event": "",
         "choices": [
           {
             "choice": "No Choice",
@@ -7576,7 +7576,7 @@
         ]
       },
       {
-        "event": "Operation: Flowerbed",
+        "event": "Operation Flowerbed",
         "choices": [
           {
             "choice": "Top Option",
@@ -7772,7 +7772,7 @@
         ]
       },
       {
-        "event": "After the Shuka Sho: Reign",
+        "event": "After the Shuka Sho Reign",
         "choices": [
           {
             "choice": "No Choice",
@@ -7955,7 +7955,7 @@
     "rarity": "⭐⭐",
     "events": [
       {
-        "event": "Maya's Thrilling ☆ Test of Courage",
+        "event": "Maya's Thrilling Test of Courage",
         "choices": [
           {
             "choice": "Top Option",
@@ -7972,7 +7972,7 @@
         ]
       },
       {
-        "event": "Sweet Feelings for You ♪",
+        "event": "Sweet Feelings for You",
         "choices": [
           {
             "choice": "Top Option",
@@ -7989,7 +7989,7 @@
         ]
       },
       {
-        "event": "Mayano Takes Off ☆",
+        "event": "Mayano Takes Off",
         "choices": [
           {
             "choice": "Top Option",
@@ -8006,7 +8006,7 @@
         ]
       },
       {
-        "event": "Maya Will Teach You ☆",
+        "event": "Maya Will Teach You",
         "choices": [
           {
             "choice": "Top Option",
@@ -8040,7 +8040,7 @@
         ]
       },
       {
-        "event": "Maya's Race Class ☆",
+        "event": "Maya's Race Class",
         "choices": [
           {
             "choice": "Top Option",
@@ -8060,7 +8060,7 @@
         ]
       },
       {
-        "event": "Hearty Chanko! ☆",
+        "event": "Hearty Chanko!",
         "choices": [
           {
             "choice": "Top Option",
@@ -8077,7 +8077,7 @@
         ]
       },
       {
-        "event": "Maya's Exciting ☆ Livestream!",
+        "event": "Maya's Exciting Livestream!",
         "choices": [
           {
             "choice": "Top Option",
@@ -8094,7 +8094,7 @@
         ]
       },
       {
-        "event": "Maya's Euphoric ☆ Livestream!",
+        "event": "Maya's Euphoric Livestream!",
         "choices": [
           {
             "choice": "Top Option",
@@ -8111,7 +8111,7 @@
         ]
       },
       {
-        "event": "Maya's Twinkly ☆ Determination!",
+        "event": "Maya's Twinkly Determination!",
         "choices": [
           {
             "choice": "Top Option",
@@ -8223,7 +8223,7 @@
         ]
       },
       {
-        "event": "This Excitement Is Hard to Crack! ☆",
+        "event": "This Excitement Is Hard to Crack!",
         "choices": [
           {
             "choice": "No Choice",
@@ -8245,7 +8245,7 @@
         ]
       },
       {
-        "event": "Get Me in the Mood ☆",
+        "event": "Get Me in the Mood",
         "choices": [
           {
             "choice": "No Choice",
@@ -8289,7 +8289,7 @@
         ]
       },
       {
-        "event": "Grand Love Plan ♪",
+        "event": "Grand Love Plan",
         "choices": [
           {
             "choice": "No Choice",
@@ -8300,7 +8300,7 @@
         ]
       },
       {
-        "event": "Mayano Flying High ☆",
+        "event": "Mayano Flying High",
         "choices": [
           {
             "choice": "No Choice",
@@ -8311,7 +8311,7 @@
         ]
       },
       {
-        "event": "Chase Me ☆",
+        "event": "Chase Me",
         "choices": [
           {
             "choice": "No Choice",
@@ -8429,7 +8429,7 @@
         ]
       },
       {
-        "event": "One-Day Experience ☆ Ceramics Class",
+        "event": "One-Day Experience Ceramics Class",
         "choices": [
           {
             "choice": "Top Option",
@@ -8608,7 +8608,7 @@
         ]
       },
       {
-        "event": "After the Satsuki Sho: A Spring Miracle!",
+        "event": "After the Satsuki Sho A Spring Miracle!",
         "choices": [
           {
             "choice": "No Choice",
@@ -8619,7 +8619,7 @@
         ]
       },
       {
-        "event": "After the Japanese Derby: ASuper-Umamusume Feat?!",
+        "event": "After the Japanese Derby ASuper-Umamusume Feat?!",
         "choices": [
           {
             "choice": "No Choice",
@@ -8630,7 +8630,7 @@
         ]
       },
       {
-        "event": "After the Kikuka Sho: Triumph of Bonds!",
+        "event": "After the Kikuka Sho Triumph of Bonds!",
         "choices": [
           {
             "choice": "No Choice",
@@ -9045,7 +9045,7 @@
         ]
       },
       {
-        "event": "Catch Me at Nakayama ♪",
+        "event": "Catch Me at Nakayama",
         "choices": [
           {
             "choice": "No Choice",
@@ -9423,7 +9423,7 @@
         ]
       },
       {
-        "event": "Report: A Clear Gaze",
+        "event": "Report A Clear Gaze",
         "choices": [
           {
             "choice": "No Choice",
@@ -9434,7 +9434,7 @@
         ]
       },
       {
-        "event": "Report: Uncertain Promises",
+        "event": "Report Uncertain Promises",
         "choices": [
           {
             "choice": "No Choice",
@@ -9445,7 +9445,7 @@
         ]
       },
       {
-        "event": "Report: Will",
+        "event": "Report Will",
         "choices": [
           {
             "choice": "No Choice",
@@ -9456,7 +9456,7 @@
         ]
       },
       {
-        "event": "Report: Change of Course",
+        "event": "Report Change of Course",
         "choices": [
           {
             "choice": "No Choice",
@@ -9467,7 +9467,7 @@
         ]
       },
       {
-        "event": "Report: Confession",
+        "event": "Report Confession",
         "choices": [
           {
             "choice": "No Choice",
@@ -9478,7 +9478,7 @@
         ]
       },
       {
-        "event": "Report: The Final Factor",
+        "event": "Report The Final Factor",
         "choices": [
           {
             "choice": "No Choice",
@@ -10261,7 +10261,7 @@
         ]
       },
       {
-        "event": "After the Sprinters S.: Successive Wins!",
+        "event": "After the Sprinters S. Successive Wins!",
         "choices": [
           {
             "choice": "No Choice",
@@ -10683,7 +10683,7 @@
         ]
       },
       {
-        "event": "After the Arima Kinen: Way, Way Better",
+        "event": "After the Arima Kinen Way, Way Better",
         "choices": [
           {
             "choice": "No Choice",
@@ -10807,7 +10807,7 @@
         ]
       },
       {
-        "event": "Special ☆ Delicious?!",
+        "event": "Special Delicious?!",
         "choices": [
           {
             "choice": "No Choice",
@@ -11225,7 +11225,7 @@
         ]
       },
       {
-        "event": "Shiraoki's ☆ Arrival",
+        "event": "Shiraoki's Arrival",
         "choices": [
           {
             "choice": "No Choice",
@@ -11515,7 +11515,7 @@
         ]
       },
       {
-        "event": "After the Satsuki Sho: An UnsatisfyingVictory",
+        "event": "After the Satsuki Sho An UnsatisfyingVictory",
         "choices": [
           {
             "choice": "No Choice",
@@ -11526,7 +11526,7 @@
         ]
       },
       {
-        "event": "After the Satsuki Sho: Still Can't CatchUp",
+        "event": "After the Satsuki Sho Still Can't CatchUp",
         "choices": [
           {
             "choice": "No Choice",
@@ -11537,7 +11537,7 @@
         ]
       },
       {
-        "event": "After the Japanese Derby: No MatterWhat",
+        "event": "After the Japanese Derby No MatterWhat",
         "choices": [
           {
             "choice": "No Choice",
@@ -11548,7 +11548,7 @@
         ]
       },
       {
-        "event": "After the Japanese Derby: The Spotlight",
+        "event": "After the Japanese Derby The Spotlight",
         "choices": [
           {
             "choice": "No Choice",
