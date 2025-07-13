@@ -8,6 +8,7 @@
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "lucide-react": "^0.263.1",
+    "puppeteer": "^24.12.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
@@ -29,9 +30,10 @@
     "server": "node server.js",
     "dev": "concurrently \"npm run server\" \"npm start\"",
     "scrape": "node scrape/skill-scrape.js && node scrape/support-scrape.js && node scrape/uma-scrape.js",
-    "copy-data": "node -e \"const fs = require('fs'); const path = require('path'); if (fs.existsSync('scrape/data')) { fs.cpSync('scrape/data', 'public/data', { recursive: true }); console.log('Data copied successfully'); } else { console.log('No data to copy'); }\"",
+    "copy-data": "node scrape/copy-data.js",
     "scrape-all": "npm run scrape && npm run copy-data"
   },
+  "proxy": "http://localhost:3001",
   "eslintConfig": {
     "extends": [
       "react-app",

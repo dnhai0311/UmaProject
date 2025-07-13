@@ -4,8 +4,9 @@ import SelectionGrid from './components/SelectionGrid';
 import EventDisplay from './components/EventDisplay';
 import SkillsTab from './components/SkillsTab';
 import ScrapeTab from './components/ScrapeTab';
+import EventScannerTab from './components/EventScannerTab';
 
-type TabType = 'selection' | 'events' | 'skills' | 'scrape';
+type TabType = 'selection' | 'events' | 'skills' | 'scrape' | 'scanner';
 
 // Local storage keys
 const STORAGE_KEYS = {
@@ -26,7 +27,7 @@ const App: React.FC = () => {
     try {
       // Load active tab
       const savedTab = localStorage.getItem(STORAGE_KEYS.ACTIVE_TAB) as TabType;
-      if (savedTab && ['selection', 'events', 'skills', 'scrape'].includes(savedTab)) {
+      if (savedTab && ['selection', 'events', 'skills', 'scrape', 'scanner'].includes(savedTab)) {
         setActiveTab(savedTab);
       }
 
@@ -195,6 +196,16 @@ const App: React.FC = () => {
               >
                 Scrape Data
               </button>
+              <button
+                onClick={() => setActiveTab('scanner')}
+                className={`px-6 py-2 rounded-md font-medium transition-colors ${
+                  activeTab === 'scanner'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                Quét Event
+              </button>
             </div>
           </div>
         </div>
@@ -229,6 +240,14 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'scrape' && <ScrapeTab />}
+
+        {activeTab === 'scanner' && (
+          <EventScannerTab
+            selectedCharacter={selectedCharacter}
+            selectedScenario={selectedScenario}
+            selectedCards={selectedCards}
+          />
+        )}
       </div>
     </div>
   );

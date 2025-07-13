@@ -1,0 +1,966 @@
+{
+  "allEvents": [
+    {
+      "combination": {
+        "supportCards": [
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30027.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30026.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30024.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30025.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30001.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30002.png",
+            "alt": "",
+            "title": ""
+          }
+        ],
+        "character": {
+          "src": "https://gametora.com/images/umamusume/characters/thumb/chara_stand_1032_103201.png",
+          "alt": "",
+          "title": ""
+        },
+        "scenario": "URA Finals"
+      },
+      "events": [
+        {
+          "event": "Expression of Conviction",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Stamina +20"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Speed +20"
+            }
+          ]
+        },
+        {
+          "event": "Obtain Data!",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Wisdom +20"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Power +20"
+            }
+          ]
+        },
+        {
+          "event": "Tachyon the Spoiled Child",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Stamina +10Guts +10(random) Get Fast Learner status"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Wisdom +20(random) Get Fast Learner status"
+            }
+          ]
+        },
+        {
+          "event": "At Tachyon's Pace",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Guts +10"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Speed +5Power +5"
+            }
+          ]
+        },
+        {
+          "event": "The Strongest Collaborator?!",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Energy -20Stamina +15Guts +10"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Energy +5Wisdom +5"
+            }
+          ]
+        },
+        {
+          "event": "The Pressure of Justice?",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Wisdom +10Skill points +15"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Corner Adept ○ hint +1"
+            }
+          ]
+        },
+        {
+          "event": "Hamburger Helper!",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Energy +10Skill points +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Randomly eitherEnergy +30Skill points +10orEnergy +30Skill points +10Speed -5Power +5Get Slow Metabolism status"
+            }
+          ]
+        },
+        {
+          "event": "Medicine That Makes You Faster?",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Power +5Guts +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Speed +5Wisdom +5"
+            }
+          ]
+        },
+        {
+          "event": "The Significance of Research",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Wisdom +10"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Speed +10"
+            }
+          ]
+        },
+        {
+          "event": "No Shortcuts",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Guts +10"
+            },
+            {
+              "choice": "Middle Option",
+              "effect": "Wisdom +10"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Power +10"
+            }
+          ]
+        },
+        {
+          "event": "A Gift From the Dark Sky",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Speed +5Power +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Guts +10"
+            }
+          ]
+        },
+        {
+          "event": "Body Modification!",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Power +5Wisdom +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Stamina +10"
+            }
+          ]
+        },
+        {
+          "event": "Report: A Clear Gaze",
+          "choices": []
+        },
+        {
+          "event": "Failed training (Get Well Soon!)",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Mood -1Last trained stat -5(random) Get Practice Poor status"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Randomly eitherMood -1Last trained stat -10(random) Get Practice Poor statusorGet Practice Perfect ○ status"
+            }
+          ]
+        },
+        {
+          "event": "Failed training (Don't Overdo It!)",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Energy +10Mood -2Last trained stat -102 random stats -10(random) Get Practice Poor status"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Randomly eitherMood -3Last trained stat -102 random stats -10Get Practice Poor statusorEnergy +10Get Practice Perfect ○ status"
+            }
+          ]
+        },
+        {
+          "event": "Extra Training",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Energy -5Last trained stat +5(random) Heal a negative status effectYayoi Akikawa bond +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Energy +5"
+            }
+          ]
+        },
+        {
+          "event": "At Summer Camp (Year 2)",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Power +10"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Guts +10"
+            }
+          ]
+        },
+        {
+          "event": "Dance Lesson",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Stamina +10"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Speed +10"
+            }
+          ]
+        },
+        {
+          "event": "New Year's Resolutions",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Wisdom +10"
+            },
+            {
+              "choice": "Middle Option",
+              "effect": "Energy +20"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Skill points +20"
+            }
+          ]
+        },
+        {
+          "event": "New Year's Shrine Visit",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Energy +30"
+            },
+            {
+              "choice": "Middle Option",
+              "effect": "All stats +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Skill points +35"
+            }
+          ]
+        },
+        {
+          "event": "Acupuncture (Just an Acupuncturist, No Worries! ☆)",
+          "choices": [
+            {
+              "choice": "Option 1",
+              "effect": "Randomly eitherAll stats +20orMood -2All stats -15Get Night Owl status"
+            },
+            {
+              "choice": "Option 2",
+              "effect": "Randomly eitherObtain Corner Recovery ○ skillObtain Straightaway Recovery skillorEnergy -20Mood -2"
+            },
+            {
+              "choice": "Option 3",
+              "effect": "Randomly eitherMaximum Energy +12Energy +40Heal all negative status effectsorEnergy -20Mood -2Get Practice Poor status"
+            },
+            {
+              "choice": "Option 4",
+              "effect": "Randomly eitherEnergy +20Mood +1Get Charming ○ statusorEnergy -10/-20Mood -1(random) Get Practice Poor status"
+            },
+            {
+              "choice": "Option 5",
+              "effect": "Energy +10"
+            }
+          ]
+        },
+        {
+          "event": "G1 (1st)",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "1 random stat +10Skill points +45Energy -15(random) Hint for a skill related to the race"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "1 random stat +10Skill points +45Energy -5/-20(random) Hint for a skill related to the race"
+            }
+          ]
+        },
+        {
+          "event": "G1 (2nd-5th)",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "1 random stat +8Skill points +45Energy -20(random) Hint for a skill related to the race"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "1 random stat +8Skill points +45Energy -10/-30(random) Hint for a skill related to the race"
+            }
+          ]
+        },
+        {
+          "event": "G1 (6th or worse)",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "1 random stat +4Skill points +25Energy -25(random) Hint for a skill related to the race"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "1 random stat +4Skill points +25Energy -15/-35(random) Hint for a skill related to the race"
+            }
+          ]
+        },
+        {
+          "event": "G2/G3 (1st)",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "1 random stat +8Skill points +35Energy -15(random) Hint for a skill related to the race"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "1 random stat +8Skill points +35Energy -5/-20(random) Hint for a skill related to the race"
+            }
+          ]
+        },
+        {
+          "event": "G2/G3 (2nd-5th)",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "1 random stat +5Skill points +35Energy -20(random) Hint for a skill related to the race"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "1 random stat +5Skill points +35Energy -10/-30(random) Hint for a skill related to the race"
+            }
+          ]
+        },
+        {
+          "event": "G2/G3 (6th or worse)",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "1 random stat +3Skill points +20Energy -25(random) Hint for a skill related to the race"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "1 random stat +3Skill points +20Energy -15/-35(random) Hint for a skill related to the race"
+            }
+          ]
+        },
+        {
+          "event": "OP/Pre-OP (1st)",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "1 random stat +5Skill points +30Energy -15(random) Hint for a skill related to the race"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "1 random stat +5Skill points +30Energy -5/-20(random) Hint for a skill related to the race"
+            }
+          ]
+        },
+        {
+          "event": "OP/Pre-OP (2nd-5th)",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "1 random stat +3Skill points +30Energy -20(random) Hint for a skill related to the race"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "1 random stat +3Skill points +30Energy -10/-30(random) Hint for a skill related to the race"
+            }
+          ]
+        },
+        {
+          "event": "OP/Pre-OP (6th or worse)",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Skill points +10Energy -25(random) Hint for a skill related to the race"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Skill points +10Energy -15/-35(random) Hint for a skill related to the race"
+            }
+          ]
+        },
+        {
+          "event": "Report: Uncertain Promises",
+          "choices": []
+        },
+        {
+          "event": "Report: Will",
+          "choices": []
+        },
+        {
+          "event": "Report: Change of Course",
+          "choices": []
+        },
+        {
+          "event": "Report: Confession",
+          "choices": []
+        },
+        {
+          "event": "Report: The Final Factor",
+          "choices": []
+        },
+        {
+          "event": "Boredom is Excruciating",
+          "choices": []
+        },
+        {
+          "event": "Rumored Microbes",
+          "choices": []
+        },
+        {
+          "event": "Midnight Pool",
+          "choices": []
+        },
+        {
+          "event": "Energetic Brain Cells",
+          "choices": []
+        },
+        {
+          "event": "Master Trainer",
+          "choices": []
+        },
+        {
+          "event": "On the Psychological Effects of Others'Emotions",
+          "choices": []
+        },
+        {
+          "event": "Coffee Trap?",
+          "choices": []
+        },
+        {
+          "event": "Keep the Lecturing to a Minimum",
+          "choices": []
+        },
+        {
+          "event": "What Is There to Gain from HelpingOthers?",
+          "choices": []
+        },
+        {
+          "event": "Engrossed in Research!",
+          "choices": []
+        },
+        {
+          "event": "(❯) Run Away to First Base",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Energy -15Stamina +10Guts +10Mejiro Palmer bond +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Energy -15Guts +10Wisdom +10Mejiro Palmer bond +5"
+            }
+          ]
+        },
+        {
+          "event": "(❯❯) Runaway Romance",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Energy +10Guts +5Wisdom +5Mejiro Palmer bond +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Energy +10Front Runner Savvy ○ hint +1Mejiro Palmer bond +5"
+            }
+          ]
+        },
+        {
+          "event": "(❯❯❯) Optimistic Escapism: Never Give Up!",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Energy -20Stamina +5Guts +5Vanguard Spirit hint +3 or Keeping the Lead hint +1/+3Mejiro Palmer bond +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Energy +10Lone Wolf hint +1"
+            }
+          ]
+        },
+        {
+          "event": "An Inescapable Choice?",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Energy -15Guts +20Mejiro Palmer bond +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Power +5Skill points +15Mejiro Palmer bond +5"
+            }
+          ]
+        },
+        {
+          "event": "Optimistic Escapism",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Guts +15Mejiro Palmer bond +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Wet Conditions ○ hint +1Mejiro Palmer bond +5"
+            }
+          ]
+        },
+        {
+          "event": "(❯) I'm Not Afraid!",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Randomly eitherSpeed +10Twin Turbo bond +5orEnergy -10Speed +10Event chain ended"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Energy +20Event chain ended"
+            }
+          ]
+        },
+        {
+          "event": "(❯❯) Can't Catch Me!",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Randomly eitherSpeed +15Leader's Pride hint +3Twin Turbo bond +5orEnergy -10Speed +10Event chain ended"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Energy +25Event chain ended"
+            }
+          ]
+        },
+        {
+          "event": "(❯❯❯) Turbo Is Strong!",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Randomly eitherEnergy -10Speed +5Early Lead hint +3orEnergy -10Speed +25Taking the Lead hint +3Twin Turbo bond +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Energy +15Watchful Eye hint +1"
+            }
+          ]
+        },
+        {
+          "event": "Just Start Running!",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Mood -1Speed +20"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Energy -10Power +20"
+            }
+          ]
+        },
+        {
+          "event": "I'm All Fired Up!",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Energy +15Twin Turbo bond +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Early Lead hint +1Twin Turbo bond +5"
+            }
+          ]
+        },
+        {
+          "event": "(❯) A Plushie...",
+          "choices": []
+        },
+        {
+          "event": "(❯❯) How Should I Respond?",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Power +5Skill points +10Stamina to Spare hint +1Oguri Cap bond +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Stamina +5Skill points +10Outer Swell hint +1Oguri Cap bond +5"
+            }
+          ]
+        },
+        {
+          "event": "(❯❯❯) What I Want to Say",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Randomly eitherPower +10Guts +5Skill points +10Oguri Cap bond +5Furious Feat hint +1orPower +15Guts +10Skill points +15Oguri Cap bond +5Furious Feat hint +3"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Energy +30"
+            }
+          ]
+        },
+        {
+          "event": "How Should I Respond?",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Energy +5Power +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Energy -10Guts +15"
+            }
+          ]
+        },
+        {
+          "event": "Conquering the Crowds",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Power +5Skill points +15"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Nakayama Racecourse ○ hint +1"
+            }
+          ]
+        },
+        {
+          "event": "(❯) Someday, I'll Be Just Like Her!",
+          "choices": []
+        },
+        {
+          "event": "(❯❯) Just a Little Closer",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Energy -10Speed +15Special Week bond +5"
+            },
+            {
+              "choice": "Middle Option",
+              "effect": "Energy -10Skill points +20Special Week bond +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Energy -10Shake It Out hint +1Special Week bond +5"
+            }
+          ]
+        },
+        {
+          "event": "(❯❯❯) Forms of Aspiration",
+          "choices": []
+        },
+        {
+          "event": "Watch Where You're Going!",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Extra Tank hint +1Special Week bond +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Guts +15Special Week bond +5"
+            }
+          ]
+        },
+        {
+          "event": "So Many Options!",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Energy +10Mood +1Special Week bond +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Energy -10Stamina +15Skill points +15Special Week bond +5"
+            }
+          ]
+        },
+        {
+          "event": "(❯) Letters → ?",
+          "choices": []
+        },
+        {
+          "event": "(❯❯) Letters → Feelings → ?",
+          "choices": []
+        },
+        {
+          "event": "(❯❯❯) Letters → Feelings → Wait for Me,Okay?",
+          "choices": []
+        },
+        {
+          "event": "What Should I Do?",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Speed +5Stamina +5Wisdom +5Silence Suzuka bond +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Left-Handed ○ hint +1Silence Suzuka bond +5"
+            }
+          ]
+        },
+        {
+          "event": "On and On",
+          "choices": [
+            {
+              "choice": "Top Option",
+              "effect": "Speed +10Stamina +5Silence Suzuka bond +5"
+            },
+            {
+              "choice": "Bottom Option",
+              "effect": "Speed +15Silence Suzuka bond +5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "combination": {
+        "supportCards": [
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30003.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30004.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30005.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30006.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30007.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30008.png",
+            "alt": "",
+            "title": ""
+          }
+        ],
+        "character": {
+          "src": "https://gametora.com/images/umamusume/characters/thumb/chara_stand_1018_101801.png",
+          "alt": "",
+          "title": ""
+        },
+        "scenario": "Aoharu Hai"
+      },
+      "events": [],
+      "error": "Failed to select card: Protocol error (DOM.describeNode): Session closed. Most likely the page has been closed."
+    },
+    {
+      "combination": {
+        "supportCards": [
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30009.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30010.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30011.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30012.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30013.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30014.png",
+            "alt": "",
+            "title": ""
+          }
+        ],
+        "character": {
+          "src": "https://gametora.com/images/umamusume/characters/thumb/chara_stand_1023_102301.png",
+          "alt": "",
+          "title": ""
+        },
+        "scenario": "Make a New Track"
+      },
+      "events": [],
+      "error": "Failed to select card: Attempted to use detached Frame 'F13501481C81BC7FA7836ADC1B50CD77'."
+    },
+    {
+      "combination": {
+        "supportCards": [
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30015.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30016.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30017.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30018.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30019.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30020.png",
+            "alt": "",
+            "title": ""
+          }
+        ],
+        "character": {
+          "src": "https://gametora.com/images/umamusume/characters/thumb/chara_stand_1009_100901.png",
+          "alt": "",
+          "title": ""
+        },
+        "scenario": "Grand Live"
+      },
+      "events": [],
+      "error": "Failed to select card: Attempted to use detached Frame 'F13501481C81BC7FA7836ADC1B50CD77'."
+    },
+    {
+      "combination": {
+        "supportCards": [
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30021.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30022.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_30023.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_20025.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_20024.png",
+            "alt": "",
+            "title": ""
+          },
+          {
+            "src": "https://gametora.com/images/umamusume/supports/support_card_s_20023.png",
+            "alt": "",
+            "title": ""
+          }
+        ],
+        "character": {
+          "src": "https://gametora.com/images/umamusume/characters/thumb/chara_stand_1014_101401.png",
+          "alt": "",
+          "title": ""
+        },
+        "scenario": "Grand Masters"
+      },
+      "events": [],
+      "error": "Failed to select card: Attempted to use detached Frame 'F13501481C81BC7FA7836ADC1B50CD77'."
+    }
+  ],
+  "totalCombinations": 5,
+  "timestamp": "2025-07-13T17:45:40.888Z"
+}

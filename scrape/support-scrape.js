@@ -1,6 +1,14 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 
+function cleanEventName(rawName) {
+    // Chỉ giữ lại chữ cái, số, dấu cách, dấu câu cơ bản
+    return rawName
+        .replace(/[^A-Za-z0-9 .,!?'"-]/g, '') // Xóa mọi ký tự không thuộc whitelist
+        .replace(/\s+/g, ' ') // Chuẩn hóa khoảng trắng
+        .trim();
+}
+
 (async () => {
   console.log('🚀 Starting Support Card scraping...');
   
@@ -131,7 +139,7 @@ const fs = require('fs');
           console.log(`✅ Support Card: ${support.name}`);
 
           // Lấy danh sách tên event trước
-          const eventNames = await page.evaluate(() => {
+          const eventNames = (await page.evaluate(() => {
             const eventBoxes = Array.from(document.querySelectorAll('[class*="eventhelper_elist"]'));
             let names = [];
             for (const box of eventBoxes) {
@@ -144,7 +152,7 @@ const fs = require('fs');
               }
             }
             return names;
-          });
+          }))
           console.log(`   Found ${eventNames.length} training events to scrape.`);
 
           const trainingEvents = [];
@@ -299,6 +307,7 @@ const fs = require('fs');
 
               }, eventName);
 
+              eventDetail.event = cleanEventName(eventDetail.event);
               trainingEvents.push(eventDetail);
 
             } catch (e) {
