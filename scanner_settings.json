@@ -2,14 +2,9 @@
   "scan_interval": 2.0,
   "confidence_threshold": 0.3,
   "theme": "light",
-  "last_region": [
-    726,
-    313,
-    364,
-    44
-  ],
+  "last_region": null,
   "ocr_language": "eng",
-  "window_position": "1920x991+739+178",
+  "window_position": "800x700+1120+10",
   "auto_close_popup": true,
   "popup_timeout": 8
 }
