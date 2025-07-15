@@ -1,8 +1,19 @@
 {
-  "pythonPath": "C:\\Users\\Lolicious\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
-  "venvPath": ".",
-  "reportMissingImports": "warning",
-  "reportMissingModuleSource": "warning",
-  "pythonVersion": "3.13",
-  "typeCheckingMode": "basic"
+  "pythonPath": "C:\\Users\\Lolicious\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\\python.exe",
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none",
+  "reportUndefinedVariable": "none",
+  "reportUnknownMemberType": "none",
+  "reportUnknownVariableType": "none",
+  "reportGeneralTypeIssues": "none",
+  "reportUnusedImport": "none",
+  "reportUnusedVariable": "none",
+  "include": [
+    "."
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*"
+  ]
 } 

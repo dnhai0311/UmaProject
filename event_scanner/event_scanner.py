@@ -18,28 +18,27 @@ from PIL import Image, ImageTk
 from typing import List, Dict, Optional, Tuple
 import re
 
-# Import OCR libraries with fallback
+# Import OCR libraries
 try:
     import easyocr
     EASYOCR_AVAILABLE = True
 except ImportError:
     EASYOCR_AVAILABLE = False
-    print("EasyOCR not available - will use Tesseract only")
+    print("EasyOCR not available")
 
+# Import GPU configuration
 try:
-    import pytesseract
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-    TESSERACT_AVAILABLE = True
+    from gpu_config import GPUConfig, EASYOCR_CONFIG, IMAGE_PROCESSING_CONFIG
+    GPU_CONFIG_AVAILABLE = True
 except ImportError:
-    TESSERACT_AVAILABLE = False
-    print("Tesseract not available")
+    GPU_CONFIG_AVAILABLE = False
+    print("GPU config not available - using default settings")
+
+# Tesseract is no longer used
+TESSERACT_AVAILABLE = False
 
 # Constants
-DATA_FILES = [
-    '../scrape/data/all_uma_events.json',
-    '../scrape/data/all_scenario_events.json', 
-    '../scrape/data/all_support_events.json'
-]
+DATA_FILE = '../scrape/data/all_training_events.json'
 
 SETTINGS_FILE = 'scanner_settings.json'
 HISTORY_FILE = 'event_history.pkl'
@@ -55,13 +54,7 @@ DEFAULT_SETTINGS = {
     'popup_timeout': 8
 }
 
-OCR_CONFIGS = [
-    ('--oem 3 --psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,!?()-\'"', 'LSTM Single Line'),
-    ('--oem 3 --psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,!?()-\'"', 'LSTM Uniform Block'),
-    ('--oem 1 --psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,!?()-\'"', 'Legacy Single Line'),
-    ('--oem 3 --psm 13', 'LSTM Raw Line'),
-    ('--oem 3 --psm 6 --dpi 300', 'LSTM High DPI')
-]
+
 
 # ========== UTILITIES ==========
 class Logger:
@@ -130,7 +123,7 @@ class FileManager:
 class ImageProcessor:
     @staticmethod
     def preprocess_for_ocr(image: np.ndarray) -> np.ndarray:
-        """Enhanced preprocessing for better OCR accuracy"""
+        """Enhanced preprocessing for better OCR accuracy with multiple methods"""
         # Convert to grayscale
         if len(image.shape) == 3:
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -146,69 +139,223 @@ class ImageProcessor:
             gray = cv2.resize(gray, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_CUBIC)
             h, w = gray.shape[:2]
         
-        # Apply Gaussian blur to reduce noise
-        gray = cv2.GaussianBlur(gray, (3, 3), 0)
-        
-        # Enhance contrast using CLAHE with more aggressive settings
-        clahe = cv2.createCLAHE(clipLimit=12.0, tileGridSize=(4, 4))
-        enhanced = clahe.apply(gray)
-        
-        # Try different thresholding methods and pick the best
-        # Method 1: Adaptive threshold
-        adaptive1 = cv2.adaptiveThreshold(
-            enhanced, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 8
-        )
-        # Method 2: Otsu's thresholding
-        _, otsu = cv2.threshold(enhanced, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        # Method 3: Adaptive threshold with different parameters
-        adaptive2 = cv2.adaptiveThreshold(
-            enhanced, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 10
-        )
-        
-        # Choose the best threshold based on the amount of white pixels
-        def evaluate_threshold(img):
-            white_pixels = np.sum(img == 255)
-            total_pixels = img.shape[0] * img.shape[1]
-            white_ratio = white_pixels / total_pixels
-            # Prefer images with 60-90% white pixels (text on background)
-            if 0.6 <= white_ratio <= 0.9:
-                return abs(0.75 - white_ratio)  # Closer to 75% is better
-            else:
-                return 1.0  # Penalize heavily
-        
-        threshold_methods = [
-            ('adaptive1', adaptive1),
-            ('otsu', otsu), 
-            ('adaptive2', adaptive2)
+        # Try multiple preprocessing methods and pick the best
+        methods = [
+            ImageProcessor._method_adaptive_clahe,
+            ImageProcessor._method_otsu_enhanced,
+            ImageProcessor._method_edge_based,
+            ImageProcessor._method_frequency_domain,
+            ImageProcessor._method_morphological
         ]
         
-        best_method = None
-        best_score = float('inf')
+        best_result = None
+        best_score = -1
         
-        for name, img in threshold_methods:
-            score = evaluate_threshold(img)
-            if score < best_score:
-                best_score = score
-                best_method = img
+        for method in methods:
+            try:
+                result = method(gray)
+                score = ImageProcessor._evaluate_preprocessing_quality(result)
+                if score > best_score:
+                    best_score = score
+                    best_result = result
+            except Exception as e:
+                Logger.debug(f"Preprocessing method failed: {e}")
+                continue
         
-        # Use the best threshold result
-        binary = best_method if best_method is not None else adaptive1
+        return best_result if best_result is not None else gray
+    
+    @staticmethod
+    def _method_adaptive_clahe(gray: np.ndarray) -> np.ndarray:
+        """Method 1: Adaptive CLAHE with noise reduction"""
+        # Apply bilateral filter to reduce noise while preserving edges
+        denoised = cv2.bilateralFilter(gray, 9, 75, 75)
         
-        # Morphological operations to clean up the image
+        # Apply Gaussian blur for additional smoothing
+        blurred = cv2.GaussianBlur(denoised, (3, 3), 0)
+        
+        # Enhanced CLAHE with adaptive parameters
+        clahe = cv2.createCLAHE(clipLimit=15.0, tileGridSize=(8, 8))
+        enhanced = clahe.apply(blurred)
+        
+        # Adaptive thresholding
+        binary = cv2.adaptiveThreshold(
+            enhanced, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 21, 11
+        )
+        
+        # Clean up with morphological operations
+        kernel = np.ones((2, 2), np.uint8)
+        binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=1)
+        
+        return ImageProcessor._ensure_black_text_on_white(binary)
+    
+    @staticmethod
+    def _method_otsu_enhanced(gray: np.ndarray) -> np.ndarray:
+        """Method 2: Enhanced Otsu with preprocessing"""
+        # Apply median filter to remove salt-and-pepper noise
+        median = cv2.medianBlur(gray, 5)
+        
+        # Apply unsharp masking to enhance edges
+        gaussian = cv2.GaussianBlur(median, (0, 0), 2.0)
+        unsharp = cv2.addWeighted(median, 1.5, gaussian, -0.5, 0)
+        
+        # Apply CLAHE for contrast enhancement
+        clahe = cv2.createCLAHE(clipLimit=8.0, tileGridSize=(4, 4))
+        enhanced = clahe.apply(unsharp)
+        
+        # Otsu's thresholding
+        _, binary = cv2.threshold(enhanced, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        
+        # Morphological cleanup
+        kernel = np.ones((3, 3), np.uint8)
+        binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel, iterations=1)
+        binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=1)
+        
+        return ImageProcessor._ensure_black_text_on_white(binary)
+    
+    @staticmethod
+    def _method_edge_based(gray: np.ndarray) -> np.ndarray:
+        """Method 3: Edge-based text detection"""
+        # Apply Canny edge detection
+        edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+        
+        # Dilate edges to connect text components
+        kernel = np.ones((2, 2), np.uint8)
+        dilated = cv2.dilate(edges, kernel, iterations=1)
+        
+        # Find contours and create mask
+        contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # Create mask for text regions
+        mask = np.zeros_like(gray)
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area > 50:  # Filter small noise
+                cv2.fillPoly(mask, [contour], 255)
+        
+        # Apply mask to original image
+        masked = cv2.bitwise_and(gray, mask)
+        
+        # Apply adaptive threshold to masked region
+        binary = cv2.adaptiveThreshold(
+            masked, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 15, 5
+        )
+        
+        return ImageProcessor._ensure_black_text_on_white(binary)
+    
+    @staticmethod
+    def _method_frequency_domain(gray: np.ndarray) -> np.ndarray:
+        """Method 4: Frequency domain processing"""
+        # Apply FFT
+        f_transform = np.fft.fft2(gray)
+        f_shift = np.fft.fftshift(f_transform)
+        
+        # Create high-pass filter
+        rows, cols = gray.shape
+        crow, ccol = rows // 2, cols // 2
+        mask = np.ones((rows, cols), np.uint8)
+        r = 30
+        center = [crow, ccol]
+        x, y = np.ogrid[:rows, :cols]
+        mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 <= r*r
+        mask[mask_area] = 0
+        
+        # Apply filter
+        f_shift_filtered = f_shift * mask
+        f_ishift = np.fft.ifftshift(f_shift_filtered)
+        img_back = np.fft.ifft2(f_ishift)
+        img_back = np.abs(img_back)
+        
+        # Normalize and convert to uint8
+        img_back = np.clip(img_back, 0, 255).astype(np.uint8)
+        
+        # Apply threshold
+        _, binary = cv2.threshold(img_back, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        
+        return ImageProcessor._ensure_black_text_on_white(binary)
+    
+    @staticmethod
+    def _method_morphological(gray: np.ndarray) -> np.ndarray:
+        """Method 5: Advanced morphological processing"""
+        # Apply top-hat transform to extract bright text on dark background
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 3))
+        tophat = cv2.morphologyEx(gray, cv2.MORPH_TOPHAT, kernel)
+        
+        # Apply black-hat transform to extract dark text on bright background
+        blackhat = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, kernel)
+        
+        # Combine both transforms
+        combined = cv2.add(gray, tophat)
+        combined = cv2.subtract(combined, blackhat)
+        
+        # Apply CLAHE
+        clahe = cv2.createCLAHE(clipLimit=10.0, tileGridSize=(4, 4))
+        enhanced = clahe.apply(combined)
+        
+        # Adaptive threshold
+        binary = cv2.adaptiveThreshold(
+            enhanced, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+        )
+        
+        # Advanced morphological operations
         # Remove small noise
         kernel_noise = np.ones((2, 2), np.uint8)
         binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel_noise, iterations=1)
         
-        # Fill small gaps in characters
+        # Fill gaps in characters
         kernel_fill = np.ones((3, 3), np.uint8)
         binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel_fill, iterations=1)
         
-        # Final dilation to make text slightly thicker (better for OCR)
+        # Slight dilation to make text more readable
         kernel_dilate = np.ones((2, 2), np.uint8)
         binary = cv2.dilate(binary, kernel_dilate, iterations=1)
         
-        # Ensure text is black on white background for OCR
-        # Count black vs white pixels to determine if we need to invert
+        return ImageProcessor._ensure_black_text_on_white(binary)
+    
+    @staticmethod
+    def _evaluate_preprocessing_quality(binary: np.ndarray) -> float:
+        """Evaluate the quality of preprocessing result"""
+        h, w = binary.shape
+        
+        # Calculate white pixel ratio
+        white_pixels = np.sum(binary == 255)
+        total_pixels = h * w
+        white_ratio = white_pixels / total_pixels
+        
+        # Ideal ratio for text is around 70-85%
+        if 0.65 <= white_ratio <= 0.90:
+            ratio_score = 1.0 - abs(0.775 - white_ratio) / 0.125
+        else:
+            ratio_score = 0.0
+        
+        # Calculate edge density (text should have good edge content)
+        edges = cv2.Canny(binary, 50, 150)
+        edge_density = np.sum(edges > 0) / total_pixels
+        edge_score = min(edge_density * 100, 1.0)
+        
+        # Calculate connected component analysis
+        num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(binary, connectivity=8)
+        
+        # Count reasonable text components (not too small, not too large)
+        good_components = 0
+        for i in range(1, num_labels):  # Skip background
+            area = stats[i, cv2.CC_STAT_AREA]
+            width = stats[i, cv2.CC_STAT_WIDTH]
+            height = stats[i, cv2.CC_STAT_HEIGHT]
+            
+            # Text components should be reasonable size
+            if 20 <= area <= 2000 and 3 <= width <= 200 and 5 <= height <= 100:
+                good_components += 1
+        
+        component_score = min(good_components / 10.0, 1.0)  # Normalize
+        
+        # Combined score
+        total_score = (ratio_score * 0.4 + edge_score * 0.3 + component_score * 0.3)
+        
+        return total_score
+    
+    @staticmethod
+    def _ensure_black_text_on_white(binary: np.ndarray) -> np.ndarray:
+        """Ensure text is black on white background"""
         black_pixels = np.sum(binary == 0)
         white_pixels = np.sum(binary == 255)
         
@@ -217,48 +364,134 @@ class ImageProcessor:
             binary = cv2.bitwise_not(binary)
         
         return binary
+    
+    @staticmethod
+    def detect_text_regions(image: np.ndarray) -> List[Tuple[int, int, int, int]]:
+        """Detect potential text regions in the image"""
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image.copy()
+        
+        # Apply contour detection for text regions (simpler alternative to MSER)
+        # Apply adaptive threshold to find text regions
+        binary = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+        contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # Filter and merge regions
+        text_regions = []
+        for contour in contours:
+            # Get bounding box
+            x, y, w, h = cv2.boundingRect(contour)
+            
+            # Filter by size (reasonable text size)
+            if 20 <= w <= 300 and 10 <= h <= 100 and w * h >= 100:
+                # Check aspect ratio (text should be wider than tall)
+                aspect_ratio = w / h
+                if 0.5 <= aspect_ratio <= 10:
+                    text_regions.append((x, y, w, h))
+        
+        # Merge overlapping regions
+        merged_regions = ImageProcessor._merge_overlapping_regions(text_regions)
+        
+        return merged_regions
+    
+    @staticmethod
+    def _merge_overlapping_regions(regions: List[Tuple[int, int, int, int]]) -> List[Tuple[int, int, int, int]]:
+        """Merge overlapping or nearby text regions"""
+        if not regions:
+            return []
+        
+        # Sort regions by x coordinate
+        regions = sorted(regions, key=lambda r: r[0])
+        
+        merged = []
+        current = list(regions[0])
+        
+        for region in regions[1:]:
+            x, y, w, h = region
+            
+            # Check if regions overlap or are close
+            if (x <= current[0] + current[2] + 10 and  # Within 10 pixels horizontally
+                abs(y - current[1]) <= max(current[3], h) * 0.5):  # Within 50% of height vertically
+                
+                # Merge regions
+                new_x = min(current[0], x)
+                new_y = min(current[1], y)
+                new_w = max(current[0] + current[2], x + w) - new_x
+                new_h = max(current[1] + current[3], y + h) - new_y
+                
+                current = [new_x, new_y, new_w, new_h]
+            else:
+                merged.append(tuple(current))
+                current = list(region)
+        
+        merged.append(tuple(current))
+        return merged
 
 class OCREngine:
     def __init__(self, language: str = 'eng'):
         self.language = language
         self.easyocr_reader = None
         self.use_easyocr = False
+        self.gpu_available = False
         
-        # Try to initialize EasyOCR
+        # Apply GPU optimizations if available
+        if GPU_CONFIG_AVAILABLE:
+            GPUConfig.optimize_for_rtx3050()
+            Logger.info("GPU optimizations applied for RTX 3050")
+        
+        # Try to initialize EasyOCR with GPU optimization
         if EASYOCR_AVAILABLE:
             try:
-                gpu_available = self._check_gpu_availability()
+                self.gpu_available = self._check_gpu_availability()
                 
-                if gpu_available:
+                if self.gpu_available:
                     try:
-                        self.easyocr_reader = easyocr.Reader(['en'], gpu=True, verbose=False)
+                        # Use optimized config for RTX 3050
+                        if GPU_CONFIG_AVAILABLE:
+                            self.easyocr_reader = easyocr.Reader(
+                                ['en'], 
+                                **EASYOCR_CONFIG
+                            )
+                        else:
+                            # Fallback to basic GPU settings
+                            self.easyocr_reader = easyocr.Reader(
+                                ['en'], 
+                                gpu=True, 
+                                verbose=False,
+                                model_storage_directory='./models',
+                                download_enabled=True,
+                                quantize=True
+                            )
+                        
                         self.use_easyocr = True
-                        Logger.info("EasyOCR initialized with GPU acceleration")
+                        Logger.info("EasyOCR initialized with RTX 3050 GPU acceleration")
+                        
                     except Exception as gpu_error:
                         Logger.error(f"GPU initialization failed: {gpu_error}")
-                        try:
-                            self.easyocr_reader = easyocr.Reader(['en'], gpu=False, verbose=False)
-                            self.use_easyocr = True
-                            Logger.info("EasyOCR initialized with CPU")
-                        except Exception as cpu_error:
-                            Logger.error(f"CPU initialization failed: {cpu_error}")
-                            self.use_easyocr = False
+                        self._fallback_to_cpu()
                 else:
-                    try:
-                        self.easyocr_reader = easyocr.Reader(['en'], gpu=False, verbose=False)
-                        self.use_easyocr = True
-                        Logger.info("EasyOCR initialized with CPU (no GPU detected)")
-                    except Exception as e:
-                        Logger.error(f"EasyOCR initialization failed: {e}")
-                        self.use_easyocr = False
+                    self._fallback_to_cpu()
                         
             except Exception as e:
                 Logger.error(f"Failed to initialize EasyOCR: {e}")
-                self.use_easyocr = False
+                self._fallback_to_cpu()
         
         # Check if we have any OCR engine
         if not self.use_easyocr and not TESSERACT_AVAILABLE:
             raise ImportError("Neither EasyOCR nor Tesseract is available")
+    
+    def _fallback_to_cpu(self):
+        """Fallback to CPU if GPU fails"""
+        try:
+            self.easyocr_reader = easyocr.Reader(['en'], gpu=False, verbose=False)
+            self.use_easyocr = True
+            self.gpu_available = False
+            Logger.info("EasyOCR initialized with CPU (GPU fallback)")
+        except Exception as cpu_error:
+            Logger.error(f"CPU initialization failed: {cpu_error}")
+            self.use_easyocr = False
     
     def _check_gpu_availability(self) -> bool:
         try:
@@ -266,7 +499,13 @@ class OCREngine:
             if torch.cuda.is_available():
                 gpu_count = torch.cuda.device_count()
                 gpu_name = torch.cuda.get_device_name(0) if gpu_count > 0 else "Unknown"
-                Logger.info(f"GPU detected: {gpu_name} (Count: {gpu_count})")
+                gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1024**3  # GB
+                Logger.info(f"GPU detected: {gpu_name} (Count: {gpu_count}, Memory: {gpu_memory:.1f}GB)")
+                
+                # Check if it's RTX 3050 or similar
+                if "3050" in gpu_name or "3060" in gpu_name or "3070" in gpu_name:
+                    Logger.info("RTX 30 series detected - optimizing for performance")
+                
                 return True
             else:
                 Logger.info("CUDA not available - will use CPU")
@@ -275,98 +514,174 @@ class OCREngine:
         return False
     
     def extract_text(self, image: np.ndarray) -> List[str]:
+        """High-performance text extraction optimized for RTX 3050"""
         results = []
         
-        # Try EasyOCR first
-        if self.use_easyocr and self.easyocr_reader:
-            try:
-                easyocr_results = self._extract_with_easyocr(image)
-                results.extend(easyocr_results)
-            except Exception as e:
-                Logger.error(f"EasyOCR failed: {e}")
+        if not self.use_easyocr or not self.easyocr_reader:
+            return results
         
-        # Fallback to Tesseract if no results
-        if not results and TESSERACT_AVAILABLE:
-            try:
-                tesseract_results = self._extract_with_tesseract(image)
-                results.extend(tesseract_results)
-            except Exception as e:
-                Logger.error(f"Tesseract failed: {e}")
-        
-        return list(set(results)) if results else []
+        try:
+            # Strategy 1: Fast extraction from original image
+            original_results = self._extract_with_easyocr_fast(image)
+            results.extend(original_results)
+            
+            # Strategy 2: Enhanced extraction from preprocessed image (only if needed)
+            if not results or len(''.join(results)) < 5:
+                processed_image = ImageProcessor.preprocess_for_ocr(image)
+                processed_results = self._extract_with_easyocr_fast(processed_image)
+                results.extend(processed_results)
+            
+            # Strategy 3: Multi-scale extraction for better accuracy (only if GPU available)
+            if not results and self.gpu_available:
+                results.extend(self._multi_scale_extraction(image))
+            
+            # Remove duplicates and filter results
+            unique_results = list(set(results))
+            filtered_results = []
+            
+            for text in unique_results:
+                if self._is_valid_text(text):
+                    corrected_text = self._correct_ocr_text(text)
+                    if corrected_text and corrected_text not in filtered_results:
+                        filtered_results.append(corrected_text)
+            
+            # Sort by quality score (length + game relevance)
+            filtered_results.sort(key=lambda x: self._calculate_text_quality(x), reverse=True)
+            
+            # Use optimized max results if available
+            max_results = IMAGE_PROCESSING_CONFIG.get('max_results', 3) if GPU_CONFIG_AVAILABLE else 3
+            return filtered_results[:max_results]
+            
+        except Exception as e:
+            Logger.error(f"Text extraction failed: {e}")
+            return []
     
-    def _extract_with_easyocr(self, image: np.ndarray) -> List[str]:
+    def _extract_with_easyocr_fast(self, image: np.ndarray) -> List[str]:
+        """Fast OCR extraction optimized for GPU"""
         results = []
         
         try:
             if not self.easyocr_reader:
                 return results
-                
-            ocr_results = self.easyocr_reader.readtext(image, detail=1)
             
-            for (bbox, text, confidence) in ocr_results:
-                conf_float = float(confidence) if isinstance(confidence, (str, int, float)) else 0.0
-                
-                if conf_float > 0.3 and self._is_valid_text(text):
-                    corrected_text = self._correct_ocr_text(text)
-                    if corrected_text:
-                        results.append(corrected_text)
+            # Use optimized confidence threshold
+            if GPU_CONFIG_AVAILABLE:
+                confidence_threshold = IMAGE_PROCESSING_CONFIG.get('confidence_threshold', 0.4)
+            else:
+                confidence_threshold = 0.4 if self.gpu_available else 0.3
             
-            # Combine multiple results if they exist
-            if len(results) > 1:
-                combined_text = ' '.join(results)
-                final_corrected = self._correct_ocr_text(combined_text)
-                if final_corrected and self._is_valid_text(final_corrected):
-                    results.append(final_corrected)
+            try:
+                ocr_results = self.easyocr_reader.readtext(image, detail=1)
+                
+                for (bbox, text, confidence) in ocr_results:
+                    conf_float = float(confidence) if isinstance(confidence, (str, int, float)) else 0.0
+                    
+                    if conf_float > confidence_threshold:
+                        cleaned_text = text.strip()
+                        if cleaned_text and len(cleaned_text) >= 2:
+                            results.append(cleaned_text)
+                
+                # If no high-confidence results, try lower threshold
+                if not results and self.gpu_available:
+                    for (bbox, text, confidence) in ocr_results:
+                        conf_float = float(confidence) if isinstance(confidence, (str, int, float)) else 0.0
+                        if conf_float > 0.2:
+                            cleaned_text = text.strip()
+                            if cleaned_text and len(cleaned_text) >= 2:
+                                results.append(cleaned_text)
+                        
+            except Exception as e:
+                Logger.debug(f"Fast OCR extraction failed: {e}")
+            
+            # Clear GPU cache after processing
+            if self.gpu_available:
+                try:
+                    import torch
+                    torch.cuda.empty_cache()
+                except:
+                    pass
                     
         except Exception as e:
-            Logger.error(f"EasyOCR extraction failed: {e}")
+            Logger.error(f"Fast OCR extraction failed: {e}")
         
         return results
     
-    def _extract_with_tesseract(self, image: np.ndarray) -> List[str]:
+    def _multi_scale_extraction(self, image: np.ndarray) -> List[str]:
+        """Extract text at multiple scales for better accuracy"""
         results = []
         
-        for config, desc in OCR_CONFIGS:
-            try:
-                data = pytesseract.image_to_data(
-                    image, 
-                    lang=self.language,
-                    config=config,
-                    output_type=pytesseract.Output.DICT
-                )
-                
-                valid_texts = []
-                for i in range(len(data['text'])):
-                    text = data['text'][i].strip()
-                    conf = int(data['conf'][i])
+        try:
+            h, w = image.shape[:2]
+            
+            # Use optimized scales if available
+            if GPU_CONFIG_AVAILABLE and IMAGE_PROCESSING_CONFIG.get('enable_multi_scale', True):
+                scales = IMAGE_PROCESSING_CONFIG.get('scales', [0.8, 1.0, 1.2])
+            else:
+                scales = [0.8, 1.0, 1.2, 1.5] if self.gpu_available else [0.8, 1.0, 1.2]
+            
+            for scale in scales:
+                try:
+                    # Resize image
+                    new_w = int(w * scale)
+                    new_h = int(h * scale)
                     
-                    if text and conf > 30 and self._is_valid_text(text):
-                        corrected_text = self._correct_ocr_text(text)
-                        if corrected_text:
-                            valid_texts.append(corrected_text)
-                
-                if valid_texts:
-                    if len(valid_texts) == 1:
-                        results.append(valid_texts[0])
-                    else:
-                        combined_text = ' '.join(valid_texts)
-                        final_corrected = self._correct_ocr_text(combined_text)
-                        if final_corrected and self._is_valid_text(final_corrected):
-                            results.append(final_corrected)
+                    if new_w < 20 or new_h < 10:  # Too small
+                        continue
                     
-            except Exception as e:
-                Logger.error(f"Tesseract error with {desc}: {e}")
+                    resized = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
+                    
+                    # Extract text from resized image
+                    scale_results = self._extract_with_easyocr_fast(resized)
+                    results.extend(scale_results)
+                    
+                    # If we found good results, don't try more scales
+                    if len(results) >= 2:
+                        break
+                        
+                except Exception as e:
+                    Logger.debug(f"Multi-scale extraction at scale {scale} failed: {e}")
+                    continue
+                    
+        except Exception as e:
+            Logger.debug(f"Multi-scale extraction failed: {e}")
         
-        # Remove duplicates while preserving order
-        unique_results = []
-        seen = set()
-        for result in results:
-            if result.lower() not in seen:
-                unique_results.append(result)
-                seen.add(result.lower())
+        return results
+    
+    def _calculate_text_quality(self, text: str) -> float:
+        """Calculate quality score for text"""
+        if not text:
+            return 0.0
         
-        return unique_results
+        # Base score from length
+        length_score = min(len(text) / 50.0, 1.0)
+        
+        # Game relevance score
+        game_words = [
+            'training', 'race', 'event', 'skill', 'card', 'support',
+            'uma', 'musume', 'stamina', 'speed', 'power', 'guts', 'wisdom',
+            'scenario', 'choice', 'conversation', 'striking', 'considerate',
+            'session', 'win', 'lose', 'level', 'rank', 'grade', 'new', 'year'
+        ]
+        
+        text_lower = text.lower()
+        game_score = 0.0
+        for word in game_words:
+            if word in text_lower:
+                game_score += 0.1
+        
+        game_score = min(game_score, 1.0)
+        
+        # Sentence structure score
+        structure_score = 0.0
+        if text[0].isupper() and text.endswith(('.', '!', '?')):
+            structure_score = 0.5
+        elif text[0].isupper():
+            structure_score = 0.3
+        
+        # Combined score
+        total_score = length_score * 0.4 + game_score * 0.4 + structure_score * 0.2
+        
+        return total_score
 
     def _is_valid_text(self, text: str) -> bool:
         if not text or len(text) < 2:
@@ -498,32 +813,65 @@ class EventDatabase:
     def load_events(self):
         self.events = {}
         
-        for file_path in DATA_FILES:
-            if os.path.exists(file_path):
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                        self._process_event_data(data)
-                except Exception as e:
-                    Logger.error(f"Failed to load {file_path}: {e}")
+        if os.path.exists(DATA_FILE):
+            try:
+                with open(DATA_FILE, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    self._process_event_data(data)
+            except Exception as e:
+                Logger.error(f"Failed to load {DATA_FILE}: {e}")
+        else:
+            Logger.error(f"Data file not found: {DATA_FILE}")
         
         Logger.info(f"Loaded {len(self.events)} events")
     
     def _process_event_data(self, data):
-        if isinstance(data, list):
-            for item in data:
-                if 'events' in item:
-                    for event in item['events']:
-                        name = event.get('event', '')
-                        if name and self._is_english_event(name):
-                            self.events[name] = {
-                                'name': name,
-                                'choices': event.get('choices', [])
-                            }
-        elif isinstance(data, dict):
-            for key, value in data.items():
-                if self._is_english_event(key):
-                    self.events[key] = value
+        """Process the new all_training_events.json structure"""
+        if not isinstance(data, dict):
+            Logger.error("Invalid data format: expected dictionary")
+            return
+        
+        # Process characters
+        if 'characters' in data:
+            for character in data['characters']:
+                if 'eventGroups' in character:
+                    for event_group in character['eventGroups']:
+                        if 'events' in event_group:
+                            for event in event_group['events']:
+                                name = event.get('event', '')
+                                if name and self._is_english_event(name):
+                                    self.events[name] = {
+                                        'name': name,
+                                        'choices': event.get('choices', [])
+                                    }
+        
+        # Process support cards
+        if 'supportCards' in data:
+            for support_card in data['supportCards']:
+                if 'eventGroups' in support_card:
+                    for event_group in support_card['eventGroups']:
+                        if 'events' in event_group:
+                            for event in event_group['events']:
+                                name = event.get('event', '')
+                                if name and self._is_english_event(name):
+                                    self.events[name] = {
+                                        'name': name,
+                                        'choices': event.get('choices', [])
+                                    }
+        
+        # Process scenarios
+        if 'scenarios' in data:
+            for scenario in data['scenarios']:
+                if 'eventGroups' in scenario:
+                    for event_group in scenario['eventGroups']:
+                        if 'events' in event_group:
+                            for event in event_group['events']:
+                                name = event.get('event', '')
+                                if name and self._is_english_event(name):
+                                    self.events[name] = {
+                                        'name': name,
+                                        'choices': event.get('choices', [])
+                                    }
     
     def _is_english_event(self, text: str) -> bool:
         if not text:
@@ -640,71 +988,277 @@ class EventPopup:
             self.popup.after(timeout * 1000, self.close)
     
     def setup_popup(self):
-        self.popup.title('Event Detected!')
+        self.popup.title('🎯 Event Detected!')
+        
+        # Force popup to be on top with multiple methods
         self.popup.attributes('-topmost', True)
-        self.popup.resizable(False, False)
+        self.popup.lift()  # Bring to front
+        self.popup.focus_force()  # Force focus
+        
+        # Additional Windows-specific attributes for better z-order
+        try:
+            self.popup.attributes('-toolwindow', False)  # Ensure it's not a tool window
+            self.popup.attributes('-alpha', 1.0)  # Ensure full opacity
+        except:
+            pass  # Some attributes might not be available on all platforms
+        
+        self.popup.resizable(True, True)  # Allow resizing
         
         screen_width = self.popup.winfo_screenwidth()
         screen_height = self.popup.winfo_screenheight()
         
-        width = 500
-        height = min(400, 200 + len(self.event.get('choices', [])) * 30)
+        # Calculate optimal size based on content
+        choices = self.event.get('choices', [])
         
-        # Position popup right below main form
-        x = screen_width - 520  # Aligned with main form (620 - 100 to center popup under main form)
-        y = 520  # Below main form (y=10 + height=500 + 10px gap)
+        # Estimate height needed for each choice (including effects)
+        choice_height_estimate = 0
+        for choice in choices:
+            if isinstance(choice, dict):
+                text = choice.get('choice', str(choice))
+                effect = choice.get('effect', '') or choice.get('effects', '')
+                # Estimate lines needed for text and effect
+                text_lines = max(1, len(text) // 50)  # ~50 chars per line
+                effect_lines = max(1, len(effect) // 50) if effect else 0
+                choice_height_estimate += (text_lines + effect_lines + 2) * 25 + 30  # 25px per line + padding
+            else:
+                choice_height_estimate += 70  # Default height for simple choices
+        
+        # Base height for header and buttons
+        base_height = 200
+        total_height = base_height + choice_height_estimate
+        
+        # Responsive width and height - limit height to prevent too large popup
+        width = min(1000, screen_width - 100)  # Reasonable width
+        max_height = min(screen_height - 100, 800)  # Max 800px height
+        height = min(total_height, max_height)
+        
+        # Position popup at bottom right corner
+        x = screen_width - width - 20  # 20px margin from right edge
+        y = screen_height - height - 20  # 20px margin from bottom edge
         
         self.popup.geometry(f'{width}x{height}+{x}+{y}')
         self.popup.configure(bg='#2c3e50')
         
+        # Add border and shadow effect
+        self.popup.configure(relief='raised', bd=3)
+        
+        # Ensure popup stays on top after geometry is set
+        self.popup.after(100, self._ensure_on_top)
+        
         self.create_content()
+        
+        # Final check to ensure popup is visible
+        self.popup.after(200, self._final_visibility_check)
+    
+    def _final_visibility_check(self):
+        """Final check to ensure popup is visible and properly positioned"""
+        try:
+            # Force update and bring to front
+            self.popup.update_idletasks()
+            self.popup.lift()
+            self.popup.attributes('-topmost', True)
+            self.popup.focus_force()
+            
+            # Ensure window is not minimized
+            self.popup.state('normal')
+            
+        except Exception as e:
+            Logger.debug(f"Final visibility check failed: {e}")
+    
+    def _ensure_on_top(self):
+        """Ensure popup stays on top after creation"""
+        try:
+            self.popup.lift()
+            self.popup.attributes('-topmost', True)
+            self.popup.focus_force()
+            
+            # Windows-specific: Force window to front using win32api if available
+            try:
+                import win32gui
+                import win32con
+                
+                # Get the window handle
+                hwnd = self.popup.winfo_id()
+                
+                # Set window to be always on top
+                win32gui.SetWindowPos(
+                    hwnd, 
+                    win32con.HWND_TOPMOST, 
+                    0, 0, 0, 0, 
+                    win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_SHOWWINDOW
+                )
+                
+                # Bring window to front
+                win32gui.SetForegroundWindow(hwnd)
+                win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+                
+            except ImportError:
+                # win32gui not available, use tkinter methods only
+                pass
+            except Exception as e:
+                Logger.debug(f"Windows-specific window management failed: {e}")
+                
+        except Exception as e:
+            Logger.error(f"Error ensuring popup is on top: {e}")
     
     def create_content(self):
-        main_frame = tk.Frame(self.popup, bg='#2c3e50', padx=20, pady=20)
-        main_frame.pack(fill='both', expand=True)
+        # Main container with scrollbar
+        main_container = tk.Frame(self.popup, bg='#2c3e50')
+        main_container.pack(fill='both', expand=True, padx=15, pady=15)  # Less padding
+        
+        # Create canvas and scrollbar for scrollable content
+        canvas = tk.Canvas(main_container, bg='#2c3e50', highlightthickness=0)
+        scrollbar = ttk.Scrollbar(main_container, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg='#2c3e50')
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Header with icon
+        header_frame = tk.Frame(scrollable_frame, bg='#e74c3c', padx=15, pady=10)  # Less padding
+        header_frame.pack(fill='x', pady=(0, 15))  # Less spacing
         
         event_label = tk.Label(
-            main_frame, 
-            text=self.event['name'],
-            font=('Arial', 14, 'bold'),
-            fg='#e74c3c',
-            bg='#2c3e50',
-            wraplength=460
+            header_frame, 
+            text=f"🎯 {self.event['name']}",
+            font=('Arial', 14, 'bold'),  # Larger font
+            fg='white',
+            bg='#e74c3c',
+            wraplength=950  # Smaller wrapping
         )
-        event_label.pack(pady=(0, 15))
+        event_label.pack()
         
+        # Choices section
         choices = self.event.get('choices', [])
         if choices:
-            for i, choice in enumerate(choices[:8]):
-                choice_text = self._format_choice(choice, i + 1)
-                choice_label = tk.Label(
-                    main_frame,
-                    text=choice_text,
-                    font=('Arial', 10),
-                    fg='#ecf0f1',
-                    bg='#2c3e50',
-                    wraplength=460,
-                    justify='left'
-                )
-                choice_label.pack(anchor='w', pady=2)
+            choices_label = tk.Label(
+                scrollable_frame,
+                text="📋 Available Choices:",
+                font=('Arial', 12, 'bold'),  # Larger font
+                fg='#ecf0f1',
+                bg='#2c3e50'
+            )
+            choices_label.pack(anchor='w', pady=(0, 10))  # Less spacing
+            
+            # Create choices container
+            choices_container = tk.Frame(scrollable_frame, bg='#2c3e50')
+            choices_container.pack(fill='x', expand=True)
+            
+            for i, choice in enumerate(choices):
+                # Define vibrant colors for different options
+                colors = [
+                    '#3498db',  # Blue
+                    '#e67e22',  # Orange  
+                    '#9b59b6',  # Purple
+                    '#f1c40f',  # Yellow
+                    '#1abc9c',  # Turquoise
+                    '#e74c3c',  # Red
+                    '#2ecc71',  # Green
+                    '#f39c12'   # Gold
+                ]
+                bg_color = colors[i % len(colors)]
+                
+                # Create choice frame with rounded corners effect
+                choice_frame = tk.Frame(choices_container, bg=bg_color, padx=15, pady=10, relief='raised', bd=2)  # Less padding
+                choice_frame.pack(fill='x', pady=5)  # Less spacing
+                
+                # Create choice text label
+                if isinstance(choice, dict):
+                    text = choice.get('choice', str(choice))
+                    effect = choice.get('effect', '') or choice.get('effects', '')
+                    
+                    # Choice text
+                    choice_label = tk.Label(
+                        choice_frame,
+                        text=f"{i+1}. {text}",
+                        font=('Arial', 11, 'bold'),  # Larger font
+                        fg='white',
+                        bg=bg_color,
+                        wraplength=950,  # Smaller wrapping
+                        justify='left',
+                        anchor='w'
+                    )
+                    choice_label.pack(anchor='w', pady=(0, 8))  # Less spacing
+                    
+                    # Effect text (if exists)
+                    if effect:
+                        effect_label = tk.Label(
+                            choice_frame,
+                            text=f"   💡 Effect: {effect}",
+                            font=('Arial', 10),  # Larger font
+                            fg='white',
+                            bg=bg_color,
+                            wraplength=950,  # Smaller wrapping
+                            justify='left',
+                            anchor='w'
+                        )
+                        effect_label.pack(anchor='w')
+                else:
+                    # Simple string choice
+                    choice_label = tk.Label(
+                        choice_frame,
+                        text=f"{i+1}. {choice}",
+                        font=('Arial', 11, 'bold'),  # Larger font
+                        fg='white',
+                        bg=bg_color,
+                        wraplength=950,  # Smaller wrapping
+                        justify='left',
+                        anchor='w'
+                    )
+                    choice_label.pack(anchor='w')
         
+        # Close button with better styling
         close_btn = tk.Button(
-            main_frame,
-            text='Close',
+            scrollable_frame,
+            text='✖ Close',
             command=self.close,
             bg='#34495e',
             fg='white',
-            font=('Arial', 10),
-            padx=20
+            font=('Arial', 10, 'bold'),  # Larger font
+            padx=25,  # Less padding
+            pady=5,   # Less padding
+            relief='raised',
+            bd=2
         )
-        close_btn.pack(pady=(15, 0))
+        close_btn.pack(pady=(20, 0))  # Less spacing
+        
+        # Pack canvas and scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Bind mouse wheel to canvas with proper error handling
+        def _on_mousewheel(event):
+            try:
+                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            except tk.TclError:
+                # Canvas might be destroyed, ignore the error
+                pass
+        
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        
+        # Unbind when popup is closed
+        def _on_closing():
+            try:
+                canvas.unbind_all("<MouseWheel>")
+            except:
+                pass
+            self.close()
+        
+        self.popup.protocol("WM_DELETE_WINDOW", _on_closing)
     
     def _format_choice(self, choice, index: int) -> str:
         if isinstance(choice, dict):
             text = choice.get('choice', str(choice))
-            effect = choice.get('effect', '')
+            # Check for both 'effect' and 'effects' keys
+            effect = choice.get('effect', '') or choice.get('effects', '')
             if effect:
-                return f"{index}. {text}\n   → {effect}"
+                # Format with better spacing and wrapping
+                return f"{index}. {text}\n\n   💡 Effect: {effect}"
             return f"{index}. {text}"
         return f"{index}. {choice}"
     
@@ -839,21 +1393,58 @@ class EventScannerApp:
     
     def setup_gui(self):
         self.root.title("Uma Event Scanner")
-        self.root.geometry("600x500")
-        self.root.minsize(500, 400)
+        self.root.geometry("800x700")  # Larger size to prevent label cutting
+        self.root.minsize(700, 600)
+        
+        # Set modern theme colors
+        style = ttk.Style()
+        style.theme_use('clam')  # Use clam theme for better appearance
+        
+        # Configure custom colors
+        self.root.configure(bg='#f0f0f0')
         
         self.position_window()
         
-        self.notebook = ttk.Notebook(self.root)
-        self.notebook.pack(fill='both', expand=True, padx=10, pady=10)
+        # Create main container
+        main_container = tk.Frame(self.root, bg='#f0f0f0')
+        main_container.pack(fill='both', expand=True, padx=15, pady=15)  # More padding
+        
+        # Title bar
+        title_frame = tk.Frame(main_container, bg='#2c3e50', height=60)  # Slightly shorter
+        title_frame.pack(fill='x', pady=(0, 15))  # More spacing
+        title_frame.pack_propagate(False)
+        
+        title_label = tk.Label(
+            title_frame,
+            text="🎯 Uma Event Scanner",
+            font=('Arial', 16, 'bold'),  # Slightly smaller font
+            fg='white',
+            bg='#2c3e50'
+        )
+        title_label.pack(expand=True)
+        
+        self.notebook = ttk.Notebook(main_container)
+        self.notebook.pack(fill='both', expand=True, pady=(0, 15))  # More spacing
         
         self.create_scanner_tab()
         self.create_history_tab()
         self.create_settings_tab()
         
+        # Status bar with better styling
+        status_frame = tk.Frame(main_container, bg='#34495e', height=30)  # Slightly shorter
+        status_frame.pack(fill='x')
+        status_frame.pack_propagate(False)
+        
         self.status_var = tk.StringVar(value="Ready")
-        self.status_bar = ttk.Label(self.root, textvariable=self.status_var, relief='sunken')
-        self.status_bar.pack(side='bottom', fill='x')
+        self.status_bar = tk.Label(
+            status_frame, 
+            textvariable=self.status_var, 
+            relief='flat',
+            bg='#34495e',
+            fg='white',
+            font=('Arial', 9)  # Slightly smaller font
+        )
+        self.status_bar.pack(side='left', padx=15, pady=6)  # Less padding
         
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
     
@@ -865,51 +1456,150 @@ class EventScannerApp:
         # DEBUG: Print screen width/height
         print(f"[DEBUG] screen_width={screen_width}, screen_height={screen_height}")
         
-        # Thử set x = screen_width - 600 (không padding)
-        x = screen_width - 600
+        # Position window on the right side with new size
+        x = screen_width - 800  # Adjusted for new width
         y = 10
         print(f"[DEBUG] Calculated x={x}, y={y}")
-        geometry_str = f"600x500+{x}+{y}"
+        geometry_str = f"800x700+{x}+{y}"  # Updated size
         print(f"[DEBUG] geometry: {geometry_str}")
         self.root.geometry(geometry_str)
         self.root.attributes('-topmost', True)
-        # Ép lại geometry sau 100ms để chắc chắn đúng vị trí
+        # Force geometry after 100ms to ensure correct position
         self.root.after(100, lambda: self.root.geometry(geometry_str))
 
     def create_scanner_tab(self):
         tab = ttk.Frame(self.notebook)
         self.notebook.add(tab, text="Scanner")
         
-        # Region selection
-        region_frame = ttk.LabelFrame(tab, text="Scan Region", padding=10)
-        region_frame.pack(fill='x', padx=10, pady=5)
+        # Region selection with better styling
+        region_frame = tk.LabelFrame(tab, text="📐 Scan Region", font=('Arial', 10, 'bold'))
+        region_frame.pack(fill='x', padx=15, pady=10)
         
-        self.region_label = ttk.Label(region_frame, text=self.get_region_text())
-        self.region_label.pack(side='left', padx=5)
+        region_inner = tk.Frame(region_frame, bg='#ecf0f1', padx=15, pady=10)
+        region_inner.pack(fill='x')
         
-        ttk.Button(region_frame, text="Select Region", command=self.select_region).pack(side='left', padx=5)
-        ttk.Button(region_frame, text="Preview", command=self.preview_region).pack(side='left', padx=5)
+        self.region_label = tk.Label(
+            region_inner, 
+            text=self.get_region_text(),
+            font=('Arial', 10),
+            bg='#ecf0f1',
+            fg='#2c3e50'
+        )
+        self.region_label.pack(side='left', padx=(0, 10))
         
-        # Controls
-        control_frame = ttk.Frame(tab)
-        control_frame.pack(fill='x', padx=10, pady=5)
+        # Buttons with modern styling
+        select_btn = tk.Button(
+            region_inner, 
+            text="🎯 Select Region", 
+            command=self.select_region,
+            bg='#3498db',
+            fg='white',
+            font=('Arial', 9, 'bold'),
+            padx=15,
+            pady=5,
+            relief='flat',
+            bd=0
+        )
+        select_btn.pack(side='left', padx=5)
         
-        self.start_btn = ttk.Button(control_frame, text="Start Scanning", command=self.start_scanning)
+        preview_btn = tk.Button(
+            region_inner, 
+            text="👁️ Preview", 
+            command=self.preview_region,
+            bg='#e67e22',
+            fg='white',
+            font=('Arial', 9, 'bold'),
+            padx=15,
+            pady=5,
+            relief='flat',
+            bd=0
+        )
+        preview_btn.pack(side='left', padx=5)
+        
+        # Controls with better styling
+        control_frame = tk.LabelFrame(tab, text="🎮 Controls", font=('Arial', 10, 'bold'))
+        control_frame.pack(fill='x', padx=15, pady=10)
+        
+        control_inner = tk.Frame(control_frame, bg='#ecf0f1', padx=15, pady=10)
+        control_inner.pack(fill='x')
+        
+        self.start_btn = tk.Button(
+            control_inner, 
+            text="▶️ Start Scanning", 
+            command=self.start_scanning,
+            bg='#27ae60',
+            fg='white',
+            font=('Arial', 10, 'bold'),
+            padx=20,
+            pady=8,
+            relief='flat',
+            bd=0
+        )
         self.start_btn.pack(side='left', padx=5)
         
-        self.stop_btn = ttk.Button(control_frame, text="Stop", command=self.stop_scanning, state='disabled')
+        self.stop_btn = tk.Button(
+            control_inner, 
+            text="⏹️ Stop", 
+            command=self.stop_scanning,
+            state='disabled',
+            bg='#e74c3c',
+            fg='white',
+            font=('Arial', 10, 'bold'),
+            padx=20,
+            pady=8,
+            relief='flat',
+            bd=0
+        )
         self.stop_btn.pack(side='left', padx=5)
         
-        ttk.Button(control_frame, text="Test OCR", command=self.test_ocr).pack(side='left', padx=5)
+        test_btn = tk.Button(
+            control_inner, 
+            text="🔍 Test OCR", 
+            command=self.test_ocr,
+            bg='#9b59b6',
+            fg='white',
+            font=('Arial', 9, 'bold'),
+            padx=15,
+            pady=5,
+            relief='flat',
+            bd=0
+        )
+        test_btn.pack(side='left', padx=5)
         
-        # Results
-        result_frame = ttk.LabelFrame(tab, text="Results", padding=10)
-        result_frame.pack(fill='both', expand=True, padx=10, pady=5)
+        test_json_btn = tk.Button(
+            control_inner, 
+            text="📄 Test JSON", 
+            command=self.test_with_json_data,
+            bg='#f39c12',
+            fg='white',
+            font=('Arial', 9, 'bold'),
+            padx=15,
+            pady=5,
+            relief='flat',
+            bd=0
+        )
+        test_json_btn.pack(side='left', padx=5)
         
-        text_frame = ttk.Frame(result_frame)
+        # Results with better styling
+        result_frame = tk.LabelFrame(tab, text="📊 Results", font=('Arial', 10, 'bold'))
+        result_frame.pack(fill='both', expand=True, padx=15, pady=10)
+        
+        result_inner = tk.Frame(result_frame, bg='#ecf0f1')
+        result_inner.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        text_frame = tk.Frame(result_inner)
         text_frame.pack(fill='both', expand=True)
         
-        self.result_text = tk.Text(text_frame, height=15, state='disabled', font=('Consolas', 10))
+        self.result_text = tk.Text(
+            text_frame, 
+            height=15, 
+            state='disabled', 
+            font=('Consolas', 10),
+            bg='white',
+            fg='#2c3e50',
+            relief='flat',
+            bd=1
+        )
         scrollbar = ttk.Scrollbar(text_frame, orient='vertical', command=self.result_text.yview)
         self.result_text.configure(yscrollcommand=scrollbar.set)
         
@@ -920,21 +1610,66 @@ class EventScannerApp:
         tab = ttk.Frame(self.notebook)
         self.notebook.add(tab, text="History")
         
-        control_frame = ttk.Frame(tab)
-        control_frame.pack(fill='x', padx=10, pady=5)
+        # Controls with better styling
+        control_frame = tk.LabelFrame(tab, text="📋 History Controls", font=('Arial', 10, 'bold'))
+        control_frame.pack(fill='x', padx=15, pady=10)
         
-        ttk.Button(control_frame, text="Refresh", command=self.refresh_history).pack(side='left', padx=5)
-        ttk.Button(control_frame, text="Clear", command=self.clear_history).pack(side='left', padx=5)
+        control_inner = tk.Frame(control_frame, bg='#ecf0f1', padx=15, pady=10)
+        control_inner.pack(fill='x')
         
-        list_frame = ttk.Frame(tab)
-        list_frame.pack(fill='both', expand=True, padx=10, pady=5)
+        refresh_btn = tk.Button(
+            control_inner, 
+            text="🔄 Refresh", 
+            command=self.refresh_history,
+            bg='#3498db',
+            fg='white',
+            font=('Arial', 9, 'bold'),
+            padx=15,
+            pady=5,
+            relief='flat',
+            bd=0
+        )
+        refresh_btn.pack(side='left', padx=5)
         
-        self.history_listbox = tk.Listbox(list_frame, font=('Arial', 10))
-        hist_scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.history_listbox.yview)
+        clear_btn = tk.Button(
+            control_inner, 
+            text="🗑️ Clear", 
+            command=self.clear_history,
+            bg='#e74c3c',
+            fg='white',
+            font=('Arial', 9, 'bold'),
+            padx=15,
+            pady=5,
+            relief='flat',
+            bd=0
+        )
+        clear_btn.pack(side='left', padx=5)
+        
+        # History list with better styling
+        list_frame = tk.LabelFrame(tab, text="📜 Event History", font=('Arial', 10, 'bold'))
+        list_frame.pack(fill='both', expand=True, padx=15, pady=10)
+        
+        list_inner = tk.Frame(list_frame, bg='#ecf0f1')
+        list_inner.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        self.history_listbox = tk.Listbox(
+            list_inner, 
+            font=('Arial', 10),
+            bg='white',
+            fg='#2c3e50',
+            relief='flat',
+            bd=1,
+            selectmode='single',
+            activestyle='none'
+        )
+        hist_scrollbar = ttk.Scrollbar(list_inner, orient='vertical', command=self.history_listbox.yview)
         self.history_listbox.configure(yscrollcommand=hist_scrollbar.set)
         
         self.history_listbox.pack(side='left', fill='both', expand=True)
         hist_scrollbar.pack(side='right', fill='y')
+        
+        # Bind double-click to show event details
+        self.history_listbox.bind('<Double-Button-1>', self.show_history_event)
         
         self.refresh_history()
     
@@ -942,20 +1677,67 @@ class EventScannerApp:
         tab = ttk.Frame(self.notebook)
         self.notebook.add(tab, text="Settings")
         
-        scanner_frame = ttk.LabelFrame(tab, text="Scanner Settings", padding=10)
-        scanner_frame.pack(fill='x', padx=10, pady=5)
+        # Scanner settings with better styling
+        scanner_frame = tk.LabelFrame(tab, text="⚙️ Scanner Settings", font=('Arial', 10, 'bold'))
+        scanner_frame.pack(fill='x', padx=15, pady=10)
         
-        ttk.Label(scanner_frame, text="Scan Interval (seconds):").grid(row=0, column=0, sticky='w', pady=5)
+        scanner_inner = tk.Frame(scanner_frame, bg='#ecf0f1', padx=15, pady=15)
+        scanner_inner.pack(fill='x')
+        
+        # Scan interval setting
+        interval_label = tk.Label(
+            scanner_inner, 
+            text="⏱️ Scan Interval (seconds):",
+            font=('Arial', 10),
+            bg='#ecf0f1',
+            fg='#2c3e50'
+        )
+        interval_label.grid(row=0, column=0, sticky='w', pady=5)
+        
         self.interval_var = tk.DoubleVar(value=self.settings.get('scan_interval', 2.0))
-        ttk.Entry(scanner_frame, textvariable=self.interval_var, width=10).grid(row=0, column=1, padx=5)
+        interval_entry = tk.Entry(
+            scanner_inner, 
+            textvariable=self.interval_var, 
+            width=10,
+            font=('Arial', 10),
+            relief='flat',
+            bd=1
+        )
+        interval_entry.grid(row=0, column=1, padx=10, pady=5)
         
-        popup_frame = ttk.LabelFrame(tab, text="Popup Settings", padding=10)
-        popup_frame.pack(fill='x', padx=10, pady=5)
+        # Popup settings with better styling
+        popup_frame = tk.LabelFrame(tab, text="🔔 Popup Settings", font=('Arial', 10, 'bold'))
+        popup_frame.pack(fill='x', padx=15, pady=10)
+        
+        popup_inner = tk.Frame(popup_frame, bg='#ecf0f1', padx=15, pady=15)
+        popup_inner.pack(fill='x')
         
         self.auto_close_var = tk.BooleanVar(value=self.settings.get('auto_close_popup', True))
-        ttk.Checkbutton(popup_frame, text="Auto-close popups", variable=self.auto_close_var).grid(row=0, column=0, sticky='w', pady=5)
+        auto_close_check = tk.Checkbutton(
+            popup_inner, 
+            text="🔄 Auto-close popups",
+            variable=self.auto_close_var,
+            font=('Arial', 10),
+            bg='#ecf0f1',
+            fg='#2c3e50',
+            selectcolor='#3498db'
+        )
+        auto_close_check.grid(row=0, column=0, sticky='w', pady=5)
         
-        ttk.Button(tab, text="Save Settings", command=self.save_settings).pack(pady=20)
+        # Save button with better styling
+        save_btn = tk.Button(
+            tab, 
+            text="💾 Save Settings", 
+            command=self.save_settings,
+            bg='#27ae60',
+            fg='white',
+            font=('Arial', 11, 'bold'),
+            padx=30,
+            pady=10,
+            relief='flat',
+            bd=0
+        )
+        save_btn.pack(pady=20)
     
     def get_region_text(self) -> str:
         if self.scan_region:
@@ -1108,7 +1890,31 @@ class EventScannerApp:
         auto_close = bool(self.settings.get('auto_close_popup', True))
         timeout = int(self.settings.get('popup_timeout', 8) or 8)
         
+        # Create popup and ensure it's properly displayed
         self.current_popup = EventPopup(self.root, event, auto_close, timeout)
+        
+        # Additional steps to ensure popup is on top
+        try:
+            # Force the popup to be visible and on top
+            self.current_popup.popup.update_idletasks()
+            self.current_popup.popup.lift()
+            self.current_popup.popup.attributes('-topmost', True)
+            self.current_popup.popup.focus_force()
+            
+            # Schedule another check after a short delay
+            self.root.after(200, self._ensure_popup_visibility)
+        except Exception as e:
+            Logger.error(f"Error ensuring popup visibility: {e}")
+    
+    def _ensure_popup_visibility(self):
+        """Additional check to ensure popup is visible and on top"""
+        if self.current_popup:
+            try:
+                self.current_popup.popup.lift()
+                self.current_popup.popup.attributes('-topmost', True)
+                self.current_popup.popup.focus_force()
+            except Exception as e:
+                Logger.error(f"Error in popup visibility check: {e}")
     
     def test_ocr(self):
         if not self.scan_region:
@@ -1146,36 +1952,92 @@ class EventScannerApp:
             else:
                 texts = texts_original
                 
-                if texts:
-                    self.update_results(texts)
-                    result = '\n'.join(texts)
-                    
-                    # Check if detected text looks like game text
-                    is_valid_game_text = self._check_if_game_text(texts)
-                    
-                    if is_valid_game_text:
-                        messagebox.showinfo("OCR Test Results", f"✅ Detected game text:\n\n{result}")
-                    else:
-                        warning_msg = f"⚠️ Text may not be from game:\n\n{result}\n\n"
-                        warning_msg += "🎯 Tips:\n"
-                        warning_msg += "• Make sure region contains ONLY the event text\n"
-                        warning_msg += "• Avoid UI elements, buttons, or background\n"
-                        warning_msg += "• Ensure text is clear and readable\n"
-                        warning_msg += "• Game should be in English language"
-                        messagebox.showwarning("OCR Test Results", warning_msg)
+            if texts:
+                self.update_results(texts)
+                result = '\n'.join(texts)
+                
+                # Check if detected text looks like game text
+                is_valid_game_text = self._check_if_game_text(texts)
+                
+                if is_valid_game_text:
+                    messagebox.showinfo("OCR Test Results", f"✅ Detected game text:\n\n{result}")
                 else:
-                    failure_msg = "❌ No text detected!\n\n"
-                    failure_msg += f"Region: {x},{y} (size: {w}x{h})\n\n"
-                    failure_msg += "💡 Try:\n"
-                    failure_msg += "• Select a smaller region focused on just the text\n"
-                    failure_msg += "• Ensure good contrast (dark text on light background)\n"
-                    failure_msg += "• Make sure game is in English\n"
-                    failure_msg += f"• Recommended size for single line: ~300x50"
-                    messagebox.showinfo("OCR Test Results", failure_msg)
+                    warning_msg = f"⚠️ Text may not be from game:\n\n{result}\n\n"
+                    warning_msg += "🎯 Tips:\n"
+                    warning_msg += "• Make sure region contains ONLY the event text\n"
+                    warning_msg += "• Avoid UI elements, buttons, or background\n"
+                    warning_msg += "• Ensure text is clear and readable\n"
+                    warning_msg += "• Game should be in English language"
+                    messagebox.showwarning("OCR Test Results", warning_msg)
+            else:
+                failure_msg = "❌ No text detected!\n\n"
+                failure_msg += f"Region: {x},{y} (size: {w}x{h})\n\n"
+                failure_msg += "💡 Try:\n"
+                failure_msg += "• Select a smaller region focused on just the text\n"
+                failure_msg += "• Ensure good contrast (dark text on light background)\n"
+                failure_msg += "• Make sure game is in English\n"
+                failure_msg += f"• Recommended size for single line: ~300x50"
+                messagebox.showinfo("OCR Test Results", failure_msg)
             
         except Exception as e:
             messagebox.showerror("Error", f"OCR test failed: {e}")
             Logger.error(f"OCR test error: {e}")
+    
+    def test_with_json_data(self):
+        """Test popup with sample JSON data to debug display issues"""
+        # Create a test event with many choices
+        test_event = {
+            'name': 'Test Event with Many Choices - This is a very long event name to test wrapping and display issues',
+            'choices': [
+                {
+                    'choice': 'First Choice - This is a very long choice text to test wrapping and display properly',
+                    'effects': 'Speed +10, Stamina +5, Power +3, Guts +2, Wisdom +1'
+                },
+                {
+                    'choice': 'Second Choice - Another long choice with different effects',
+                    'effects': 'Power +15, Speed +5, Stamina +10'
+                },
+                {
+                    'choice': 'Third Choice - This choice has a very long effect description that should wrap properly',
+                    'effects': 'Guts +8, Wisdom +3, Speed +2, Power +2, Stamina +2'
+                },
+                {
+                    'choice': 'Fourth Choice - Balanced approach',
+                    'effects': 'Speed +5, Power +5, Stamina +5, Guts +5, Wisdom +5'
+                },
+                {
+                    'choice': 'Fifth Choice - This choice has a very long effect description that should wrap properly and show multiple lines',
+                    'effects': 'Speed +3, Power +3, Stamina +3, Guts +3, Wisdom +3, Special bonus: Get Hot Topic status'
+                },
+                {
+                    'choice': 'Sixth Choice - Special effect',
+                    'effects': 'Special effect: Gain unique skill'
+                },
+                {
+                    'choice': 'Seventh Choice - Another special effect',
+                    'effects': 'Another special effect with long description'
+                },
+                {
+                    'choice': 'Eighth Choice - Final choice',
+                    'effects': 'Yet another effect with multiple bonuses'
+                }
+            ]
+        }
+        
+        # Show test popup
+        auto_close = False
+        self.current_popup = EventPopup(self.root, test_event, auto_close, 0)
+        
+        # Ensure test popup is also properly displayed
+        try:
+            self.current_popup.popup.update_idletasks()
+            self.current_popup.popup.lift()
+            self.current_popup.popup.attributes('-topmost', True)
+            self.current_popup.popup.focus_force()
+        except Exception as e:
+            Logger.error(f"Error ensuring test popup visibility: {e}")
+        
+        Logger.info("Showing test popup with JSON data")
     
     def _check_if_game_text(self, texts: List[str]) -> bool:
         """Check if detected texts look like actual game text"""
@@ -1230,6 +2092,32 @@ class EventScannerApp:
         if messagebox.askyesno("Confirm", "Clear all history?"):
             self.history.clear()
             self.refresh_history()
+    
+    def show_history_event(self, event):
+        """Show event details when double-clicking on history item"""
+        selection = self.history_listbox.curselection()
+        if not selection:
+            return
+        
+        index = selection[0]
+        history_entries = self.history.get_history()
+        
+        if index < len(history_entries):
+            entry = history_entries[index]
+            event_data = entry['event']
+            
+            # Show event popup
+            auto_close = False  # Don't auto-close for history view
+            self.current_popup = EventPopup(self.root, event_data, auto_close, 0)
+            
+            # Ensure history popup is also properly displayed
+            try:
+                self.current_popup.popup.update_idletasks()
+                self.current_popup.popup.lift()
+                self.current_popup.popup.attributes('-topmost', True)
+                self.current_popup.popup.focus_force()
+            except Exception as e:
+                Logger.error(f"Error ensuring history popup visibility: {e}")
     
     def save_settings(self):
         self.settings.set('scan_interval', self.interval_var.get())

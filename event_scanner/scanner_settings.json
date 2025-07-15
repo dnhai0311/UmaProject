@@ -3,13 +3,13 @@
   "confidence_threshold": 0.5,
   "theme": "dark",
   "last_region": [
-    238,
-    195,
-    379,
-    51
+    484,
+    449,
+    235,
+    76
   ],
   "ocr_language": "vie+eng+jpn",
-  "window_position": "600x500+1320+10",
+  "window_position": "800x700+1120+10",
   "auto_close_popup": true,
   "popup_timeout": 8,
   "auto_save_history": true,

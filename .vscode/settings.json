@@ -1,6 +1,17 @@
 {
-  "python.defaultInterpreterPath": "C:\\Users\\Lolicious\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+  "python.defaultInterpreterPath": "C:\\Users\\Lolicious\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\\python.exe",
   "python.analysis.extraPaths": [],
   "python.analysis.autoImportCompletions": true,
-  "python.analysis.typeCheckingMode": "basic"
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.stubPath": "",
+  "python.analysis.include": [
+    "**/*.py"
+  ],
+  "python.analysis.exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*"
+  ]
 } 
