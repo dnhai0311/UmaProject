@@ -1,27 +1,15 @@
 {
   "scan_interval": 2.0,
-  "confidence_threshold": 0.5,
-  "theme": "dark",
+  "confidence_threshold": 0.3,
+  "theme": "light",
   "last_region": [
+    819,
     484,
-    449,
-    235,
-    76
+    158,
+    43
   ],
-  "ocr_language": "vie+eng+jpn",
+  "ocr_language": "eng",
   "window_position": "800x700+1120+10",
   "auto_close_popup": true,
-  "popup_timeout": 8,
-  "auto_save_history": true,
-  "max_history_items": 50,
-  "hotkey_start": "f9",
-  "hotkey_stop": "f10",
-  "hotkey_capture": "f11",
-  "last_scan_region": [
-    0,
-    0,
-    800,
-    600
-  ],
-  "ocr_config": "--oem 3 --psm 6"
+  "popup_timeout": 8
 }
