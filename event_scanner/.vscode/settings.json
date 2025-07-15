@@ -1,0 +1,35 @@
+{
+  "python.defaultInterpreterPath": "C:\\Users\\Lolicious\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\\python.exe",
+  "python.analysis.extraPaths": [],
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.stubPath": "",
+  "python.analysis.include": [
+    "**/*.py"
+  ],
+  "python.analysis.exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*"
+  ],
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": false,
+  "python.linting.flake8Enabled": false,
+  "python.linting.mypyEnabled": false,
+  "python.linting.pycodestyleEnabled": false,
+  "python.linting.pydocstyleEnabled": false,
+  "python.linting.prospectorEnabled": false,
+  "python.linting.pylamaEnabled": false,
+  "python.linting.pylspEnabled": false,
+  "python.linting.ruffEnabled": false,
+  "python.linting.ruffPath": "",
+  "python.linting.ruffArgs": [],
+  "python.linting.ruffSeverity": {
+    "E": "Error",
+    "W": "Warning",
+    "F": "Error",
+    "I": "Information"
+  }
+} 
