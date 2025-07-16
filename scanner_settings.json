@@ -1,12 +1,12 @@
 {
-  "scan_interval": 2.0,
+  "scan_interval": 0.5,
   "confidence_threshold": 0.3,
   "theme": "light",
   "last_region": [
-    217,
-    191,
-    408,
-    56
+    614,
+    398,
+    490,
+    175
   ],
   "ocr_language": "eng",
   "window_position": "800x700+1100+20",
