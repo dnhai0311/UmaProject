@@ -64,48 +64,26 @@ class EventPopup(QDialog):
         self.setFocus()
     
     def positionBelowMainWindow(self) -> None:
-        """Position the popup below the main window"""
+        """Position the popup at top-right and stretch height."""
         screen = QApplication.primaryScreen()
         if not screen:
             return
             
-        # Get screen dimensions
         screen_geometry = screen.availableGeometry()
         
-        # Find main window position
-        main_window_pos = QPoint(0, 0)
-        main_window_size = QSize(800, 600)  # Default size
-        
-        # If we have a parent window, use its position
-        if self.parent_window:
-            try:
-                main_window_pos = self.parent_window.pos()
-                main_window_size = self.parent_window.size()
-            except:
-                Logger.error("Could not get parent window position")
-        
-        # Adjust our size based on content
-        self_size = self.sizeHint()
-        self.resize(main_window_size.width(), self_size.height())
-        
-        # Position at the bottom of the main window or screen
-        x_pos = main_window_pos.x()
-        y_pos = main_window_pos.y() + main_window_size.height() - 20  # Overlap slightly for better visibility
-        
-        # Check if it would go off screen bottom
-        if y_pos + self_size.height() > screen_geometry.height():
-            # If it would go off bottom, position at screen bottom
-            y_pos = screen_geometry.height() - self_size.height() - 20  # 20px margin
-        
-        # Ensure x position is on screen
-        if x_pos < 0:
-            x_pos = 0
-        if x_pos + self_size.width() > screen_geometry.width():
-            x_pos = screen_geometry.width() - self_size.width()
-            
-        # Set position
+        # Desired size
+        desired_width = 800  # wider for readability (was 600)
+        desired_height = screen_geometry.height() - 40  # leave small margin
+
+        # Resize window
+        self.resize(desired_width, desired_height)
+
+        # Position: top-right with 20px margin
+        x_pos = screen_geometry.width() - desired_width - 20
+        y_pos = 20
+
         self.move(x_pos, y_pos)
-        Logger.info(f"Positioned popup at {x_pos},{y_pos} (below main window)")
+        Logger.info(f"Positioned popup at {x_pos},{y_pos} (top-right)")
     
     def setupUi(self) -> None:
         """Setup the UI components"""
@@ -169,11 +147,18 @@ class EventPopup(QDialog):
                                         f"border-radius: 5px; padding: 15px;")
                 
                 choice_layout = QVBoxLayout(choice_frame)
-                choice_layout.setSpacing(10)
+                choice_layout.setSpacing(0)
                 
                 if isinstance(choice, dict):
                     text = choice.get('choice', str(choice))
-                    effect = choice.get('effect', '') or choice.get('effects', '')
+                    segs = choice.get('effects', [])
+                    html_lines = []
+                    for seg in segs:
+                        if seg.get('kind') in ('divider_or','random_header'):
+                            html_lines.append(f"<b>{seg.get('raw','')}</b>")
+                        else:
+                            html_lines.append(seg.get('raw',''))
+                    effect = '<br>'.join(html_lines)
                     
                     # Choice text - INCREASED FONT SIZE
                     choice_text = QLabel(f"{i+1}. {text}")
@@ -182,9 +167,11 @@ class EventPopup(QDialog):
                     choice_text.setWordWrap(True)
                     choice_layout.addWidget(choice_text)
                     
-                    # Effect text (if exists) - INCREASED FONT SIZE
+                    # Effect text (if exists) - INCREASED FONT SIZE (remove 'Effect:')
                     if effect:
-                        effect_text = QLabel(f"💡 Effect: {effect}")
+                        effect_text = QLabel()
+                        effect_text.setTextFormat(Qt.TextFormat.RichText)
+                        effect_text.setText(effect)
                         effect_text.setStyleSheet("color: white;")
                         effect_text.setFont(QFont("Arial", 13))  # Increased from 10 to 13
                         effect_text.setWordWrap(True)
@@ -213,7 +200,17 @@ class EventPopup(QDialog):
                 
                 effect_layout = QVBoxLayout(effect_frame)
                 
-                effect_label = QLabel(f"💡 Effect: {effect}")
+                # For no-choice effect list
+                segs_nc = self.event_data.get('effects', [])
+                html_lines_nc = []
+                for seg in segs_nc:
+                    if seg.get('kind') in ('divider_or','random_header'):
+                        html_lines_nc.append(f"<b>{seg.get('raw','')}</b>")
+                    else:
+                        html_lines_nc.append(seg.get('raw',''))
+                effect_label = QLabel()
+                effect_label.setTextFormat(Qt.TextFormat.RichText)
+                effect_label.setText('<br>'.join(html_lines_nc))
                 effect_label.setStyleSheet("color: white;")
                 effect_label.setFont(QFont("Arial", 13))  # Increased from 10 to 13
                 effect_label.setWordWrap(True)
@@ -264,24 +261,23 @@ class EventPopup(QDialog):
         """Custom close method to ensure proper cleanup"""
         if self.close_requested:
             return
-            
+        
         Logger.debug("Popup close requested")
         self.close_requested = True
-        
-        # Hide first for smoother transition
-        self.hide()
-        
-        # Close the window
-        self.close()
-        
-        # If we have a parent, make sure it gets proper focus
-        if self.parent_window:
+
+        # Notify parent window immediately so scan loop skips redisplay
+        if self.parent_window and hasattr(self.parent_window, 'dismissed_event_name'):
             try:
-                self.parent_window.activateWindow()
-                self.parent_window.raise_()
-                QApplication.processEvents()
-            except:
+                self.parent_window.dismissed_event_name = self.event_data.get('name')
+            except Exception:
                 pass
+
+        # Use accept() to reliably finish the dialog and emit finished signal
+        self.accept()
+        
+        # If we have a parent, restore focus after a short delay
+        if self.parent_window:
+            QTimer.singleShot(100, self.restore_parent_focus)
     
     def closeEvent(self, event):
         """Override close event to ensure proper closing"""
@@ -349,15 +345,28 @@ if __name__ == '__main__':
         'choices': [
             {
                 'choice': 'First Choice - This is a very long choice text to test wrapping and display properly',
-                'effect': 'Speed +10, Stamina +5, Power +3, Guts +2, Wisdom +1'
+                'effects': [
+                    {'kind': 'text', 'raw': 'Speed +10'},
+                    {'kind': 'text', 'raw': 'Stamina +5'},
+                    {'kind': 'text', 'raw': 'Power +3'},
+                    {'kind': 'text', 'raw': 'Guts +2'},
+                    {'kind': 'text', 'raw': 'Wisdom +1'}
+                ]
             },
             {
                 'choice': 'Second Choice - Another long choice with different effects',
-                'effect': 'Power +15, Speed +5, Stamina +10'
+                'effects': [
+                    {'kind': 'text', 'raw': 'Power +15'},
+                    {'kind': 'text', 'raw': 'Speed +5'},
+                    {'kind': 'text', 'raw': 'Stamina +10'}
+                ]
             },
             {
                 'choice': 'Third Choice - Yet another choice option',
-                'effect': 'Guts +8, Wisdom +3'
+                'effects': [
+                    {'kind': 'text', 'raw': 'Guts +8'},
+                    {'kind': 'text', 'raw': 'Wisdom +3'}
+                ]
             }
         ]
     }

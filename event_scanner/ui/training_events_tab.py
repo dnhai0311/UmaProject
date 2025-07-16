@@ -347,9 +347,16 @@ class TrainingEventsTab(QWidget):
                     display_text += "  Lựa chọn:\n"
                     for j, choice in enumerate(choices, 1):
                         display_text += f"    {j}. {choice.get('choice', 'Không có mô tả')}\n"
-                        effect = choice.get('effect', '').strip()
-                        if effect:
-                            for line in effect.split('\n'):
+                        raw_lines = []
+                        segs = choice.get('effects', [])
+                        if isinstance(segs, list):
+                            for seg in segs:
+                                if seg.get('kind') == 'divider_or':
+                                    raw_lines.append('or')
+                                else:
+                                    raw_lines.append(seg.get('raw', ''))
+                        for line in raw_lines:
+                            if line.strip():
                                 display_text += f"       → {line.strip()}\n"
                 display_text += "-"*30 + "\n"
                 

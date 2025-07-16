@@ -9,10 +9,6 @@ import re
 from typing import List, Dict, Optional
 from event_scanner.utils import Logger
 
-# AI Event Detector removed from project
-    AI_AVAILABLE = False
-
-# Constants
 DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "..", "scrape", "data", "all_training_events.json")
 
 
@@ -25,8 +21,6 @@ class EventDatabase:
         
         # Initialize AI detector if available
         # AI functionality removed
-        if AI_AVAILABLE:
-            Logger.warning("AI functionality was removed; detector not initialized")
         
         self.load_events()
     
@@ -269,56 +263,3 @@ class EventDatabase:
     def reload_events(self):
         """Reload events from file"""
         self.load_events() 
-
-    def detect_event_with_ai(self, image) -> Optional[Dict]:
-        """Detect event using AI if available"""
-        if not self.ai_detector or not AI_AVAILABLE:
-            return None
-        
-        try:
-            result = self.ai_detector.detect_event(image)
-            if result['detected'] and result['event_type']:
-                # Try to find the event in our database
-                event_name = result['event_type']
-                if event_name in self.events:
-                    Logger.info(f"AI detected event: {event_name} (confidence: {result['confidence']:.2f})")
-                    return self.events[event_name]
-                else:
-                    Logger.warning(f"AI detected unknown event: {event_name}")
-        except Exception as e:
-            Logger.error(f"AI detection failed: {e}")
-        
-        return None
-    
-    def collect_training_data(self, image, event_name: str, confidence: float = 1.0):
-        """Collect training data for AI learning"""
-        if not self.ai_detector or not AI_AVAILABLE:
-            return
-        
-        try:
-            self.ai_detector.collect_training_data(image, event_name, confidence)
-        except Exception as e:
-            Logger.error(f"Failed to collect training data: {e}")
-    
-    def train_ai_model(self, force_retrain: bool = False) -> bool:
-        """Train the AI model with collected data"""
-        if not self.ai_detector or not AI_AVAILABLE:
-            Logger.warning("AI Event Detector not available")
-            return False
-        
-        try:
-            return self.ai_detector.train_model(force_retrain)
-        except Exception as e:
-            Logger.error(f"AI training failed: {e}")
-            return False
-    
-    def get_ai_model_info(self) -> Dict:
-        """Get information about the AI model"""
-        if not self.ai_detector or not AI_AVAILABLE:
-            return {'available': False}
-        
-        try:
-            return self.ai_detector.get_model_info()
-        except Exception as e:
-            Logger.error(f"Failed to get AI model info: {e}")
-            return {'available': False, 'error': str(e)} 

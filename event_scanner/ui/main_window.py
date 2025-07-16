@@ -41,7 +41,8 @@ class MainWindow(QMainWindow):
     
     # Custom signals for thread-safe operations
     update_results_signal = pyqtSignal(list)
-    event_detected_signal = pyqtSignal(dict)
+    # Accepts either a dict (event data) or None to indicate no event
+    event_detected_signal = pyqtSignal(object)
     
     def __init__(self):
         super().__init__()
@@ -52,6 +53,8 @@ class MainWindow(QMainWindow):
         self.event_db = EventDatabase()
         # Track the last event name currently displayed to avoid reopening same popup
         self.last_event_name: Optional[str] = None
+        # Track an event name that the user manually dismissed so we don't immediately reopen it
+        self.dismissed_event_name: Optional[str] = None
         self.ocr_engine = None
         self.image_processor = ImageProcessor()
         
@@ -194,6 +197,27 @@ class MainWindow(QMainWindow):
             }
         """)
         region_layout.addWidget(preview_btn)
+
+        # Button to clear the last/dismissed event so pop-up can re-appear
+        clear_event_btn = QPushButton("🧹 Clear Event")
+        clear_event_btn.clicked.connect(self.clear_last_event)
+        clear_event_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #7f8c8d; 
+                color: white; 
+                font-weight: bold; 
+                padding: 5px 15px;
+                border-radius: 4px;
+            }
+            QPushButton:hover {
+                background-color: #707b7c;
+            }
+            QPushButton:pressed {
+                background-color: #5d6d7e;
+                border: 2px solid #4d565e;
+            }
+        """)
+        region_layout.addWidget(clear_event_btn)
         
         tab_layout.addWidget(region_group)
         
@@ -430,50 +454,6 @@ class MainWindow(QMainWindow):
         tab_layout.addStretch(1)
         
         self.tab_widget.addTab(tab, "Settings")
-    
-    def setup_ai_tab(self):
-        """Set up the AI tab"""
-        tab = QWidget()
-        tab_layout = QVBoxLayout(tab)
-        tab_layout.setSpacing(15)
-        
-        # AI Learning group
-        ai_group = QGroupBox("🤖 AI Learning")
-        ai_group.setFont(QFont("Arial", 10, QFont.Weight.Bold))
-        
-        ai_layout = QVBoxLayout(ai_group)
-        ai_layout.setContentsMargins(15, 15, 15, 15)
-        ai_layout.setSpacing(10)
-        
-        # AI Learning button
-        ai_learning_btn = QPushButton("🧠 Start AI Learning")
-        ai_learning_btn.clicked.connect(self.show_ai_learning_dialog)
-        ai_layout.addWidget(ai_learning_btn)
-        
-        # AI Model Info
-        model_info_label = QLabel("Current AI Model:")
-        self.ai_model_label = QLabel("Loading...")
-        
-        # Initialize AI model info
-        try:
-            model_info = self.event_db.get_ai_model_info()
-            if model_info.get('available', False):
-                num_classes = model_info.get('num_classes', 0)
-                training_samples = model_info.get('training_samples', 0)
-                self.ai_model_label.setText(f"{num_classes} classes, {training_samples} samples")
-            else:
-                self.ai_model_label.setText("Not available")
-        except Exception as e:
-            Logger.error(f"Failed to get AI model info: {e}")
-            self.ai_model_label.setText("Error loading")
-        
-        ai_layout.addWidget(model_info_label)
-        ai_layout.addWidget(self.ai_model_label)
-        
-        tab_layout.addWidget(ai_group)
-        tab_layout.addStretch(1)
-        
-        self.tab_widget.addTab(tab, "AI")
     
     def connect_signals(self):
         """Connect signals to slots"""
@@ -712,18 +692,31 @@ class MainWindow(QMainWindow):
                     # Check if the texts match an event
                     event = self.event_db.find_matching_event(texts)
                     if event:
-                        # Only emit if new or changed event
-                        if event['name'] != self.last_event_name:
+                        # Skip if this event was recently dismissed by the user
+                        if self.dismissed_event_name == event['name']:
+                            # Still update last_event_name to current event for future comparison
                             self.last_event_name = event['name']
-                        self.event_detected_signal.emit(event)
-                        # Add to history
-                        self.history.add_entry(event, texts)
-                        Logger.info(f"Event detected: {event['name']}")
+                            # Do not show the popup again until the event disappears
+                        else:
+                            # Only emit if new or changed event
+                            if event['name'] != self.last_event_name:
+                                self.last_event_name = event['name']
+                            self.event_detected_signal.emit(event)
+                            # Add to history
+                            self.history.add_entry(event, texts)
+                            Logger.info(f"Event detected: {event['name']}")
                     else:
-                        # No event detected this cycle – if previously showing, close popup
-                        if self.last_event_name is not None:
+                        # No matching event detected – close existing popup if needed
+                        if self.last_event_name is not None or self.current_popup:
                             self.last_event_name = None
+                            self.dismissed_event_name = None
                             self.event_detected_signal.emit(None)
+                else:
+                    # No OCR text at all – ensure popup is closed
+                    if self.last_event_name is not None or self.current_popup:
+                        self.last_event_name = None
+                        self.dismissed_event_name = None
+                        self.event_detected_signal.emit(None)
                 
                 # Get scan interval from settings
                 interval = float(self.settings.get('scan_interval', 2.0) or 2.0)
@@ -766,8 +759,8 @@ class MainWindow(QMainWindow):
                     self.ensure_popup_visible()
                     return
                 else:
-                self.current_popup.close()
-                self.current_popup = None
+                    self.current_popup.close()
+                    self.current_popup = None
             except Exception as e:
                 Logger.error(f"Failed to handle existing popup: {e}")
         
@@ -821,6 +814,8 @@ class MainWindow(QMainWindow):
     def on_popup_closed(self):
         """Handle popup being closed"""
         self.current_popup = None
+        # Remember which event was dismissed so we don't reopen it immediately
+        self.dismissed_event_name = self.last_event_name
         # Make sure main window gets focus back
         self.activateWindow()
         self.raise_()
@@ -1013,6 +1008,15 @@ class MainWindow(QMainWindow):
             self.current_popup.raise_()
             self.current_popup.activateWindow()
     
+    def clear_last_event(self):
+        """Clear the last event name and any dismissed event name, closing any current popup."""
+        self.last_event_name = None
+        self.dismissed_event_name = None
+        if self.current_popup:
+            self.current_popup.close()
+            self.current_popup = None
+        Logger.info("Last event name and dismissed event name cleared.")
+    
     def save_settings(self):
         """Save application settings"""
         self.settings.set('scan_interval', self.interval_spinbox.value())
@@ -1022,26 +1026,6 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "Success", "Settings saved!")
         else:
             QMessageBox.critical(self, "Error", "Failed to save settings")
-    
-    def show_ai_learning_dialog(self):
-        """Show the AI Learning Dialog"""
-        try:
-            # dialog = AILearningDialog(self.event_db, self) # Removed AI feature
-            # dialog.exec()
-            
-            # Update AI model info after dialog closes
-            model_info = self.event_db.get_ai_model_info()
-            if model_info.get('available', False):
-                num_classes = model_info.get('num_classes', 0)
-                training_samples = model_info.get('training_samples', 0)
-                self.ai_model_label.setText(f"Model: {num_classes} classes, {training_samples} samples")
-            else:
-                self.ai_model_label.setText("Model: Not available")
-                
-            Logger.info(f"AI Learning Dialog closed. Model info updated.")
-        except Exception as e:
-            Logger.error(f"Failed to show AI Learning Dialog: {e}")
-            self.ai_model_label.setText("Model: Error")
     
     def closeEvent(self, event):
         """Handle application closing"""
