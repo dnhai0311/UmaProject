@@ -3,13 +3,13 @@
   "confidence_threshold": 0.3,
   "theme": "light",
   "last_region": [
-    819,
-    484,
-    158,
-    43
+    234,
+    197,
+    382,
+    50
   ],
   "ocr_language": "eng",
-  "window_position": "800x700+1120+10",
+  "window_position": "800x700+1100+20",
   "auto_close_popup": true,
   "popup_timeout": 8
 }

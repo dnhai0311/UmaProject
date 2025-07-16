@@ -1,7 +1,6 @@
 @echo off
 echo ========================================
 echo Installing Python Dependencies for Uma Event Scanner
-echo Optimized for RTX 3050 Laptop GPU
 echo ========================================
 echo.
 
@@ -24,8 +23,7 @@ python -m pip install --upgrade pip
 echo.
 
 REM Install PyTorch with CUDA support for RTX 3050
-echo Installing PyTorch with CUDA support for RTX 3050...
-python -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+REM (PyTorch installation removed)
 echo.
 
 REM Install OpenCV
@@ -58,24 +56,35 @@ echo Installing additional OCR dependencies...
 python -m pip install easyocr[gpu]
 echo.
 
-REM Install pywin32 for Windows-specific features
-echo Installing pywin32 for Windows features...
-python -m pip install pywin32
-echo.
-
 REM Install psutil for system monitoring
 echo Installing psutil for system monitoring...
 python -m pip install psutil
 echo.
 
-REM Verify installations
+REM Install PyQt6
+echo Installing PyQt6...
+python -m pip install PyQt6
 echo.
-echo ========================================
+
+REM Install requests for HTTP requests
+echo Installing requests for HTTP requests...
+python -m pip install requests
+echo.
+
+REM Install pathlib (usually included with Python 3.4+, but just in case)
+echo Installing pathlib...
+python -m pip install pathlib
+echo.
+
+REM ========================================
+REM AI/ML Dependencies for Event Detection
+REM ========================================
+REM (AI/ML dependency installations removed)
+echo.
 echo Verifying installations...
 echo ========================================
 
-echo Testing PyTorch CUDA...
-python -c "import torch; print(f'PyTorch version: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}'); print(f'CUDA version: {torch.version.cuda}'); print(f'GPU count: {torch.cuda.device_count()}'); print(f'GPU name: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"None\"}')"
+REM (PyTorch test removed)
 echo.
 
 echo Testing OpenCV...
@@ -86,19 +95,37 @@ echo Testing EasyOCR...
 python -c "import easyocr; print('EasyOCR imported successfully')"
 echo.
 
+echo Testing requests...
+python -c "import requests; print('Requests imported successfully')"
+echo.
+
+REM (AI/ML library test removed)
+echo.
+
 echo Testing other libraries...
-python -c "import numpy as np; import PIL; import pyautogui; print('All core libraries imported successfully')"
+python -c "import numpy as np; import PIL; import pyautogui; import psutil; print('All core libraries imported successfully')"
 echo.
 
 echo ========================================
 echo Installation completed!
 echo ========================================
 echo.
+echo All dependencies installed successfully:
+echo ✓ OpenCV
+echo ✓ EasyOCR
+echo ✓ PyQt6
+echo ✓ NumPy
+echo ✓ PyAutoGUI, psutil
+echo ✓ Requests
+echo ✓ Pandas, Matplotlib, Seaborn
+echo.
+REM (AI Learning feature lines removed)
 echo If you see any errors above, please check:
 echo 1. Python version (should be 3.8+)
 echo 2. Internet connection
 echo 3. Sufficient disk space
 echo.
-echo To run the scanner, use: python event_scanner/event_scanner.py
+REM (AI test instruction removed)
+echo To run the scanner, use: python start_scanner.py
 echo.
 pause 

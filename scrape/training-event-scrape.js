@@ -2,6 +2,265 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
+// ===== MAPPING FUNCTIONS =====
+// Function to extract ID from imageUrl
+function extractIdFromImageUrl(imageUrl) {
+  if (!imageUrl) return null;
+  
+  // For characters: chara_stand_1023_102301.png -> 102301, hoặc chara_stand_1013_101301.png -> 1013_101301
+  if (imageUrl.includes('chara_stand_')) {
+    // Ưu tiên lấy cả cụm 2 số: chara_stand_1013_101301.png
+    const match = imageUrl.match(/chara_stand_(\d+_\d+)\.png/);
+    if (match) return match[1];
+    // Nếu không có, fallback về số cuối
+    const match2 = imageUrl.match(/chara_stand_\d+_(\d+)\.png/);
+    if (match2) return match2[1];
+  }
+  
+  // For support cards: tex_support_card_30027.png -> 30027
+  if (imageUrl.includes('tex_support_card_')) {
+    const match = imageUrl.match(/tex_support_card_(\d+)\.png/);
+    return match ? match[1] : null;
+  }
+  
+  // For support cards with different format: support_card_s_30027.png -> 30027
+  if (imageUrl.includes('support_card_s_')) {
+    const match = imageUrl.match(/support_card_s_(\d+)\.png/);
+    return match ? match[1] : null;
+  }
+  
+  return null;
+}
+
+// Function to load and parse JSON file
+function loadJsonFile(filePath) {
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error(`Error loading ${filePath}:`, error.message);
+    return null;
+  }
+}
+
+// Function to create mapping from uma events
+function createUmaMapping(umaData) {
+  const mapping = new Map();
+  
+  umaData.forEach(character => {
+    const id = extractIdFromImageUrl(character.imageUrl);
+    if (id) {
+      mapping.set(id, {
+        name: character.name,
+        imageUrl: character.imageUrl,
+        url_detail: character.url_detail,
+        rarity: character.rarity,
+        type: 'character'
+      });
+    }
+    
+    // Also try to map by name as fallback
+    if (character.name) {
+      mapping.set(character.name, {
+        name: character.name,
+        imageUrl: character.imageUrl,
+        url_detail: character.url_detail,
+        rarity: character.rarity,
+        type: 'character'
+      });
+    }
+  });
+  
+  return mapping;
+}
+
+// Function to create mapping from support events
+function createSupportMapping(supportData) {
+  const mapping = new Map();
+  
+  supportData.forEach(support => {
+    const id = extractIdFromImageUrl(support.imageUrl);
+    if (id) {
+      mapping.set(id, {
+        name: support.name,
+        imageUrl: support.imageUrl,
+        url_detail: support.url_detail,
+        rarity: support.rarity,
+        type: 'support'
+      });
+    }
+    
+    // Also try to map by name as fallback
+    if (support.name) {
+      mapping.set(support.name, {
+        name: support.name,
+        imageUrl: support.imageUrl,
+        url_detail: support.url_detail,
+        rarity: support.rarity,
+        type: 'support'
+      });
+    }
+  });
+  
+  return mapping;
+}
+
+// Function to find best match for a card/character
+function findBestMatch(item, mapping) {
+  const itemId = item.id;
+  const itemName = item.name;
+  
+  // Try direct ID match
+  let match = mapping.get(itemId);
+  if (match) return match;
+  
+  // Try name match
+  if (itemName && itemName !== itemId) {
+    match = mapping.get(itemName);
+    if (match) return match;
+  }
+  
+  // Try extracted ID from name
+  if (itemName) {
+    const extractedId = extractIdFromImageUrl(itemName);
+    if (extractedId) {
+      match = mapping.get(extractedId);
+      if (match) return match;
+    }
+  }
+  
+  // Try numeric ID match
+  if (itemId && /^\d+$/.test(itemId)) {
+    match = mapping.get(itemId);
+    if (match) return match;
+  }
+  
+  // Try partial name matching
+  if (itemName) {
+    for (const [key, value] of mapping.entries()) {
+      if (key.includes(itemName) || itemName.includes(key)) {
+        return value;
+      }
+    }
+  }
+  
+  // Try fuzzy matching for support cards
+  if (itemName && itemName.length > 3) {
+    for (const [key, value] of mapping.entries()) {
+      const keyLower = key.toLowerCase();
+      const nameLower = itemName.toLowerCase();
+      
+      // Check if key contains the name or vice versa
+      if (keyLower.includes(nameLower) || nameLower.includes(keyLower)) {
+        return value;
+      }
+      
+      // Check for common patterns
+      if (keyLower.includes('support card') && nameLower.includes('support card')) {
+        return value;
+      }
+    }
+  }
+  
+  return null;
+}
+
+// Function to enhance training events data with character/support info
+function enhanceTrainingEventsData(trainingData, umaMapping, supportMapping) {
+  const enhancedData = {
+    ...trainingData,
+    characters: [],
+    supportCards: [],
+    scenarios: trainingData.scenarios || [],
+    events: trainingData.events || [],
+    progress: trainingData.progress || {},
+    timestamp: trainingData.timestamp || new Date().toISOString()
+  };
+
+  // Enhance characters with detailed info
+  trainingData.characters.forEach(char => {
+    const umaInfo = findBestMatch(char, umaMapping);
+    
+    if (umaInfo) {
+      enhancedData.characters.push({
+        ...char,
+        name: umaInfo.name,
+        imageUrl: umaInfo.imageUrl,
+        url_detail: umaInfo.url_detail,
+        rarity: umaInfo.rarity
+      });
+    } else {
+      // Fallback if not found in uma mapping
+      enhancedData.characters.push({
+        ...char,
+        name: char.id,
+        imageUrl: null,
+        url_detail: null,
+        rarity: null
+      });
+    }
+  });
+
+  // Enhance support cards with detailed info
+  trainingData.supportCards.forEach(card => {
+    const supportInfo = findBestMatch(card, supportMapping);
+    
+    if (supportInfo) {
+      enhancedData.supportCards.push({
+        ...card,
+        name: supportInfo.name,
+        imageUrl: supportInfo.imageUrl,
+        url_detail: supportInfo.url_detail,
+        rarity: supportInfo.rarity
+      });
+    } else {
+      // Fallback if not found in support mapping
+      enhancedData.supportCards.push({
+        ...card,
+        name: card.id,
+        imageUrl: null,
+        url_detail: null,
+        rarity: null
+      });
+    }
+  });
+
+  return enhancedData;
+}
+
+// ===== END MAPPING FUNCTIONS =====
+
+// Function to clean event names by removing unwanted prefixes
+function cleanEventName(rawName) {
+    if (!rawName) return '';
+    
+    let cleaned = rawName.trim();
+    
+    // Loại bỏ comment hoặc dòng bắt đầu bằng //
+    if (cleaned.startsWith('//')) {
+        return null; // Bỏ qua dòng comment
+    }
+    
+    // Loại bỏ prefix là giờ (HH:MM /)
+    cleaned = cleaned.replace(/^\d{1,2}:\d{2}\s*\/\s*/, '');
+    
+    // Loại bỏ prefix là số trong ngoặc (9999)
+    cleaned = cleaned.replace(/^\(\d+\)\s*/, '');
+    
+    // Loại bỏ prefix là số và dấu /
+    cleaned = cleaned.replace(/^\d+\s*\/\s*/, '');
+    
+    // Loại bỏ // ở đầu (nếu còn sót)
+    cleaned = cleaned.replace(/^\/\/+/, '');
+    
+    // Nếu sau khi làm sạch mà vẫn còn // ở đầu hoặc quá ngắn, bỏ qua
+    if (cleaned.startsWith('//') || cleaned.length < 2) {
+        return null;
+    }
+    
+    return cleaned;
+}
+
 // Utility function for timeout
 function waitTimeout(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -318,8 +577,8 @@ async function scrapeTrainingEvents(headlessMode = true) {
         });
         console.log(`  🔍 Found classes: ${pageContent.join(', ')}`);
         
-        // Scrape events
-        const events = await scrapeEvents(page);
+        // Scrape events (now owner-aware, needs combination context)
+        const events = await scrapeEvents(page, combination);
         
         if (events.length > 0) {
           console.log(`✅ Found ${events.length} events for this combination`);
@@ -911,11 +1170,11 @@ async function selectCharacter(page, characterObj) {
   }
 }
 
-async function scrapeEvents(page) {
-  return await scrapeEventsFromEventViewer(page);
+async function scrapeEvents(page, combination) {
+  return await scrapeEventsFromEventViewer(page, combination);
 }
 
-async function scrapeEventsFromEventViewer(page) {
+async function scrapeEventsFromEventViewer(page, combination) {
   console.log('  📋 Scraping events from Event Viewer...');
   try {
     // Wait for any Event Viewer to appear
@@ -979,6 +1238,25 @@ async function scrapeEventsFromEventViewer(page) {
     
     // Click through all images sequentially by index
     for (let i = 0; i < imageHandles.length; i++) {
+      // Determine who this icon represents
+      let ownerType = 'unknown';
+      let ownerName = 'Unknown';
+      const totalImages = imageHandles.length;
+      if (i === 0) {
+        // First icon is always Character
+        ownerType = 'character';
+        ownerName = (combination.character?.alt || combination.character?.title || 'Unknown');
+      } else if (i === totalImages - 1) {
+        // Last icon is Scenario
+        ownerType = 'scenario';
+        ownerName = combination.scenario;
+      } else {
+        // Icons in between correspond to support cards in order of selection slots
+        const cardIdx = i - 1;
+        const cardObj = combination.cards[cardIdx];
+        ownerType = 'support';
+        ownerName = cardObj ? (cardObj.alt || cardObj.title || 'Unknown') : 'Unknown';
+      }
       console.log(`  🎯 Clicking image ${i + 1}/${imageHandles.length}`);
       
       try {
@@ -1001,6 +1279,37 @@ async function scrapeEventsFromEventViewer(page) {
             
             // Get popup detail (tooltip)
             const detail = await page.evaluate(() => {
+              // Function to clean event names by removing unwanted prefixes
+              function cleanEventName(rawName) {
+                if (!rawName) return '';
+                
+                let cleaned = rawName.trim();
+                
+                // Loại bỏ comment hoặc dòng bắt đầu bằng //
+                if (cleaned.startsWith('//')) {
+                  return null; // Bỏ qua dòng comment
+                }
+                
+                // Loại bỏ prefix là giờ (HH:MM /)
+                cleaned = cleaned.replace(/^\d{1,2}:\d{2}\s*\/\s*/, '');
+                
+                // Loại bỏ prefix là số trong ngoặc (9999)
+                cleaned = cleaned.replace(/^\(\d+\)\s*/, '');
+                
+                // Loại bỏ prefix là số và dấu /
+                cleaned = cleaned.replace(/^\d+\s*\/\s*/, '');
+                
+                // Loại bỏ // ở đầu (nếu còn sót)
+                cleaned = cleaned.replace(/^\/\/+/, '');
+                
+                // Nếu sau khi làm sạch mà vẫn còn // ở đầu hoặc quá ngắn, bỏ qua
+                if (cleaned.startsWith('//') || cleaned.length < 2) {
+                  return null;
+                }
+                
+                return cleaned;
+              }
+
               const tippy = document.querySelector('.tippy-box');
               if (!tippy) return null;
               const eventName = tippy.querySelector('.tooltips_ttable_heading__jlJcE')?.textContent?.trim() || '';
@@ -1156,15 +1465,15 @@ async function scrapeEventsFromEventViewer(page) {
                   // Tách theo các pattern phổ biến - sử dụng regex để tìm và tách
                   const patterns = [
                     {
-                      regex: /([A-Za-z]+ \+[0-9]+)([A-Za-z\s]+ \+[0-9]+)/g,
+                      regex: /([A-Za-z]+ \+[0-9]+)([A-Za-z\s]+ \ +[0-9]+)/g,
                       example: "Energy +10Skill points +5"
                     },
                     {
-                      regex: /([A-Za-z]+ \+[0-9]+),([A-Za-z\s]+ \+[0-9]+)/g,
+                      regex: /([A-Za-z]+ \ +[0-9]+),([A-Za-z\s]+ \ +[0-9]+)/g,
                       example: "Power +8, Technique +2"
                     },
                     {
-                      regex: /([A-Za-z]+ \+[0-9]+)\s+([A-Za-z\s]+ \+[0-9]+)/g,
+                      regex: /([A-Za-z]+ \ +[0-9]+)\s+([A-Za-z\s]+ \ +[0-9]+)/g,
                       example: "Wisdom +10 Skill points +15"
                     }
                   ];
@@ -1469,12 +1778,23 @@ async function scrapeEventsFromEventViewer(page) {
                   effects: combinedEffects
                 };
               });
-              return { event: eventName, type, choices };
+              const cleanedEventName = cleanEventName(eventName);
+              if (cleanedEventName) {
+                return { event: cleanedEventName, type, choices };
+              } else {
+                return null; // Bỏ qua event có tên null sau khi clean
+              }
             });
             
             if (detail && detail.event) {
-              allEvents.push(detail);
-              console.log(`      ✅ Added event: ${detail.event} (Type: ${detail.type})`);
+              allEvents.push({
+                ownerType,
+                ownerName,
+                event: detail
+              });
+              console.log(`      ✅ Added event: ${detail.event} (Type: ${detail.type}) -> ${ownerType}: ${ownerName}`);
+            } else if (detail && !detail.event) {
+              console.log(`      ⏭️ Skipping event with invalid name`);
             }
             
             // Close tooltip
@@ -1489,10 +1809,30 @@ async function scrapeEventsFromEventViewer(page) {
       }
     }
     
-    // Filter duplicate events (by event name)
-    const uniqueEvents = Array.from(new Map(allEvents.map(e => [e.event, e])).values());
-    console.log(`  ✅ Found ${uniqueEvents.length} unique events with detail`);
-    
+    // Remove duplicates per owner + event content
+    const eventMap = new Map();
+    let duplicateCount = 0;
+
+    allEvents.forEach(evObj => {
+      if (evObj && evObj.event && evObj.event.event) {
+        const keyContent = JSON.stringify({
+          ownerType: evObj.ownerType,
+          ownerName: evObj.ownerName,
+          event: evObj.event.event,
+          type: evObj.event.type,
+          choices: evObj.event.choices ? evObj.event.choices.map(c => ({ choice: c.choice, effects: c.effects })) : []
+        });
+        if (!eventMap.has(keyContent)) {
+          eventMap.set(keyContent, evObj);
+        } else {
+          duplicateCount++;
+        }
+      }
+    });
+
+    const uniqueEvents = Array.from(eventMap.values());
+    console.log(`  ✅ Found ${uniqueEvents.length} unique owner-tagged events (removed ${duplicateCount} duplicates)`);
+
     return uniqueEvents;
   } catch (error) {
     console.log('  ❌ Error scraping events:', error.message);
@@ -1601,8 +1941,31 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
   try {
     console.log(`  💾 Saving progress to JSON (${combinationCount}/${totalCombinations})...`);
     
-    // Create simplified results structure
-    const simplifiedResults = {
+    // Load mapping data
+    console.log('  🔗 Loading mapping data...');
+    const umaData = loadJsonFile(path.join(__dirname, 'data', 'all_uma_events.json'));
+    const supportData = loadJsonFile(path.join(__dirname, 'data', 'all_support_events.json'));
+    
+    let umaMapping = new Map();
+    let supportMapping = new Map();
+    
+    if (umaData) {
+      umaMapping = createUmaMapping(umaData);
+      console.log(`  ✅ Loaded mapping for ${umaMapping.size} characters`);
+    } else {
+      console.log('  ⚠️ Could not load uma mapping data');
+    }
+    
+    if (supportData) {
+      supportMapping = createSupportMapping(supportData);
+      console.log(`  ✅ Loaded mapping for ${supportMapping.size} support cards`);
+    } else {
+      console.log('  ⚠️ Could not load support mapping data');
+    }
+    
+    // Tạo cấu trúc tối ưu
+    const optimizedData = {
+      events: [], // unique events pool
       characters: [],
       supportCards: [],
       scenarios: [],
@@ -1614,92 +1977,100 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
       timestamp: new Date().toISOString()
     };
 
-    // Process character events
-    const characterEvents = {};
+    // 1. Thu thập tất cả event duy nhất (theo nội dung)
+    const eventMap = new Map(); // key: content, value: {id, ...event}
+    const eventIdMap = new Map(); // key: content, value: id
     allEvents.forEach(result => {
       if (result.events && result.events.length > 0) {
-        const charName = result.combination.character.alt || result.combination.character.title || 'Unknown';
-        if (!characterEvents[charName]) {
-          characterEvents[charName] = [];
-        }
-        characterEvents[charName].push(...result.events);
+        result.events.forEach(evObj => {
+          const ev = evObj.event;
+          const eventKey = JSON.stringify({
+            event: ev.event,
+            type: ev.type,
+            choices: ev.choices || []
+          });
+          if (!eventMap.has(eventKey)) {
+            const eventId = `event_${eventMap.size + 1}`;
+            eventMap.set(eventKey, { id: eventId, ...ev });
+            eventIdMap.set(eventKey, eventId);
+          }
+        });
       }
     });
+    optimizedData.events = Array.from(eventMap.values());
+    console.log(`  ✅ Collected ${optimizedData.events.length} unique events`);
 
-    // Convert to array format and remove duplicates
-    function groupByType(events) {
-      const groups = {};
-      events.forEach(e => {
-        const type = e.type || 'Unknown';
-        if (!groups[type]) groups[type] = [];
-        groups[type].push(e);
-      });
-      return Object.entries(groups).map(([type, events]) => ({ type, events }));
-    }
+    // 2. Lưu character -> group -> eventIds (đã sửa để tránh duplicate)
+    const charMap = new Map();
+    const cardMap = new Map();
+    const scenarioMap = new Map();
 
-    Object.keys(characterEvents).forEach(charName => {
-      const uniqueEvents = Array.from(new Map(characterEvents[charName].map(e => [e.event, e])).values());
-      simplifiedResults.characters.push({
-        id: charName,
-        eventGroups: groupByType(uniqueEvents)
-      });
-    });
-
-    // Process support card events
-    const cardEvents = {};
     allEvents.forEach(result => {
       if (result.events && result.events.length > 0) {
-        result.combination.cards.forEach(card => {
-          const cardName = card.alt || card.title || 'Unknown';
-          if (!cardEvents[cardName]) {
-            cardEvents[cardName] = [];
-          }
-          cardEvents[cardName].push(...result.events);
+        result.events.forEach(evObj => {
+          const ev = evObj.event;
+          const ownerType = evObj.ownerType;
+          const ownerName = evObj.ownerName;
+
+          const eventType = ev.type || 'Unknown';
+          const eventKey = JSON.stringify({
+            event: ev.event,
+            type: ev.type,
+            choices: ev.choices || []
+          });
+          const eventId = eventIdMap.get(eventKey);
+
+          const targetMap = ownerType === 'character' ? charMap : ownerType === 'support' ? cardMap : ownerType === 'scenario' ? scenarioMap : null;
+          if (!targetMap) return;
+
+          if (!targetMap.has(ownerName)) targetMap.set(ownerName, {});
+          if (!targetMap.get(ownerName)[eventType]) targetMap.get(ownerName)[eventType] = new Set();
+          targetMap.get(ownerName)[eventType].add(eventId);
         });
       }
     });
 
-    // Convert to array format and remove duplicates
-    Object.keys(cardEvents).forEach(cardName => {
-      const uniqueEvents = Array.from(new Map(cardEvents[cardName].map(e => [e.event, e])).values());
-      simplifiedResults.supportCards.push({
+    // Convert maps to arrays for optimizedData
+    charMap.forEach((groups, charName) => {
+      optimizedData.characters.push({
+        id: charName,
+        eventGroups: Object.entries(groups).map(([type, ids]) => ({ type, eventIds: Array.from(ids) }))
+      });
+    });
+
+    cardMap.forEach((groups, cardName) => {
+      optimizedData.supportCards.push({
         id: cardName,
-        eventGroups: groupByType(uniqueEvents)
+        eventGroups: Object.entries(groups).map(([type, ids]) => ({ type, eventIds: Array.from(ids) }))
       });
     });
 
-    // Process scenario events
-    const scenarioEvents = {};
-    allEvents.forEach(result => {
-      if (result.events && result.events.length > 0) {
-        const scenarioName = result.combination.scenario;
-        if (!scenarioEvents[scenarioName]) {
-          scenarioEvents[scenarioName] = [];
-        }
-        scenarioEvents[scenarioName].push(...result.events);
-      }
-    });
-
-    // Convert to array format and remove duplicates
-    Object.keys(scenarioEvents).forEach(scenarioName => {
-      const uniqueEvents = Array.from(new Map(scenarioEvents[scenarioName].map(e => [e.event, e])).values());
-      simplifiedResults.scenarios.push({
+    scenarioMap.forEach((groups, scenarioName) => {
+      optimizedData.scenarios.push({
         id: scenarioName,
-        eventGroups: groupByType(uniqueEvents)
+        eventGroups: Object.entries(groups).map(([type, ids]) => ({ type, eventIds: Array.from(ids) }))
       });
     });
 
-    // Save to file
+    // Apply mapping to enhance data with names and imageUrls
+    console.log('  🔧 Applying mapping to enhance data...');
+    const enhancedData = enhanceTrainingEventsData(optimizedData, umaMapping, supportMapping);
+    
+    // Calculate mapping statistics
+    const mappedCharacters = enhancedData.characters.filter(c => c.name !== c.id).length;
+    const mappedCards = enhancedData.supportCards.filter(c => c.name !== c.id).length;
+    
+    // Save enhanced data to file
     fs.writeFileSync(
       path.join(__dirname, 'data', 'all_training_events.json'),
-      JSON.stringify(simplifiedResults, null, 2)
+      JSON.stringify(enhancedData, null, 2)
     );
     
-    console.log(`  ✅ Progress saved: ${combinationCount}/${totalCombinations} (${simplifiedResults.progress.percentage}%)`);
-    console.log(`     👤 Characters: ${simplifiedResults.characters.length}`);
-    console.log(`     🎴 Support Cards: ${simplifiedResults.supportCards.length}`);
-    console.log(`     📖 Scenarios: ${simplifiedResults.scenarios.length}`);
-    
+    console.log(`  ✅ Progress saved: ${combinationCount}/${totalCombinations} (${enhancedData.progress.percentage}%)`);
+    console.log(`     👤 Characters: ${enhancedData.characters.length} (mapped: ${mappedCharacters}/${enhancedData.characters.length})`);
+    console.log(`     🎴 Support Cards: ${enhancedData.supportCards.length} (mapped: ${mappedCards}/${enhancedData.supportCards.length})`);
+    console.log(`     📖 Scenarios: ${enhancedData.scenarios.length}`);
+    console.log(`     📦 Unique events: ${enhancedData.events.length}`);
   } catch (error) {
     console.log(`  ⚠️ Error saving progress: ${error.message}`);
   }

@@ -2,11 +2,33 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 
 function cleanEventName(rawName) {
-    // Chỉ giữ lại chữ cái, số, dấu cách, dấu câu cơ bản
-    return rawName
-        .replace(/[^A-Za-z0-9 .,!?'"-]/g, '') // Xóa mọi ký tự không thuộc whitelist
-        .replace(/\s+/g, ' ') // Chuẩn hóa khoảng trắng
-        .trim();
+    if (!rawName) return '';
+    
+    let cleaned = rawName.trim();
+    
+    // Loại bỏ comment hoặc dòng bắt đầu bằng //
+    if (cleaned.startsWith('//')) {
+        return null; // Bỏ qua dòng comment
+    }
+    
+    // Loại bỏ prefix là giờ (HH:MM /)
+    cleaned = cleaned.replace(/^\d{1,2}:\d{2}\s*\/\s*/, '');
+    
+    // Loại bỏ prefix là số trong ngoặc (9999)
+    cleaned = cleaned.replace(/^\(\d+\)\s*/, '');
+    
+    // Loại bỏ prefix là số và dấu /
+    cleaned = cleaned.replace(/^\d+\s*\/\s*/, '');
+    
+    // Loại bỏ // ở đầu (nếu còn sót)
+    cleaned = cleaned.replace(/^\/\/+/, '');
+    
+    // Nếu sau khi làm sạch mà vẫn còn // ở đầu hoặc quá ngắn, bỏ qua
+    if (cleaned.startsWith('//') || cleaned.length < 2) {
+        return null;
+    }
+    
+    return cleaned;
 }
 
 (async () => {
@@ -296,6 +318,13 @@ function cleanEventName(rawName) {
               }, eventName);
 
               eventDetail.event = cleanEventName(eventDetail.event);
+              
+              // Bỏ qua event nếu tên bị clean thành null
+              if (!eventDetail.event) {
+                console.log(`      ⏭️ Skipping event with invalid name: ${eventName}`);
+                continue;
+              }
+              
               events.push(eventDetail);
 
             } catch (e) {
