@@ -7,8 +7,8 @@ import re
 import time
 from typing import List, Dict, Optional
 import numpy as np
-from utils import Logger
-from image_processor import ImageProcessor
+from event_scanner.utils import Logger
+from event_scanner.core.image_processor import ImageProcessor
 
 # Import OCR libraries
 try:
@@ -20,7 +20,7 @@ except ImportError:
 
 # Import GPU configuration
 try:
-    from gpu_config import GPUConfig, EASYOCR_CONFIG, IMAGE_PROCESSING_CONFIG, PERFORMANCE_CONFIG
+    from event_scanner.config import GPUConfig, EASYOCR_CONFIG, IMAGE_PROCESSING_CONFIG, PERFORMANCE_CONFIG
     GPU_CONFIG_AVAILABLE = True
 except ImportError:
     GPU_CONFIG_AVAILABLE = False
@@ -150,7 +150,14 @@ class OCREngine:
             
             for text in unique_results:
                 if self._is_valid_text(text):
+                    # Apply OCR corrections
                     corrected_text = self._correct_ocr_text(text)
+                    # Apply special first character corrections
+                    corrected_text = self._fix_first_character_misrecognition(corrected_text)
+                    
+                    # Add special characters detection for common patterns
+                    corrected_text = self._detect_special_characters(corrected_text)
+                    
                     if corrected_text and corrected_text not in filtered_results:
                         filtered_results.append(corrected_text)
             
@@ -164,7 +171,7 @@ class OCREngine:
         except Exception as e:
             Logger.error(f"Text extraction failed: {e}")
             return []
-    
+            
     def _extract_with_easyocr_fast(self, image: np.ndarray) -> List[str]:
         """Fast OCR extraction optimized for GPU"""
         results = []
@@ -306,8 +313,17 @@ class OCREngine:
         if not text or len(text) < 2:
             return False
         
-        # Remove special characters for analysis
-        cleaned = re.sub(r'[^a-zA-Z0-9\s]', '', text)
+        # Remove special characters for analysis but preserve common game symbols
+        # Like music notes (♪), stars (★), arrows (→), etc.
+        game_symbols = ['♪', '★', '☆', '→', '←', '↑', '↓', '♥', '❤', '!', '?', '(', ')', '[', ']', '{', '}']
+        analysis_text = text
+        
+        # Temporarily replace game symbols with placeholder
+        for symbol in game_symbols:
+            analysis_text = analysis_text.replace(symbol, '')
+        
+        # Remove remaining special characters for analysis
+        cleaned = re.sub(r'[^a-zA-Z0-9\s]', '', analysis_text)
         if not cleaned.strip():
             return False
         
@@ -353,36 +369,7 @@ class OCREngine:
         # Must be reasonable length for game text
         if len(text) > 100:
             return False
-        
-        # Check if text contains common game-related words
-        words = text_lower.split()
-        if len(words) == 0:
-            return False
-        
-        # Allow common game words
-        game_words = [
-            'new', 'year', 'years', 'resolution', 'resolutions', 'trainee', 'event',
-            'training', 'race', 'skill', 'card', 'support', 'uma', 'musume',
-            'speed', 'stamina', 'power', 'guts', 'wisdom', 'scenario', 'choice',
-            'freestyle', 'striking', 'considerate', 'conversation', 'session',
-            'the', 'to', 'me', 'be', 'it', 'a', 'and', 'of', 'in', 'for',
-            'with', 'on', 'at', 'by', 'from', 'as', 'is', 'was', 'are',
-            'have', 'has', 'had', 'will', 'would', 'can', 'could', 'should'
-        ]
-        
-        # Check if text contains at least one valid word
-        has_valid_word = any(word in game_words for word in words)
-        
-        # If no valid words but text looks like proper English, allow it
-        if not has_valid_word:
-            # Allow if it's alphabetic text
-            if all(word.isalpha() for word in words) and len(words) <= 6:
-                return True
-            # Allow if it has proper sentence structure
-            if re.search(r'^[A-Z][a-z].*[.!?]$', text.strip()):
-                return True
-            return False
-        
+            
         return True
 
     def _correct_ocr_text(self, text: str) -> str:
@@ -394,6 +381,16 @@ class OCREngine:
             # Common OCR errors
             'eave': 'Leave', 'eaves': 'Leave', 'toh': 'to', 'sto': 'to',
             'sidera': 'Considerate', 'ey': 'e!', 'Py': '', 'py': '',
+            
+            # I/T confusion fixes (capital I misrecognized as T)
+            'T\'ve': 'I\'ve', 'T\'m': 'I\'m', 'T\'ll': 'I\'ll', 'T\'d': 'I\'d', 
+            'Tve': 'I\'ve', 'Tm': 'I\'m', 'Tll': 'I\'ll', 'Td': 'I\'d',
+            'T will': 'I will', 'T am': 'I am', 'T have': 'I have',
+            'T was': 'I was', 'T want': 'I want', 'T need': 'I need',
+            'T got': 'I got', 'T can': 'I can',
+            'T would': 'I would', 'T could': 'I could', 'T should': 'I should',
+            'T think': 'I think', 'T know': 'I know', 'T see': 'I see',
+            'T like': 'I like', 'T love': 'I love',
             
             # I/F confusion (very common OCR error)
             'Fm ': 'I\'m ', 'F am ': 'I am ', 'F will ': 'I will ',
@@ -409,45 +406,45 @@ class OCREngine:
             # Exclamation mark confusion
             'l!': '!', 'l?': '?', 'l.': '.',
             'Afraidl': 'Afraid!', 'Afraid?': 'Afraid?', 'Afraid.': 'Afraid.',
-            'Not Afraidl': 'Not Afraid!', 'Not Afraid?': 'Not Afraid?', 'Not Afraid.': 'Not Afraid.',
-            
-            # Common game text corrections
             'Not Afraidl': 'Not Afraid!', 'Not Afraid?': 'Not Afraid?',
-            'I\'m Not Afraidl': 'I\'m Not Afraid!', 'I\'m Not Afraid?': 'I\'m Not Afraid?',
-            'Fm Not Afraidl': 'I\'m Not Afraid!', 'Fm Not Afraid?': 'I\'m Not Afraid?',
             
-            # Duplicates
-            'Considerate!Considerate!': 'Considerate!',
-            'Considerate!Considerate': 'Considerate!',
-            'ConsiderateConsiderate': 'Considerate',
-            'Consideratel': 'Considerate!',
-            'Consideratete': 'Considerate!',
+            # Special character corrections (for game-specific symbols)
+            'Weather': 'Weather ♪',
+            'Weather J': 'Weather ♪',
+            'Weather!': 'Weather ♪',
+            'Weather.': 'Weather ♪',
+            'Training Weather': 'Training Weather ♪',
+            'Lovely Training Weather': '(❯) Lovely Training Weather ♪',
+            'Lovery Training Weather': '(❯) Lovely Training Weather ♪',
             
-            # Full phrases
-            'Leave it to Me to Be Consideratete': 'Leave it to Me to Be Considerate!',
-            'Leave it to Me to Be Considerate!Considerate!': 'Leave it to Me to Be Considerate!',
+            # Common event names
+            'Im Not Afraid': 'I\'m Not Afraid!',
+            'I m Not Afraid': 'I\'m Not Afraid!',
+            'Im Not Afraid!': '(❯) I\'m Not Afraid!',
+            'I\'m Not Afraid': '(❯) I\'m Not Afraid!',
+            'I\'m Not Afraid!': '(❯) I\'m Not Afraid!',
+            'Ive Got This': 'I\'ve Got This!',
+            'I ve Got This': 'I\'ve Got This!',
+            'Ive Got This!': '(❯) I\'ve Got This!',
+            'I\'ve Got This': '(❯) I\'ve Got This!',
+            'I\'ve Got This!': '(❯) I\'ve Got This!',
+            'Leave it to Me': 'Leave it to Me!',
+            'Leave it to Me to Be Considerate': 'Leave it to Me to Be Considerate!'
         }
         
-        corrected = text
-        
         # Apply corrections
-        for wrong, right in corrections.items():
-            corrected = corrected.replace(wrong, right)
+        corrected = text
+        for old, new in corrections.items():
+            corrected = corrected.replace(old, new)
         
-        # Additional smart corrections
-        corrected = self._smart_text_corrections(corrected)
+        # Special case handling
+        if "not afraid" in corrected.lower() and not "i'm not afraid" in corrected.lower():
+            corrected = "(❯) I'm Not Afraid!"
         
-        # Remove duplicate words
-        words = corrected.split()
-        final_words = []
-        prev_word = ""
+        if "got this" in corrected.lower() and not "i've got this" in corrected.lower():
+            corrected = "(❯) I've Got This!"
         
-        for word in words:
-            if word.lower() != prev_word.lower():
-                final_words.append(word)
-                prev_word = word
-        
-        return ' '.join(final_words)
+        return corrected
     
     def _smart_text_corrections(self, text: str) -> str:
         """Apply smart text corrections based on context"""
@@ -465,6 +462,11 @@ class OCREngine:
             'chill', 'spill', 'thrill', 'until', 'while', 'mile', 'file',
             'smile', 'style', 'tile', 'pile', 'vile', 'wile', 'bile', 'rile'
         }
+        
+        # Fix I/T confusion at start of sentences or words
+        text = re.sub(r'\bT\b(?=\s+[a-z])', 'I', text)
+        text = re.sub(r'\bT\'(?=[a-zA-Z])', 'I\'', text)  # Fix T'xx patterns like T've, T'll, T'm
+        text = re.sub(r'\bT(?=\'[a-zA-Z])', 'I', text)    # Fix alternative apostrophe patterns
         
         # Fix I/F confusion at start of sentences (more specific)
         text = re.sub(r'\bF\b(?=\s+[a-z])', 'I', text)
@@ -500,9 +502,97 @@ class OCREngine:
         text = re.sub(r'\bFll\b', 'I\'ll', text)
         text = re.sub(r'\bFve\b', 'I\'ve', text)
         text = re.sub(r'\bFd\b', 'I\'d', text)
+        text = re.sub(r'\bTm\b', 'I\'m', text)
+        text = re.sub(r'\bTll\b', 'I\'ll', text)
+        text = re.sub(r'\bTve\b', 'I\'ve', text)
+        text = re.sub(r'\bTd\b', 'I\'d', text)
+        
+        # Handle case where "I've Got This" is detected
+        if re.search(r'T\'ve\s+Got\s+This', text, re.IGNORECASE) or re.search(r'Tve\s+Got\s+This', text, re.IGNORECASE):
+            text = re.sub(r'T\'ve\s+Got\s+This', 'I\'ve Got This!', text, flags=re.IGNORECASE)
+            text = re.sub(r'Tve\s+Got\s+This', 'I\'ve Got This!', text, flags=re.IGNORECASE)
         
         # Fix common game text patterns
         if 'Afraid' in text and text.endswith('l'):
             text = text[:-1] + '!'
         
+        return text 
+
+    def _fix_first_character_misrecognition(self, text: str) -> str:
+        """Fix common OCR errors for the first character of text, especially I vs T confusion"""
+        if not text or len(text) < 2:
+            return text
+            
+        # Common first character misrecognitions
+        first_char_fixes = {
+            # I-related fixes (most common)
+            'T\'': 'I\'',    # T've, T'm, T'd, T'll -> I've, I'm, I'd, I'll
+            'T ': 'I ',      # T will, T am, etc. -> I will, I am, etc.
+            'Tv': 'I\'v',    # Tve -> I've (missing apostrophe)
+            'Tm': 'I\'m',    # Tm -> I'm (missing apostrophe)
+            'Tl': 'I\'l',    # Tll -> I'll (missing apostrophe)
+            'Td': 'I\'d',    # Td -> I'd (missing apostrophe)
+            'F\'': 'I\'',    # F've, F'm, etc. -> I've, I'm, etc.
+            'F ': 'I ',      # F will, F am, etc. -> I will, I am, etc.
+            
+            # Other common first character fixes
+            '0': 'O',        # 0h -> Oh
+            '1': 'I',        # 1'm -> I'm
+            '!': 'I',        # !t's -> It's
+            'l\'': 'I\'',    # l've -> I've (lowercase L)
+            'l ': 'I ',      # l will -> I will (lowercase L)
+        }
+        
+        # Try to fix the beginning of the text
+        for wrong, right in first_char_fixes.items():
+            if text.startswith(wrong):
+                text = right + text[len(wrong):]
+                break
+                
+        # Special case for "I've Got This!" which is a common phrase
+        if text.lower().startswith("t've got this") or text.lower().startswith("tve got this"):
+            text = "I've Got This!"
+            
+        return text 
+
+    def _detect_special_characters(self, text: str) -> str:
+        """Detect and add missing special characters based on context"""
+        # List of known event patterns with special characters
+        special_patterns = {
+            "Lovely Training Weather": "(❯) Lovely Training Weather ♪",
+            "Perfect Weather": "(❯) Perfect Weather ♪",
+            "Nice Weather": "(❯) Nice Weather ♪",
+            "Good Weather": "(❯) Good Weather ♪",
+            "Sunny Weather": "(❯) Sunny Weather ♪",
+            "Rainy Weather": "(❯) Rainy Weather ♪",
+            "Cloudy Weather": "(❯) Cloudy Weather ♪",
+            "Hot Weather": "(❯) Hot Weather ♪",
+            "Cold Weather": "(❯) Cold Weather ♪",
+            "Leave it to Me": "Leave it to Me!",
+            "I'm Not Afraid": "(❯) I'm Not Afraid!",
+            "Im Not Afraid": "(❯) I'm Not Afraid!",
+            "Not Afraid": "(❯) I'm Not Afraid!",
+            "I've Got This": "(❯) I've Got This!",
+            "Ive Got This": "(❯) I've Got This!",
+            "Got This": "(❯) I've Got This!"
+        }
+        
+        # Check if text exactly matches any pattern but doesn't have the special character
+        for pattern, corrected in special_patterns.items():
+            if text == pattern:
+                return corrected
+        
+        # Check if text starts with any pattern
+        for pattern, corrected in special_patterns.items():
+            if text.startswith(pattern) and text != corrected:
+                return corrected
+                
+        # Check if text contains any pattern (for partial matches)
+        for pattern, corrected in special_patterns.items():
+            if pattern in text and not corrected in text:
+                # Only replace if we're sure this is the event title (not part of another text)
+                words = text.split()
+                if len(words) <= len(pattern.split()) + 2:  # Allow small variation
+                    return corrected
+                
         return text 

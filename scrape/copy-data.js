@@ -2,6 +2,37 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
+// Function to clean event names by removing unwanted prefixes
+function cleanEventName(rawName) {
+    if (!rawName) return '';
+    
+    let cleaned = rawName.trim();
+    
+    // Loại bỏ comment hoặc dòng bắt đầu bằng //
+    if (cleaned.startsWith('//')) {
+        return null; // Bỏ qua dòng comment
+    }
+    
+    // Loại bỏ prefix là giờ (HH:MM /)
+    cleaned = cleaned.replace(/^\d{1,2}:\d{2}\s*\/\s*/, '');
+    
+    // Loại bỏ prefix là số trong ngoặc (9999)
+    cleaned = cleaned.replace(/^\(\d+\)\s*/, '');
+    
+    // Loại bỏ prefix là số và dấu /
+    cleaned = cleaned.replace(/^\d+\s*\/\s*/, '');
+    
+    // Loại bỏ // ở đầu (nếu còn sót)
+    cleaned = cleaned.replace(/^\/\/+/, '');
+    
+    // Nếu sau khi làm sạch mà vẫn còn // ở đầu hoặc quá ngắn, bỏ qua
+    if (cleaned.startsWith('//') || cleaned.length < 2) {
+        return null;
+    }
+    
+    return cleaned;
+}
+
 // Utility function for timeout
 function waitTimeout(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -349,10 +380,12 @@ async function scrapeEventsFromEventViewer(page) {
               effect: tds[1]?.textContent?.trim() || ''
             };
           });
-          return { event: eventName, choices };
+          return { event: cleanEventName(eventName), choices };
         });
         if (detail && detail.event) {
           allEvents.push(detail);
+        } else if (detail && !detail.event) {
+          console.log(`      ⏭️ Skipping event with invalid name`);
         }
         // Đóng tooltip nếu cần
         await page.keyboard.press('Escape');

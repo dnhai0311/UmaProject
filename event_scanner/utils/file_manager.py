@@ -1,38 +1,12 @@
 """
-Utility classes for Uma Event Scanner
-Contains Logger and FileManager classes
+File manager utility for Uma Event Scanner
 """
 
 import json
 import os
 import pickle
-from datetime import datetime
-from typing import Dict, Any, Optional
-
-
-class Logger:
-    """Simple logging utility with timestamp"""
-    
-    @staticmethod
-    def info(message: str):
-        timestamp = datetime.now().strftime('%H:%M:%S')
-        print(f"[{timestamp}] INFO: {message}")
-    
-    @staticmethod
-    def error(message: str):
-        timestamp = datetime.now().strftime('%H:%M:%S')
-        print(f"[{timestamp}] ERROR: {message}")
-    
-    @staticmethod
-    def debug(message: str):
-        timestamp = datetime.now().strftime('%H:%M:%S')
-        print(f"[{timestamp}] DEBUG: {message}")
-    
-    @staticmethod
-    def warning(message: str):
-        timestamp = datetime.now().strftime('%H:%M:%S')
-        print(f"[{timestamp}] WARNING: {message}")
-
+from typing import Dict, Any
+from .logger import Logger
 
 class FileManager:
     """File management utilities for JSON and pickle files"""

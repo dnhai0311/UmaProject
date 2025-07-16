@@ -6,7 +6,7 @@ Contains ImageProcessor class with various preprocessing methods
 import cv2
 import numpy as np
 from typing import List, Tuple
-from utils import Logger
+from event_scanner.utils import Logger
 
 
 class ImageProcessor:

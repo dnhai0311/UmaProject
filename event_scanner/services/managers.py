@@ -1,11 +1,10 @@
 """
 Settings and History Managers for Uma Event Scanner
-Contains SettingsManager and HistoryManager classes
 """
 
 from datetime import datetime
 from typing import Dict, List, Any, Optional
-from utils import Logger, FileManager
+from event_scanner.utils import Logger, FileManager
 
 # Constants
 SETTINGS_FILE = 'scanner_settings.json'
