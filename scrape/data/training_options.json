@@ -1,6 +1,21 @@
 {
   "supportCards": [
     {
+      "src": "https://gametora.com/images/umamusume/supports/support_card_s_30028.png",
+      "alt": "30028",
+      "title": "30028"
+    },
+    {
+      "src": "https://gametora.com/images/umamusume/supports/support_card_s_30029.png",
+      "alt": "30029",
+      "title": "30029"
+    },
+    {
+      "src": "https://gametora.com/images/umamusume/supports/support_card_s_30030.png",
+      "alt": "30030",
+      "title": "30030"
+    },
+    {
       "src": "https://gametora.com/images/umamusume/supports/support_card_s_30027.png",
       "alt": "30027",
       "title": "30027"
@@ -134,6 +149,11 @@
       "src": "https://gametora.com/images/umamusume/supports/support_card_s_30023.png",
       "alt": "30023",
       "title": "30023"
+    },
+    {
+      "src": "https://gametora.com/images/umamusume/supports/support_card_s_20026.png",
+      "alt": "20026",
+      "title": "20026"
     },
     {
       "src": "https://gametora.com/images/umamusume/supports/support_card_s_20025.png",
@@ -332,6 +352,11 @@
       "title": "1013_101301"
     },
     {
+      "src": "https://gametora.com/images/umamusume/characters/thumb/chara_stand_1013_101302.png",
+      "alt": "1013_101302",
+      "title": "1013_101302"
+    },
+    {
       "src": "https://gametora.com/images/umamusume/characters/thumb/chara_stand_1027_102701.png",
       "alt": "1027_102701",
       "title": "1027_102701"
@@ -395,6 +420,11 @@
       "src": "https://gametora.com/images/umamusume/characters/thumb/chara_stand_1003_100301.png",
       "alt": "1003_100301",
       "title": "1003_100301"
+    },
+    {
+      "src": "https://gametora.com/images/umamusume/characters/thumb/chara_stand_1003_100302.png",
+      "alt": "1003_100302",
+      "title": "1003_100302"
     },
     {
       "src": "https://gametora.com/images/umamusume/characters/thumb/chara_stand_1008_100801.png",

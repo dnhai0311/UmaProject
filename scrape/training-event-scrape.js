@@ -519,6 +519,16 @@ async function scrapeTrainingEvents(headlessMode = true) {
     const allEvents = [];
     let combinationCount = 0;
 
+    // Cache the scenario currently set on the page to skip redundant clicks
+    let currentScenarioOnPage = null;
+
+    // Helper: select scenario only if different
+    async function selectScenarioSmart(page, targetScenario) {
+      if (currentScenarioOnPage === targetScenario) return; // already set
+      await selectScenario(page, targetScenario);
+      currentScenarioOnPage = targetScenario;
+    }
+
     for (const combination of combinations) {
       combinationCount++;
       console.log(`\n🔄 Testing combination ${combinationCount}/${combinations.length}`);
@@ -543,7 +553,7 @@ async function scrapeTrainingEvents(headlessMode = true) {
         
         // Select scenario
         try {
-          await selectScenario(page, combination.scenario);
+          await selectScenarioSmart(page, combination.scenario);
           await waitTimeout(400);
         } catch (scenarioError) {
           console.log(`   ⚠️ Error selecting scenario: ${scenarioError.message}`);
@@ -1448,336 +1458,70 @@ async function scrapeEventsFromEventViewer(page, combination) {
                 }
               }
 
-              const rows = Array.from(tippy.querySelectorAll('.tooltips_ttable__dvIzv tr'));
-              const choices = rows.map(row => {
-                const tds = row.querySelectorAll('td');
-                const choiceText = tds[0]?.textContent?.trim() || '';
-                const effectText = tds[1]?.textContent?.trim() || '';
-                
-                // Tách các effect thành mảng riêng biệt
-                // Trước tiên split theo \n, sau đó split theo các pattern khác
-                let effects = effectText.split('\n').filter(effect => effect.trim());
-                
-                // Nếu chỉ có 1 effect, thử tách theo các pattern khác
-                if (effects.length === 1) {
-                  const singleEffect = effects[0];
-                  
-                  // Tách theo các pattern phổ biến - sử dụng regex để tìm và tách
-                  const patterns = [
-                    {
-                      regex: /([A-Za-z]+ \+[0-9]+)([A-Za-z\s]+ \ +[0-9]+)/g,
-                      example: "Energy +10Skill points +5"
-                    },
-                    {
-                      regex: /([A-Za-z]+ \ +[0-9]+),([A-Za-z\s]+ \ +[0-9]+)/g,
-                      example: "Power +8, Technique +2"
-                    },
-                    {
-                      regex: /([A-Za-z]+ \ +[0-9]+)\s+([A-Za-z\s]+ \ +[0-9]+)/g,
-                      example: "Wisdom +10 Skill points +15"
-                    }
-                  ];
-                  
-                  let foundPattern = false;
-                  for (const pattern of patterns) {
-                    const matches = [...singleEffect.matchAll(pattern.regex)];
-                    if (matches.length > 0) {
-                      // Tách theo pattern này
-                      const parts = [];
-                      let lastIndex = 0;
-                      
-                      for (const match of matches) {
-                        if (match.index > lastIndex) {
-                          parts.push(singleEffect.substring(lastIndex, match.index).trim());
-                        }
-                        parts.push(match[1].trim());
-                        parts.push(match[2].trim());
-                        lastIndex = match.index + match[0].length;
-                      }
-                      
-                      if (lastIndex < singleEffect.length) {
-                        parts.push(singleEffect.substring(lastIndex).trim());
-                      }
-                      
-                      effects = parts.filter(part => part.trim());
-                      foundPattern = true;
-                      break;
-                    }
-                  }
-                  
-                                  // Nếu vẫn không tách được, thử tách theo các từ khóa
-                if (!foundPattern && effects.length === 1) {
-                  const keywords = ['Energy', 'Speed', 'Stamina', 'Power', 'Technique', 'Wisdom', 'Skill points', 'Motivation', 'Friendship'];
-                  const parts = [];
-                  let currentPart = '';
-                  let lastIndex = 0;
-                  
-                  for (const keyword of keywords) {
-                    const keywordIndex = singleEffect.indexOf(keyword, lastIndex);
-                    if (keywordIndex !== -1) {
-                      if (currentPart) {
-                        parts.push(currentPart.trim());
-                      }
-                      currentPart = keyword;
-                      lastIndex = keywordIndex + keyword.length;
-                    }
-                  }
-                  
-                  if (currentPart) {
-                    parts.push(currentPart.trim());
-                  }
-                  
-                  if (parts.length > 1) {
-                    effects = parts;
-                  }
+              /* ---------------- NEW CHOICE / EFFECT PARSER ---------------- */
+              const statColors = {
+                'Speed': '#3498db', 'Stamina': '#e67e22', 'Power': '#e74c3c', 'Guts': '#9b59b6',
+                'Wisdom': '#2ecc71', 'Skill points': '#f1c40f', 'Energy': '#f39c12', 'Mood': '#1abc9c',
+                'All stats': '#e84393'
+              };
+
+              const parseEffectLine = (txt) => {
+                const m = txt.match(/^([A-Za-z ]+?)\s*([+-]?-?\d+)/);
+                if (m) {
+                  const stat = m[1].trim();
+                  return { kind: 'stat', raw: txt, stat, amount: parseInt(m[2]), color: statColors[stat] || null };
                 }
-                
-                // Nếu vẫn chưa tách được, thử tách theo các pattern phức tạp hơn
-                if (effects.length === 1) {
-                  const singleEffect = effects[0];
-                  
-                  // Pattern cho các trường hợp phức tạp - cải tiến logic
-                  const complexPatterns = [
-                    // Tách theo các từ khóa phức tạp với logic thông minh hơn
-                    {
-                      test: (text) => text.includes('Randomly') && text.includes('either'),
-                      logic: (text) => {
-                        // Xử lý trường hợp "Randomly either...or..."
-                        const parts = [];
-                        
-                        // Tách theo "Randomly either"
-                        if (text.includes('Randomly either')) {
-                          parts.push('Randomly either');
-                          const afterRandomly = text.substring(text.indexOf('Randomly either') + 'Randomly either'.length);
-                          
-                          // Tách theo "or"
-                          if (afterRandomly.includes('or')) {
-                            const orIndex = afterRandomly.indexOf('or');
-                            const beforeOr = afterRandomly.substring(0, orIndex).trim();
-                            const afterOr = afterRandomly.substring(orIndex + 2).trim();
-                            
-                            if (beforeOr) parts.push(beforeOr);
-                            parts.push('or');
-                            if (afterOr) parts.push(afterOr);
-                          } else {
-                            parts.push(afterRandomly.trim());
-                          }
-                        }
-                        
-                        return parts.filter(part => part.trim());
-                      }
-                    },
-                    // Tách theo dấu ngoặc đơn với logic cải tiến
-                    {
-                      test: (text) => text.includes('(') && text.includes(')'),
-                      logic: (text) => {
-                        const parts = [];
-                        let currentText = text;
-                        
-                        // Tìm và tách theo dấu ngoặc
-                        while (currentText.includes('(') && currentText.includes(')')) {
-                          const openIndex = currentText.indexOf('(');
-                          const closeIndex = currentText.indexOf(')', openIndex);
-                          
-                          if (openIndex > 0) {
-                            parts.push(currentText.substring(0, openIndex).trim());
-                          }
-                          parts.push(currentText.substring(openIndex, closeIndex + 1).trim());
-                          currentText = currentText.substring(closeIndex + 1);
-                        }
-                        
-                        if (currentText.trim()) {
-                          parts.push(currentText.trim());
-                        }
-                        
-                        return parts.filter(part => part.trim());
-                      }
-                    },
-                                // Tách theo các từ khóa đơn giản hơn
-            {
-              test: (text) => text.includes('Get') || text.includes('Practice') || text.includes('status'),
-              logic: (text) => {
-                const keywords = ['Get', 'Practice', 'status', 'Mood', 'Last trained stat'];
-                const parts = [];
-                let currentText = text;
-                
-                for (const keyword of keywords) {
-                  const index = currentText.indexOf(keyword);
-                  if (index !== -1) {
-                    if (index > 0) {
-                      parts.push(currentText.substring(0, index).trim());
-                    }
-                    parts.push(keyword);
-                    currentText = currentText.substring(index + keyword.length);
-                  }
+                return { kind: 'text', raw: txt };
+              };
+
+              const pushSegmentsFromText = (arr, text) => {
+                const parts = text.split(/\s+or\s+/i);
+                if (parts.length > 1) {
+                  arr.push(parseEffectLine(parts[0]));
+                  arr.push({ kind: 'divider_or', raw: 'or' });
+                  parts.slice(1).forEach(p => arr.push(parseEffectLine(p)));
+                } else {
+                  arr.push(parseEffectLine(text));
                 }
-                
-                if (currentText.trim()) {
-                  parts.push(currentText.trim());
-                }
-                
-                return parts.filter(part => part.trim());
-              }
-            },
-                      // Tách theo các từ khóa phức tạp hơn cho trường hợp đặc biệt
-          {
-            test: (text) => text.includes('statusor') || text.includes('○') || text.includes('-1Last') || text.includes('+5Get') || text.includes('+10Get') || text.includes('+15Get') || text.includes('+20Get'),
-            logic: (text) => {
-              const parts = [];
-              let currentText = text;
-              
-              // Tách theo "statusor" -> "status" + "or"
-              if (currentText.includes('statusor')) {
-                const statusorIndex = currentText.indexOf('statusor');
-                if (statusorIndex > 0) {
-                  parts.push(currentText.substring(0, statusorIndex).trim());
-                }
-                parts.push('status');
-                parts.push('or');
-                currentText = currentText.substring(statusorIndex + 'statusor'.length);
-              }
-              
-              // Tách theo "-1Last" -> "-1" + "Last"
-              if (currentText.includes('-1Last')) {
-                const minusIndex = currentText.indexOf('-1Last');
-                if (minusIndex > 0) {
-                  parts.push(currentText.substring(0, minusIndex).trim());
-                }
-                parts.push('-1');
-                parts.push('Last');
-                currentText = currentText.substring(minusIndex + '-1Last'.length);
-              }
-              
-              // Tách theo "+5Get", "+10Get", "+15Get", "+20Get" -> "+5" + "Get", etc.
-              const getPatterns = ['+5Get', '+10Get', '+15Get', '+20Get'];
-              for (const pattern of getPatterns) {
-                if (currentText.includes(pattern)) {
-                  const patternIndex = currentText.indexOf(pattern);
-                  if (patternIndex > 0) {
-                    const beforePattern = currentText.substring(0, patternIndex).trim();
-                    // Thử tách thêm phần trước pattern nếu có dạng "Speed -5Power"
-                    if (beforePattern.includes('Power') && beforePattern.includes('-')) {
-                      const powerIndex = beforePattern.indexOf('Power');
-                      if (powerIndex > 0) {
-                        parts.push(beforePattern.substring(0, powerIndex).trim());
-                        parts.push('Power');
-                      } else {
-                        parts.push(beforePattern);
-                      }
+              };
+
+              let choices = [];
+              const tableEl = tippy.querySelector('table.tooltips_ttable__dvIzv');
+
+              if (tableEl) {
+                tableEl.querySelectorAll('tr').forEach(tr => {
+                  const tds = tr.querySelectorAll('td');
+                  if (tds.length < 2) return;
+                  const optionName = tds[0].textContent.trim();
+                  const effectCell = tds[1];
+                  const segs = [];
+
+                  effectCell.childNodes.forEach(node => {
+                    const txt = node.textContent.trim();
+                    if (!txt) return;
+                    if (node.className && node.className.includes('eventhelper_random_text')) {
+                      segs.push({ kind: 'random_header', raw: txt });
+                    } else if (node.className && node.className.includes('eventhelper_divider_or')) {
+                      segs.push({ kind: 'divider_or', raw: txt || 'or' });
                     } else {
-                      parts.push(beforePattern);
+                      pushSegmentsFromText(segs, txt);
                     }
-                  }
-                  parts.push(pattern.substring(0, pattern.length - 3)); // Lấy phần số
-                  parts.push('Get');
-                  currentText = currentText.substring(patternIndex + pattern.length);
-                  break;
+                  });
+
+                  if (segs.length) choices.push({ choice: optionName, effects: segs });
+                });
+              } else {
+                const singleCell = tippy.querySelector('.tooltips_ttable_cell___3NMF');
+                if (singleCell) {
+                  const segs = [];
+                  Array.from(singleCell.querySelectorAll('div')).forEach(d => {
+                    const t = d.textContent.trim();
+                    if (t) pushSegmentsFromText(segs, t);
+                  });
+                  if (segs.length) choices.push({ choice: '', effects: segs });
                 }
               }
-              
-              // Tách theo "○"
-              if (currentText.includes('○')) {
-                const circleIndex = currentText.indexOf('○');
-                if (circleIndex > 0) {
-                  parts.push(currentText.substring(0, circleIndex).trim());
-                }
-                parts.push('○');
-                currentText = currentText.substring(circleIndex + 1);
-              }
-              
-              if (currentText.trim()) {
-                parts.push(currentText.trim());
-              }
-              
-              return parts.filter(part => part.trim());
-            }
-          },
-          // Tách theo các pattern phức tạp nhất - xử lý toàn bộ chuỗi
-          {
-            test: (text) => text.includes('Randomly either') && (text.includes('statusor') || text.includes('-1Last')),
-            logic: (text) => {
-              const parts = [];
-              let currentText = text;
-              
-              // Tách theo "Randomly either"
-              if (currentText.includes('Randomly either')) {
-                parts.push('Randomly either');
-                currentText = currentText.substring(currentText.indexOf('Randomly either') + 'Randomly either'.length);
-              }
-              
-              // Tách theo "-1Last" -> "-1" + "Last"
-              if (currentText.includes('-1Last')) {
-                const minusIndex = currentText.indexOf('-1Last');
-                if (minusIndex > 0) {
-                  parts.push(currentText.substring(0, minusIndex).trim());
-                }
-                parts.push('-1');
-                parts.push('Last');
-                currentText = currentText.substring(minusIndex + '-1Last'.length);
-              }
-              
-              // Tách theo dấu ngoặc
-              if (currentText.includes('(') && currentText.includes(')')) {
-                const openIndex = currentText.indexOf('(');
-                const closeIndex = currentText.indexOf(')', openIndex);
-                
-                if (openIndex > 0) {
-                  parts.push(currentText.substring(0, openIndex).trim());
-                }
-                parts.push(currentText.substring(openIndex, closeIndex + 1).trim());
-                currentText = currentText.substring(closeIndex + 1);
-              }
-              
-              // Tách theo "statusor" -> "status" + "or"
-              if (currentText.includes('statusor')) {
-                const statusorIndex = currentText.indexOf('statusor');
-                if (statusorIndex > 0) {
-                  parts.push(currentText.substring(0, statusorIndex).trim());
-                }
-                parts.push('status');
-                parts.push('or');
-                currentText = currentText.substring(statusorIndex + 'statusor'.length);
-              }
-              
-              // Tách theo "○"
-              if (currentText.includes('○')) {
-                const circleIndex = currentText.indexOf('○');
-                if (circleIndex > 0) {
-                  parts.push(currentText.substring(0, circleIndex).trim());
-                }
-                parts.push('○');
-                currentText = currentText.substring(circleIndex + 1);
-              }
-              
-              if (currentText.trim()) {
-                parts.push(currentText.trim());
-              }
-              
-              return parts.filter(part => part.trim());
-            }
-          }
-                  ];
-                  
-                  for (const pattern of complexPatterns) {
-                    if (pattern.test && pattern.test(singleEffect)) {
-                      const parts = pattern.logic(singleEffect);
-                      if (parts.length > 1) {
-                        effects = parts;
-                        break;
-                      }
-                    }
-                  }
-                }
-                }
-                
-                // Join tất cả effects bằng \n
-                const combinedEffects = effects.join('\n');
-                
-                return {
-                  choice: choiceText,
-                  effects: combinedEffects
-                };
-              });
+              /* ---------------- END NEW PARSER ---------------- */
               const cleanedEventName = cleanEventName(eventName);
               if (cleanedEventName) {
                 return { event: cleanedEventName, type, choices };
