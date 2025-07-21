@@ -22,7 +22,7 @@ from PyQt6.QtGui import QFont, QPixmap, QImage
 
 from event_scanner.core import ImageProcessor, EventDatabase, OCREngine
 from event_scanner.services import SettingsManager, HistoryManager
-from event_scanner.ui import EventPopup, RegionSelector
+from event_scanner.ui import EventPopup, RegionSelector, StatRecommendationsTab
 # from event_scanner.ui.ai_learning_dialog import AILearningDialog  # Removed AI feature
 from event_scanner.ui.training_events_tab import TrainingEventsTab
 from event_scanner.utils import Logger
@@ -119,6 +119,7 @@ class MainWindow(QMainWindow):
         
         self.setup_scanner_tab()
         self.setup_training_events_tab()
+        self.setup_stat_recommendations_tab()
         self.setup_history_tab()
         self.setup_settings_tab()
         # self.setup_ai_tab()  # AI tab disabled
@@ -141,6 +142,11 @@ class MainWindow(QMainWindow):
         """Set up the training events tab"""
         self.training_events_tab = TrainingEventsTab()
         self.tab_widget.addTab(self.training_events_tab, "🎴 Training Events")
+    
+    def setup_stat_recommendations_tab(self):
+        """Set up the stat recommendations tab"""
+        self.stat_recommendations_tab = StatRecommendationsTab()
+        self.tab_widget.addTab(self.stat_recommendations_tab, "📊 Stat Recommendations")
     
     def setup_scanner_tab(self):
         """Set up the scanner tab"""
