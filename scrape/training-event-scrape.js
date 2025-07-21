@@ -1553,31 +1553,9 @@ async function scrapeEventsFromEventViewer(page, combination) {
       }
     }
     
-    // Remove duplicates per owner + event content
-    const eventMap = new Map();
-    let duplicateCount = 0;
-
-    allEvents.forEach(evObj => {
-      if (evObj && evObj.event && evObj.event.event) {
-        const keyContent = JSON.stringify({
-          ownerType: evObj.ownerType,
-          ownerName: evObj.ownerName,
-          event: evObj.event.event,
-          type: evObj.event.type,
-          choices: evObj.event.choices ? evObj.event.choices.map(c => ({ choice: c.choice, effects: c.effects })) : []
-        });
-        if (!eventMap.has(keyContent)) {
-          eventMap.set(keyContent, evObj);
-        } else {
-          duplicateCount++;
-        }
-      }
-    });
-
-    const uniqueEvents = Array.from(eventMap.values());
-    console.log(`  ✅ Found ${uniqueEvents.length} unique owner-tagged events (removed ${duplicateCount} duplicates)`);
-
-    return uniqueEvents;
+    // Skip any de-duplication – keep every event as-is
+    console.log(`  ✅ Collected ${allEvents.length} events (no de-duplication)`);
+    return allEvents;
   } catch (error) {
     console.log('  ❌ Error scraping events:', error.message);
     return [];
@@ -1721,30 +1699,24 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
       timestamp: new Date().toISOString()
     };
 
-    // 1. Thu thập tất cả event duy nhất (theo nội dung)
-    const eventMap = new Map(); // key: content, value: {id, ...event}
-    const eventIdMap = new Map(); // key: content, value: id
+    // 1. Thu thập tất cả các event (GIỮ NGUYÊN, không loại trùng)
+    let globalEventIndex = 0;
+    const eventIdMap = new Map(); // Map để tra cứu id đã gán cho từng eventObject (dựa trên object reference)
+
     allEvents.forEach(result => {
       if (result.events && result.events.length > 0) {
         result.events.forEach(evObj => {
           const ev = evObj.event;
-          const eventKey = JSON.stringify({
-            event: ev.event,
-            type: ev.type,
-            choices: ev.choices || []
-          });
-          if (!eventMap.has(eventKey)) {
-            const eventId = `event_${eventMap.size + 1}`;
-            eventMap.set(eventKey, { id: eventId, ...ev });
-            eventIdMap.set(eventKey, eventId);
-          }
+          // Tạo id mới cho mỗi lần encounter – KHÔNG KIỂM TRA TRÙNG LẶP
+          const eventId = `event_${++globalEventIndex}`;
+          optimizedData.events.push({ id: eventId, ...ev });
+          eventIdMap.set(evObj, eventId); // lưu để map vào owner sau
         });
       }
     });
-    optimizedData.events = Array.from(eventMap.values());
-    console.log(`  ✅ Collected ${optimizedData.events.length} unique events`);
+    console.log(`  ✅ Collected ${optimizedData.events.length} events (no de-duplication)`);
 
-    // 2. Lưu character -> group -> eventIds (đã sửa để tránh duplicate)
+    // 2. Lưu character -> group -> eventIds (không loại trùng)
     const charMap = new Map();
     const cardMap = new Map();
     const scenarioMap = new Map();
@@ -1757,12 +1729,7 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
           const ownerName = evObj.ownerName;
 
           const eventType = ev.type || 'Unknown';
-          const eventKey = JSON.stringify({
-            event: ev.event,
-            type: ev.type,
-            choices: ev.choices || []
-          });
-          const eventId = eventIdMap.get(eventKey);
+          const eventId = eventIdMap.get(evObj);
 
           const targetMap = ownerType === 'character' ? charMap : ownerType === 'support' ? cardMap : ownerType === 'scenario' ? scenarioMap : null;
           if (!targetMap) return;
