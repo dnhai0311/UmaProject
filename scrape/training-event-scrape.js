@@ -519,16 +519,6 @@ async function scrapeTrainingEvents(headlessMode = true) {
     const allEvents = [];
     let combinationCount = 0;
 
-    // Cache the scenario currently set on the page to skip redundant clicks
-    let currentScenarioOnPage = null;
-
-    // Helper: select scenario only if different
-    async function selectScenarioSmart(page, targetScenario) {
-      if (currentScenarioOnPage === targetScenario) return; // already set
-      await selectScenario(page, targetScenario);
-      currentScenarioOnPage = targetScenario;
-    }
-
     for (const combination of combinations) {
       combinationCount++;
       console.log(`\n🔄 Testing combination ${combinationCount}/${combinations.length}`);
@@ -553,7 +543,7 @@ async function scrapeTrainingEvents(headlessMode = true) {
         
         // Select scenario
         try {
-          await selectScenarioSmart(page, combination.scenario);
+          await selectScenario(page, combination.scenario);
           await waitTimeout(400);
         } catch (scenarioError) {
           console.log(`   ⚠️ Error selecting scenario: ${scenarioError.message}`);
@@ -1459,24 +1449,27 @@ async function scrapeEventsFromEventViewer(page, combination) {
               }
 
               /* ---------------- NEW CHOICE / EFFECT PARSER ---------------- */
-              const statColors = {
-                'Speed': '#3498db', 'Stamina': '#e67e22', 'Power': '#e74c3c', 'Guts': '#9b59b6',
-                'Wisdom': '#2ecc71', 'Skill points': '#f1c40f', 'Energy': '#f39c12', 'Mood': '#1abc9c',
-                'All stats': '#e84393'
-              };
-
               const parseEffectLine = (txt) => {
-                const m = txt.match(/^([A-Za-z ]+?)\s*([+-]?-?\d+)/);
-                if (m) {
-                  const stat = m[1].trim();
-                  return { kind: 'stat', raw: txt, stat, amount: parseInt(m[2]), color: statColors[stat] || null };
+                const statMatch = txt.match(/^([A-Za-z ]+?)\s*([+-]?-?\d+)/);
+                if (statMatch) {
+                  const stat = statMatch[1].trim();
+                  return { kind: 'stat', raw: txt, stat, amount: parseInt(statMatch[2]) };
                 }
+
+                const lower = txt.toLowerCase();
+                if (lower.startsWith('obtain') && lower.includes('skill')) {
+                  return { kind: 'skill', raw: txt };
+                }
+                if (lower.includes('status')) {
+                  return { kind: 'status', raw: txt };
+                }
+
                 return { kind: 'text', raw: txt };
               };
 
               const pushSegmentsFromText = (arr, text) => {
                 const parts = text.split(/\s+or\s+/i);
-                if (parts.length > 1) {
+                  if (parts.length > 1) {
                   arr.push(parseEffectLine(parts[0]));
                   arr.push({ kind: 'divider_or', raw: 'or' });
                   parts.slice(1).forEach(p => arr.push(parseEffectLine(p)));
@@ -1503,14 +1496,14 @@ async function scrapeEventsFromEventViewer(page, combination) {
                       segs.push({ kind: 'random_header', raw: txt });
                     } else if (node.className && node.className.includes('eventhelper_divider_or')) {
                       segs.push({ kind: 'divider_or', raw: txt || 'or' });
-                    } else {
+                          } else {
                       pushSegmentsFromText(segs, txt);
-                    }
+                        }
                   });
 
                   if (segs.length) choices.push({ choice: optionName, effects: segs });
                 });
-              } else {
+                      } else {
                 const singleCell = tippy.querySelector('.tooltips_ttable_cell___3NMF');
                 if (singleCell) {
                   const segs = [];
@@ -1519,8 +1512,8 @@ async function scrapeEventsFromEventViewer(page, combination) {
                     if (t) pushSegmentsFromText(segs, t);
                   });
                   if (segs.length) choices.push({ choice: '', effects: segs });
-                }
-              }
+                      }
+                    }
               /* ---------------- END NEW PARSER ---------------- */
               const cleanedEventName = cleanEventName(eventName);
               if (cleanedEventName) {
@@ -1553,9 +1546,31 @@ async function scrapeEventsFromEventViewer(page, combination) {
       }
     }
     
-    // Skip any de-duplication – keep every event as-is
-    console.log(`  ✅ Collected ${allEvents.length} events (no de-duplication)`);
-    return allEvents;
+    // Remove duplicates per owner + event content
+    const eventMap = new Map();
+    let duplicateCount = 0;
+
+    allEvents.forEach(evObj => {
+      if (evObj && evObj.event && evObj.event.event) {
+        const keyContent = JSON.stringify({
+          ownerType: evObj.ownerType,
+          ownerName: evObj.ownerName,
+          event: evObj.event.event,
+          type: evObj.event.type,
+          choices: evObj.event.choices ? evObj.event.choices.map(c => ({ choice: c.choice, effects: c.effects })) : []
+        });
+        if (!eventMap.has(keyContent)) {
+          eventMap.set(keyContent, evObj);
+        } else {
+          duplicateCount++;
+        }
+      }
+    });
+
+    const uniqueEvents = Array.from(eventMap.values());
+    console.log(`  ✅ Found ${uniqueEvents.length} unique owner-tagged events (removed ${duplicateCount} duplicates)`);
+
+    return uniqueEvents;
   } catch (error) {
     console.log('  ❌ Error scraping events:', error.message);
     return [];
@@ -1699,24 +1714,30 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
       timestamp: new Date().toISOString()
     };
 
-    // 1. Thu thập tất cả các event (GIỮ NGUYÊN, không loại trùng)
-    let globalEventIndex = 0;
-    const eventIdMap = new Map(); // Map để tra cứu id đã gán cho từng eventObject (dựa trên object reference)
-
+    // 1. Thu thập tất cả event duy nhất (theo nội dung)
+    const eventMap = new Map(); // key: content, value: {id, ...event}
+    const eventIdMap = new Map(); // key: content, value: id
     allEvents.forEach(result => {
       if (result.events && result.events.length > 0) {
         result.events.forEach(evObj => {
           const ev = evObj.event;
-          // Tạo id mới cho mỗi lần encounter – KHÔNG KIỂM TRA TRÙNG LẶP
-          const eventId = `event_${++globalEventIndex}`;
-          optimizedData.events.push({ id: eventId, ...ev });
-          eventIdMap.set(evObj, eventId); // lưu để map vào owner sau
+          const eventKey = JSON.stringify({
+            event: ev.event,
+            type: ev.type,
+            choices: ev.choices || []
+          });
+          if (!eventMap.has(eventKey)) {
+            const eventId = `event_${eventMap.size + 1}`;
+            eventMap.set(eventKey, { id: eventId, ...ev });
+            eventIdMap.set(eventKey, eventId);
+          }
         });
       }
     });
-    console.log(`  ✅ Collected ${optimizedData.events.length} events (no de-duplication)`);
+    optimizedData.events = Array.from(eventMap.values());
+    console.log(`  ✅ Collected ${optimizedData.events.length} unique events`);
 
-    // 2. Lưu character -> group -> eventIds (không loại trùng)
+    // 2. Lưu character -> group -> eventIds (đã sửa để tránh duplicate)
     const charMap = new Map();
     const cardMap = new Map();
     const scenarioMap = new Map();
@@ -1729,7 +1750,12 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
           const ownerName = evObj.ownerName;
 
           const eventType = ev.type || 'Unknown';
-          const eventId = eventIdMap.get(evObj);
+          const eventKey = JSON.stringify({
+            event: ev.event,
+            type: ev.type,
+            choices: ev.choices || []
+          });
+          const eventId = eventIdMap.get(eventKey);
 
           const targetMap = ownerType === 'character' ? charMap : ownerType === 'support' ? cardMap : ownerType === 'scenario' ? scenarioMap : null;
           if (!targetMap) return;
@@ -1763,8 +1789,68 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
       });
     });
 
+    // Load skills and status data for detail mapping
+    console.log('  🔧 Loading skills & status database for detail mapping...');
+    const skillsDB = loadJsonFile(path.join(__dirname, 'data', 'all_skills.json')) || [];
+    const statusDB = loadJsonFile(path.join(__dirname, 'data', 'all_status.json')) || { positive_conditions: [], negative_conditions: [] };
+
+    const statusList = [...statusDB.positive_conditions, ...statusDB.negative_conditions];
+
+    const findSkill = (raw) => {
+      const lower = raw.toLowerCase();
+      return skillsDB.find(s => lower.includes(s.name.toLowerCase()));
+    };
+
+    const findStatus = (raw) => {
+      const lower = raw.toLowerCase();
+      return statusList.find(st => lower.includes(st.condition.toLowerCase()));
+    };
+
+    // Add detail to segments inside optimizedData events
+    optimizedData.events.forEach(ev => {
+      if (ev.choices) {
+        ev.choices.forEach(ch => {
+          if (ch && Array.isArray(ch.effects)) {
+            ch.effects.forEach(seg => {
+              if (seg && !seg.detail) {
+                if (seg.kind === 'skill') {
+                  const skill = findSkill(seg.raw);
+                  if (skill) {
+                    seg.detail = { effect: skill.effect, name: skill.name, imageUrl: skill.imageUrl };
+                  }
+                } else if (seg.kind === 'status') {
+                  const st = findStatus(seg.raw);
+                  if (st) {
+                    seg.detail = { effect: st.effect, condition: st.condition };
+                  }
+                } else if (seg.kind === 'text') {
+                  const lower = seg.raw.toLowerCase();
+                  const skillMatch = skillsDB.find(s => lower.includes(s.name.toLowerCase()));
+                  if (skillMatch) {
+                    seg.kind = 'skill';
+                    seg.detail = { effect: skillMatch.effect, name: skillMatch.name, imageUrl: skillMatch.imageUrl };
+                    // Detect hint amount if present
+                    const hm = seg.raw.match(/hint\s*\+?(-?\d+)/i);
+                    if (hm) {
+                      seg.hint = parseInt(hm[1]);
+                    }
+                  } else {
+                    const statusMatch = statusList.find(st => lower.includes(st.condition.toLowerCase()));
+                    if (statusMatch) {
+                      seg.kind = 'status';
+                      seg.detail = { effect: statusMatch.effect, condition: statusMatch.condition };
+                    }
+                  }
+                }
+              }
+            });
+          }
+        });
+      }
+    });
+
     // Apply mapping to enhance data with names and imageUrls
-    console.log('  🔧 Applying mapping to enhance data...');
+    console.log('  🔧 Applying mapping to enhance character/support data...');
     const enhancedData = enhanceTrainingEventsData(optimizedData, umaMapping, supportMapping);
     
     // Calculate mapping statistics

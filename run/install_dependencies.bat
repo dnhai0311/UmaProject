@@ -76,6 +76,11 @@ echo Installing pathlib...
 python -m pip install pathlib
 echo.
 
+REM Install RapidFuzz for high-accuracy fuzzy matching
+echo Installing RapidFuzz...
+python -m pip install rapidfuzz
+echo.
+
 REM ========================================
 REM AI/ML Dependencies for Event Detection
 REM ========================================

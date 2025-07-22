@@ -1,0 +1,126 @@
+{
+  "positive_conditions": [
+    {
+      "condition": "Charming ○",
+      "effect": "Increases bond gain with supports by 2",
+      "acquisition": "Random Event",
+      "removal": ""
+    },
+    {
+      "condition": "Fast Learner",
+      "effect": "Reduces cost of learning skills by 10%",
+      "acquisition": "",
+      "removal": ""
+    },
+    {
+      "condition": "Practice Perfect ○",
+      "effect": "Reduces chance to fail stat training by 2%",
+      "acquisition": "Random Event. Slight chance after failing training.",
+      "removal": ""
+    },
+    {
+      "condition": "Practice Perfect ◎",
+      "effect": "Reduces chance to fail stat training by 4%",
+      "acquisition": "",
+      "removal": ""
+    },
+    {
+      "condition": "Hot Topic",
+      "effect": "Increases bond gain with Yayoi Akikawa and Etsuko Otonashi by 40%",
+      "acquisition": "Random Event",
+      "removal": ""
+    },
+    {
+      "condition": "Shining Brightly",
+      "effect": "Reduces the chance to fail stat training",
+      "acquisition": "",
+      "removal": ""
+    },
+    {
+      "condition": "ファンとの約束",
+      "effect": "Win a race in the listed location to receive stat bonuses and motivation",
+      "acquisition": "",
+      "removal": ""
+    },
+    {
+      "condition": "ポジティブ思考",
+      "effect": "Prevents a motivation decrease of any level once",
+      "acquisition": "",
+      "removal": ""
+    },
+    {
+      "condition": "幸運体質",
+      "effect": "Prevents obtaining a negative condition once",
+      "acquisition": "",
+      "removal": ""
+    }
+  ],
+  "negative_conditions": [
+    {
+      "condition": "Practice Poor",
+      "effect": "Increases the chance to fail stat training by 2%",
+      "acquisition": "",
+      "removal": "Infirmary"
+    },
+    {
+      "condition": "Migraine",
+      "effect": "Motivation cannot increase",
+      "acquisition": "",
+      "removal": "Infirmary"
+    },
+    {
+      "condition": "Dry Skin",
+      "effect": "Random chance to lower motivation by one stage as long as the condition persists",
+      "acquisition": "",
+      "removal": "Infirmary"
+    },
+    {
+      "condition": "Night Owl",
+      "effect": "Random chance to lower energy by 10 as long as the condition persists",
+      "acquisition": "Randomly when Rest is selected",
+      "removal": "Infirmary\nGain 70 energy through rest"
+    },
+    {
+      "condition": "Slow Metabolism",
+      "effect": "Speed stat cannot be increased",
+      "acquisition": "",
+      "removal": "Infirmary\nStat Training"
+    },
+    {
+      "condition": "Slacker",
+      "effect": "If you attempt to do a stat training with this condition your trainee may not show up, wasting a turn",
+      "acquisition": "",
+      "removal": "Infirmary\nTrain with Etsuko"
+    },
+    {
+      "condition": "Under the Weather",
+      "effect": "Increases the chance to fail trainings by 5%",
+      "acquisition": "Participate in the objective race Game:Sumire Stakes",
+      "removal": "Participate in the objective race Kikka Sho"
+    },
+    {
+      "condition": "まだまだ準備中",
+      "effect": "Random chance to lower energy by 5 after a race long as the condition persists",
+      "acquisition": "Complete debut race",
+      "removal": "Complete debut race"
+    },
+    {
+      "condition": "春待つ蕾",
+      "effect": "Random chance to lower energy by 5 after a race long as the condition persists",
+      "acquisition": "Complete debut race",
+      "removal": "Complete November of classic year"
+    },
+    {
+      "condition": "春待つ蕾",
+      "effect": "A race streak for two or more will drain an additional 10 energy",
+      "acquisition": "Complete debut race",
+      "removal": "Participate in the objective race Tenno Sho (Autumn)"
+    },
+    {
+      "condition": "春待つ蕾",
+      "effect": "Unknown effect",
+      "acquisition": "Always acquired at the beginning of June, classic year",
+      "removal": "Participate in the objective race February Stakes"
+    }
+  ]
+}

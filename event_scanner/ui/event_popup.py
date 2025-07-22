@@ -151,31 +151,47 @@ class EventPopup(QDialog):
                 
                 if isinstance(choice, dict):
                     text = choice.get('choice', str(choice))
-                    segs = choice.get('effects', [])
-                    html_lines = []
-                    for seg in segs:
-                        if seg.get('kind') in ('divider_or','random_header'):
-                            html_lines.append(f"<b>{seg.get('raw','')}</b>")
-                        else:
-                            html_lines.append(seg.get('raw',''))
-                    effect = '<br>'.join(html_lines)
-                    
-                    # Choice text - INCREASED FONT SIZE
-                    choice_text = QLabel(f"{i+1}. {text}")
-                    choice_text.setStyleSheet("color: white; font-weight: bold;")
-                    choice_text.setFont(QFont("Arial", 14, QFont.Weight.Bold))  # Increased from 11 to 14
-                    choice_text.setWordWrap(True)
-                    choice_layout.addWidget(choice_text)
-                    
-                    # Effect text (if exists) - INCREASED FONT SIZE (remove 'Effect:')
-                    if effect:
-                        effect_text = QLabel()
-                        effect_text.setTextFormat(Qt.TextFormat.RichText)
-                        effect_text.setText(effect)
-                        effect_text.setStyleSheet("color: white;")
-                        effect_text.setFont(QFont("Arial", 13))  # Increased from 10 to 13
-                        effect_text.setWordWrap(True)
-                        choice_layout.addWidget(effect_text)
+                    effect_data = choice.get('effects', '')
+
+                    # Choice label
+                    choice_label = QLabel(f"{i+1}. {text}")
+                    choice_label.setStyleSheet("color: white; font-weight: bold;")
+                    choice_label.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+                    choice_label.setWordWrap(True)
+                    choice_layout.addWidget(choice_label)
+
+                    # Build effect string
+                    effect_str = ""
+                    if isinstance(effect_data, list):
+                        lines = []
+                        for seg in effect_data:
+                            if not isinstance(seg, dict):
+                                lines.append(str(seg))
+                                continue
+                            kind = seg.get('kind')
+                            if kind in ('divider_or', 'random_header'):
+                                lines.append(seg.get('raw', ''))
+                            elif kind == 'stat':
+                                lines.append(f"{seg.get('stat', '')} {seg.get('amount', ''):+}")
+                            elif kind in ('skill', 'status'):
+                                line = seg.get('raw', '')
+                                if 'hint' in seg:
+                                    line += f" (hint {seg['hint']:+})"
+                                if seg.get('detail') and seg['detail'].get('effect'):
+                                    line += f" — {seg['detail']['effect']}"
+                                lines.append(line)
+                            else:
+                                lines.append(seg.get('raw', ''))
+                        effect_str = "\n".join(lines)
+                    else:
+                        effect_str = str(effect_data) if effect_data else (choice.get('effect', '') or '')
+
+                    if effect_str:
+                        effect_label = QLabel(f"💡 Effect: {effect_str}")
+                        effect_label.setStyleSheet("color: white;")
+                        effect_label.setFont(QFont("Arial", 13))
+                        effect_label.setWordWrap(True)
+                        choice_layout.addWidget(effect_label)
                 else:
                     # Simple string choice - INCREASED FONT SIZE
                     choice_text = QLabel(f"{i+1}. {choice}")
@@ -261,10 +277,10 @@ class EventPopup(QDialog):
         """Custom close method to ensure proper cleanup"""
         if self.close_requested:
             return
-        
+            
         Logger.debug("Popup close requested")
         self.close_requested = True
-
+        
         # Notify parent window immediately so scan loop skips redisplay
         if self.parent_window and hasattr(self.parent_window, 'dismissed_event_name'):
             try:

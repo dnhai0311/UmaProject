@@ -283,45 +283,7 @@ class MainWindow(QMainWindow):
         """)
         control_layout.addWidget(self.stop_btn)
         
-        test_btn = QPushButton("🔍 Test OCR")
-        test_btn.clicked.connect(self.test_ocr)
-        test_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #9b59b6; 
-                color: white; 
-                font-weight: bold; 
-                padding: 5px 15px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #8e44ad;
-            }
-            QPushButton:pressed {
-                background-color: #6c3483;
-                border: 2px solid #4a235a;
-            }
-        """)
-        control_layout.addWidget(test_btn)
-        
-        test_json_btn = QPushButton("📄 Test JSON")
-        test_json_btn.clicked.connect(self.test_with_json_data)
-        test_json_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #f39c12; 
-                color: white; 
-                font-weight: bold; 
-                padding: 5px 15px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #d68910;
-            }
-            QPushButton:pressed {
-                background-color: #b9770e;
-                border: 2px solid #9a7d0a;
-            }
-        """)
-        control_layout.addWidget(test_json_btn)
+        # --- đã xoá nút Test JSON và hàm test_with_json_data để loại bỏ code test ---
         
         tab_layout.addWidget(self.control_group)
         
@@ -587,11 +549,7 @@ class MainWindow(QMainWindow):
             close_btn = QPushButton("Close")
             close_btn.clicked.connect(preview.close)
             btn_layout.addWidget(close_btn)
-            
-            test_ocr_btn = QPushButton("Test OCR")
-            test_ocr_btn.clicked.connect(lambda: [preview.close(), self.test_ocr()])
-            btn_layout.addWidget(test_ocr_btn)
-            
+
             select_new_btn = QPushButton("Select New Region")
             select_new_btn.clicked.connect(lambda: [preview.close(), self.select_region()])
             btn_layout.addWidget(select_new_btn)
@@ -827,156 +785,6 @@ class MainWindow(QMainWindow):
         self.raise_()
         QApplication.processEvents()
         Logger.debug("Popup was closed, main window focus restored")
-    
-    def test_ocr(self):
-        """Test OCR on the current region"""
-        if not self.scan_region:
-            QMessageBox.warning(self, "Warning", "Please select a region first")
-            return
-        
-        try:
-            x, y, w, h = self.scan_region
-            
-            # Validate region
-            screen = QApplication.primaryScreen()
-            if not screen:
-                QMessageBox.critical(self, "Error", "Could not get screen information")
-                return
-                
-            screen_geometry = screen.geometry()
-            
-            if x < 0 or y < 0 or x + w > screen_geometry.width() or y + h > screen_geometry.height():
-                QMessageBox.critical(
-                    self, "Invalid Region", 
-                    f"Selected region is outside screen bounds!\n\n"
-                    f"Screen: {screen_geometry.width()}x{screen_geometry.height()}\n"
-                    f"Region: {x},{y} + {w}x{h}\n\n"
-                    f"Please select a new region."
-                )
-                return
-            
-            # Take screenshot of the region
-            screenshot = pyautogui.screenshot(region=self.scan_region)
-            img_array = np.array(screenshot)
-            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-            
-            # Test with original image first
-            texts_original = self.ocr_engine.extract_text(img_array) if self.ocr_engine else []
-            
-            # Test with processed image if original didn't work well
-            if not texts_original or len(''.join(texts_original)) < 3:
-                processed_img = self.image_processor.preprocess_for_ocr(img_array)
-                texts_processed = self.ocr_engine.extract_text(processed_img) if self.ocr_engine else []
-                texts = texts_processed
-            else:
-                texts = texts_original
-            
-            if texts:
-                self.update_results_signal.emit(texts)
-                result = '\n'.join(texts)
-                
-                # Check if detected text looks like game text
-                is_valid_game_text = self._check_if_game_text(texts)
-                
-                if is_valid_game_text:
-                    QMessageBox.information(
-                        self, "OCR Test Results", 
-                        f"✅ Detected game text:\n\n{result}"
-                    )
-                else:
-                    warning_msg = f"⚠️ Text may not be from game:\n\n{result}\n\n"
-                    warning_msg += "🎯 Tips:\n"
-                    warning_msg += "• Make sure region contains ONLY the event text\n"
-                    warning_msg += "• Avoid UI elements, buttons, or background\n"
-                    warning_msg += "• Ensure text is clear and readable\n"
-                    warning_msg += "• Game should be in English language"
-                    
-                    QMessageBox.warning(self, "OCR Test Results", warning_msg)
-            else:
-                failure_msg = "❌ No text detected!\n\n"
-                failure_msg += f"Region: {x},{y} (size: {w}x{h})\n\n"
-                failure_msg += "💡 Try:\n"
-                failure_msg += "• Select a smaller region focused on just the text\n"
-                failure_msg += "• Ensure good contrast (dark text on light background)\n"
-                failure_msg += "• Make sure game is in English\n"
-                failure_msg += f"• Recommended size for single line: ~300x50"
-                
-                QMessageBox.information(self, "OCR Test Results", failure_msg)
-        
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"OCR test failed: {e}")
-            Logger.error(f"OCR test error: {e}")
-    
-    def _check_if_game_text(self, texts: List[str]) -> bool:
-        """Check if detected texts look like actual game text"""
-        if not texts:
-            return False
-        
-        combined = ' '.join(texts).lower()
-        
-        # Game-specific keywords that indicate valid game text
-        game_indicators = [
-            'training', 'race', 'event', 'skill', 'card', 'support',
-            'uma', 'musume', 'stamina', 'speed', 'power', 'guts', 'wisdom',
-            'scenario', 'choice', 'conversation', 'striking', 'considerate',
-            'session', 'win', 'lose', 'level', 'rank', 'grade'
-        ]
-        
-        # Common English words that could appear in game text
-        common_words = [
-            'the', 'to', 'me', 'be', 'it', 'a', 'and', 'of', 'in', 'for',
-            'with', 'on', 'at', 'by', 'from', 'as', 'is', 'was', 'are',
-            'have', 'has', 'had', 'will', 'would', 'can', 'could', 'should'
-        ]
-        
-        # Check for game indicators
-        for indicator in game_indicators:
-            if indicator in combined:
-                return True
-        
-        # Check if it's a reasonable English sentence/phrase
-        words = combined.split()
-        if len(words) >= 2:
-            common_word_count = sum(1 for word in words if word in common_words)
-            # If at least 25% are common English words, likely valid
-            if common_word_count / len(words) >= 0.25:
-                return True
-        
-        # Check for proper sentence structure
-        if any(text[0].isupper() and text.endswith(('!', '.', '?')) for text in texts):
-            return True
-        
-        return False
-    
-    def test_with_json_data(self):
-        """Test popup with sample JSON data"""
-        # Create a test event with many choices
-        test_event = {
-            'name': 'Test Event with Many Choices - This is a very long event name to test wrapping and display issues',
-            'choices': [
-                {
-                    'choice': 'First Choice - This is a very long choice text to test wrapping and display properly',
-                    'effect': 'Speed +10, Stamina +5, Power +3, Guts +2, Wisdom +1'
-                },
-                {
-                    'choice': 'Second Choice - Another long choice with different effects',
-                    'effect': 'Power +15, Speed +5, Stamina +10'
-                },
-                {
-                    'choice': 'Third Choice - This choice has a very long effect description that should wrap properly',
-                    'effect': 'Guts +8, Wisdom +3, Speed +2, Power +2, Stamina +2'
-                },
-                {
-                    'choice': 'Fourth Choice - Balanced approach',
-                    'effect': 'Speed +5, Power +5, Stamina +5, Guts +5, Wisdom +5'
-                }
-            ]
-        }
-        
-        # Use the standard event popup method for proper handling
-        self.show_event_popup(test_event)
-        
-        Logger.info("Showing test popup with JSON data")
     
     def refresh_history(self):
         """Refresh history display"""

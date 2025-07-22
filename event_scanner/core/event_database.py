@@ -168,7 +168,7 @@ class EventDatabase:
         else:
             Logger.warning("Unexpected JSON format; skipping file")
             return
-
+        
         for entry in iterable:
             name = entry.get("event") or entry.get("name") or ""
             if not name:
