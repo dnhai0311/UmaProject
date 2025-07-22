@@ -72,7 +72,7 @@ class EventPopup(QDialog):
         screen_geometry = screen.availableGeometry()
         
         # Desired size
-        desired_width = 800  # wider for readability (was 600)
+        desired_width = 650  # compact width
         desired_height = screen_geometry.height() - 40  # leave small margin
 
         # Resize window
@@ -94,7 +94,7 @@ class EventPopup(QDialog):
         
         # Header frame with event name
         header_frame = QFrame()
-        header_frame.setStyleSheet("background-color: #e74c3c; padding: 10px;")
+        header_frame.setStyleSheet("background-color: #d35400; padding: 10px; border-radius:4px;")
         header_frame.setMinimumHeight(60)
         
         header_layout = QVBoxLayout(header_frame)
@@ -141,7 +141,7 @@ class EventPopup(QDialog):
         # Scroll area for content
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet("background-color: #2c3e50;")
+        scroll_area.setStyleSheet("background-color: #1e272e;")
         
         content_widget = QWidget()
         content_layout = QVBoxLayout(content_widget)
@@ -165,7 +165,7 @@ class EventPopup(QDialog):
                 
                 choice_frame = QFrame()
                 choice_frame.setStyleSheet(f"background-color: {bg_color}; "
-                                        f"border-radius: 5px; padding: 15px;")
+                                        f"border-radius: 4px; padding: 12px;")
                 
                 choice_layout = QVBoxLayout(choice_frame)
                 choice_layout.setSpacing(0)
@@ -181,38 +181,46 @@ class EventPopup(QDialog):
                     choice_label.setWordWrap(True)
                     choice_layout.addWidget(choice_label)
 
-                    # Build effect string
-                    effect_str = ""
+                    # Build effect HTML with color coding
+                    html_lines = []
                     if isinstance(effect_data, list):
-                        lines = []
                         for seg in effect_data:
                             if not isinstance(seg, dict):
-                                lines.append(str(seg))
+                                html_lines.append(f"<span style='color:#ecf0f1'>{seg}</span>")
                                 continue
-                            kind = seg.get('kind')
-                            if kind in ('divider_or', 'random_header'):
-                                lines.append(seg.get('raw', ''))
-                            elif kind == 'stat':
-                                lines.append(f"{seg.get('stat', '')} {seg.get('amount', ''):+}")
-                            elif kind in ('skill', 'status'):
-                                line = seg.get('raw', '')
-                                if 'hint' in seg:
-                                    line += f" (hint {seg['hint']:+})"
-                                if seg.get('detail') and seg['detail'].get('effect'):
-                                    line += f" — {seg['detail']['effect']}"
-                                lines.append(line)
-                            else:
-                                lines.append(seg.get('raw', ''))
-                        effect_str = "\n".join(lines)
-                    else:
-                        effect_str = str(effect_data) if effect_data else (choice.get('effect', '') or '')
 
-                    if effect_str:
-                        # Show effects without the 'Effect:' prefix and use a highlighted color
-                        effect_label = QLabel(effect_str)
-                        effect_label.setStyleSheet("color: #f9e79f; font-weight: bold;")  # Light yellow highlight
-                        effect_label.setFont(QFont("Arial", 13, QFont.Weight.DemiBold))
+                            kind = seg.get('kind')
+                            raw_text = seg.get('raw', '')
+
+                            # Determine color based on kind
+                            if kind == 'stat':
+                                color = '#1abc9c'  # teal
+                                raw_text = f"{seg.get('stat', '')} {seg.get('amount', ''):+}"
+                            elif kind == 'skill':
+                                color = '#f1c40f'  # yellow
+                            elif kind == 'status':
+                                color = '#e67e22'  # orange
+                            elif kind in ('divider_or', 'random_header'):
+                                color = '#9b59b6'  # purple
+                            else:
+                                color = '#ecf0f1'  # light gray/white
+
+                            # Append detailed effect text if present
+                            if kind in ('skill', 'status') and seg.get('detail') and seg['detail'].get('effect'):
+                                raw_text += f" — {seg['detail']['effect']}"
+
+                            html_lines.append(f"<span style='color:{color}; font-weight:bold'>{raw_text}</span>")
+                    else:
+                        single_text = str(effect_data) if effect_data else (choice.get('effect', '') or '')
+                        if single_text:
+                            html_lines.append(f"<span style='color:#ecf0f1'>{single_text}</span>")
+
+                    if html_lines:
+                        effect_label = QLabel()
+                        effect_label.setTextFormat(Qt.TextFormat.RichText)
+                        effect_label.setText('<br>'.join(html_lines))
                         effect_label.setWordWrap(True)
+                        effect_label.setStyleSheet("font-size: 13px;")
                         choice_layout.addWidget(effect_label)
                 else:
                     # Simple string choice - INCREASED FONT SIZE
@@ -369,9 +377,9 @@ class EventPopup(QDialog):
         # Base size, adjust based on number of choices
         if choices:
             height = 300 + (len(choices) * 120)  # Increased from 100 to 120 for larger text
-            return QSize(800, min(height, 700))
+            return QSize(650, min(height, 700)) # Changed to 650
         else:
-            return QSize(800, 400)
+            return QSize(650, 400) # Changed to 650
 
 
 # For testing purposes

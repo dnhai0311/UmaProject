@@ -1678,20 +1678,8 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
       timestamp: new Date().toISOString()
     };
 
-    // 1. Thu thập tất cả event (không lọc trùng)
+    // 1. Thu thập event và đồng thời gắn vào owner group (cho phép trùng lặp)
     let eventCounter = 0;
-    allEvents.forEach(result => {
-      if (result.events && result.events.length > 0) {
-        result.events.forEach(evObj => {
-          const ev = evObj.event;
-          const eventId = `event_${++eventCounter}`;
-          optimizedData.events.push({ id: eventId, ...ev });
-        });
-      }
-    });
-    console.log(`  ✅ Collected ${optimizedData.events.length} events (no dedup)`);
-
-    // 2. Lưu character -> group -> eventIds (đã sửa để tránh duplicate)
     const charMap = new Map();
     const cardMap = new Map();
     const scenarioMap = new Map();
@@ -1703,17 +1691,10 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
           const ownerType = evObj.ownerType;
           const ownerName = evObj.ownerName;
 
-          const eventType = ev.type || 'Unknown';
-          const eventKey = JSON.stringify({
-            ownerType: ownerType,
-            ownerName: ownerName,
-            event: ev.event,
-            type: ev.type,
-            choices: ev.choices || []
-          });
           const eventId = `event_${++eventCounter}`;
           optimizedData.events.push({ id: eventId, ...ev });
 
+          const eventType = ev.type || 'Unknown';
           const targetMap = ownerType === 'character' ? charMap : ownerType === 'support' ? cardMap : ownerType === 'scenario' ? scenarioMap : null;
           if (!targetMap) return;
 
@@ -1723,6 +1704,7 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
         });
       }
     });
+    console.log(`  ✅ Collected ${optimizedData.events.length} events and linked to owners (duplicates allowed)`);
 
     // Convert maps to arrays for optimizedData
     charMap.forEach((groups, charName) => {
@@ -1830,31 +1812,16 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
       path.join(DATA_DIR, 'events.json'),
       JSON.stringify(enhancedData, null, 2)
     );
-    
-    // ---------------- DEBUG TXT ----------------
-    const eventLookup = new Map();
-    enhancedData.events.forEach(ev => eventLookup.set(ev.id, ev));
 
-    let debugLines = [];
+    // -------------------- VALIDATION --------------------
+    const linkedIds = new Set();
+    [...enhancedData.characters, ...enhancedData.supportCards, ...enhancedData.scenarios]
+      .forEach(owner => owner.eventGroups.forEach(g => g.eventIds.forEach(id => linkedIds.add(id))));
+    const unlinked = enhancedData.events.filter(ev => !linkedIds.has(ev.id));
+    console.log(`  🔎 Validation: ${unlinked.length} / ${enhancedData.events.length} events chưa gắn owner`);
+    // -----------------------------------------------------
 
-    const pushOwner = (ownerArr, typeLabel) => {
-      ownerArr.forEach(owner => {
-        debugLines.push(`${typeLabel}: ${owner.name || owner.id}`);
-        owner.eventGroups.forEach(group => {
-          const evNames = group.eventIds.map(id => eventLookup.get(id)?.event || id);
-          debugLines.push(`  ${group.type} (${evNames.length})`);
-          evNames.forEach(nm => debugLines.push(`    - ${nm}`));
-        });
-        debugLines.push('');
-      });
-    };
-
-    pushOwner(enhancedData.characters, 'Character');
-    pushOwner(enhancedData.supportCards, 'Support');
-    pushOwner(enhancedData.scenarios, 'Scenario');
-
-    fs.writeFileSync(path.join(DATA_DIR, 'event.txt'), debugLines.join("\n"), 'utf-8');
-    // -------------------------------------------
+    // (Removed block that previously wrote event.txt)
 
     console.log(`  ✅ Progress saved: ${combinationCount}/${totalCombinations} (${enhancedData.progress.percentage}%)`);
     console.log(`     👤 Characters: ${enhancedData.characters.length} (mapped: ${mappedCharacters}/${enhancedData.characters.length})`);
