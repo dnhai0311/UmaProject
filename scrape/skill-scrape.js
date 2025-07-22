@@ -1,5 +1,8 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
+const path = require('path');
+const DATA_DIR = path.resolve(__dirname, '..', 'data');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 
 (async () => {
   console.log('🚀 Starting Skill scraping...');
@@ -62,17 +65,22 @@ const fs = require('fs');
     });
     console.log(`🔗 Found ${skills.length} skills.`);
 
-    // Lưu dữ liệu vào file
-    fs.writeFileSync('./data/all_skills.json', JSON.stringify(skills, null, 2), 'utf-8');
-    console.log('💾 Saved skills to ./data/all_skills.json');
-    
-    // Copy data to public folder
-    try {
-      require('./copy-data');
-      console.log('📋 Data copied to public folder');
-    } catch (copyError) {
-      console.log('⚠️ Error copying data:', copyError.message);
+    // Build output with a simple progress display
+    const total = skills.length;
+    const output = [];
+    for (let i = 0; i < total; i++) {
+      output.push(skills[i]);
+      if ((i+1) % 10 === 0 || i === total-1) {
+        process.stdout.write(`Processing: ${i+1}/${total}\r`);
+      }
     }
+    console.log();
+
+    const dataPath = path.join(DATA_DIR, 'skills.json');
+    fs.writeFileSync(dataPath, JSON.stringify(output, null, 2), 'utf-8');
+    console.log(`💾 Saved skills to ${dataPath}`);
+    
+    // (copy-data step removed)
     
     // Success - exit with code 0
     console.log('🎉 Skill scraping completed successfully!');

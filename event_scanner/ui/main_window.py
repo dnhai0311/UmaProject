@@ -61,6 +61,9 @@ class MainWindow(QMainWindow):
         self.ocr_engine = None
         self.image_processor = ImageProcessor()
         
+        from collections import Counter
+        self.source_freq = Counter()
+
         self.scanning = False
         self.scan_region = self.settings.get('last_region')
         self.current_popup = None
@@ -708,6 +711,9 @@ class MainWindow(QMainWindow):
                             # Only emit if new or changed event
                             if event['name'] != self.last_event_name:
                                 self.last_event_name = event['name']
+                            # update source frequency
+                            for src in event.get('sources', []):
+                                self.event_db.increment_source(src['name'])
                             self.event_detected_signal.emit(event)
                             # Add to history
                             self.history.add_entry(event, texts)

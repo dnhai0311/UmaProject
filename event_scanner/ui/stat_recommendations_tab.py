@@ -64,7 +64,7 @@ class StatRecommendationsTab(QWidget):
         try:
             # Get the path to the recommendations file
             current_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            file_path = os.path.join(current_dir, "scrape", "data", "stat_recommendations.json")
+            file_path = os.path.join(current_dir, "data", "stat_recommendations.json")
             
             if os.path.exists(file_path):
                 with open(file_path, 'r', encoding='utf-8') as f:

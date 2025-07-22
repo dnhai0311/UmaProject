@@ -2,6 +2,9 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
+const DATA_DIR = path.resolve(__dirname, '..', 'data');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
+
 // ===== MAPPING FUNCTIONS =====
 // Function to extract ID from imageUrl
 function extractIdFromImageUrl(imageUrl) {
@@ -261,9 +264,42 @@ function cleanEventName(rawName) {
     return cleaned;
 }
 
-// Utility function for timeout
+const SPEED_FACTOR = 2;
 function waitTimeout(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms * SPEED_FACTOR));
+}
+
+// ==============================================
+// NEW HELPER – ensure all event items are loaded
+// ==============================================
+async function collectAllEventHandles(page) {
+  // Scroll the Event Viewer list until no new items appear so that
+  // all lazily-rendered events are present in the DOM, then return
+  // every ".compatibility_viewer_item__SWULM" element handle.
+  let prevCount = -1;
+  let stableCycles = 0;
+  const MAX_CYCLES = 10;
+
+  while (stableCycles < 2 && stableCycles < MAX_CYCLES) {
+    await page.evaluate(() => {
+      const viewer = document.querySelector('.compatibility_result_box__OpJCO');
+      if (viewer) viewer.scrollBy(0, viewer.scrollHeight);
+    });
+    await waitTimeout(250);
+
+    const curCount = await page.evaluate(() =>
+      document.querySelectorAll('.compatibility_viewer_item__SWULM').length
+    );
+
+    if (curCount === prevCount) {
+      stableCycles += 1; // list size unchanged – maybe done
+    } else {
+      prevCount = curCount;
+      stableCycles = 0;  // reset when new items appear
+    }
+  }
+
+  return await page.$$('.compatibility_viewer_item__SWULM');
 }
 
 // Helper function to get random index from unused items
@@ -357,7 +393,7 @@ async function scrapeTrainingEvents(headlessMode = true) {
   
   // Xóa file kết quả cũ nếu có
   const fs = require('fs');
-  const outputFile = './data/all_training_events.json';
+  const outputFile = path.join(DATA_DIR, 'events.json');
   if (fs.existsSync(outputFile)) {
     fs.unlinkSync(outputFile);
     console.log('🗑️ Deleted old results file');
@@ -386,7 +422,7 @@ async function scrapeTrainingEvents(headlessMode = true) {
     const page = await browser.newPage();
     
     // Set page-level timeouts (giảm xuống)
-    page.setDefaultTimeout(20000);
+    page.setDefaultTimeout(30000);
     page.setDefaultNavigationTimeout(30000);
     
     // Navigate to the Training Event Helper page
@@ -402,119 +438,46 @@ async function scrapeTrainingEvents(headlessMode = true) {
     const options = await getAvailableOptions(page);
     console.log(`✅ Found ${options.supportCards.length} support cards, ${options.scenarios.length} scenarios, ${options.characters.length} characters`);
     
-    // Save options to file
-    fs.writeFileSync(
-      path.join(__dirname, 'data', 'training_options.json'),
-      JSON.stringify(options, null, 2)
-    );
-    console.log('💾 Saved options to data/training_options.json');
+    // Skip writing training_options.json per preference
 
-    // Lấy toàn bộ dữ liệu: tất cả support cards, nhân vật, scenarios
+    // === 1. REPLACE old combination creation logic ===
+    // find section after options retrieved where combinations created; we'll insert new block and comment old (not deleting for now)
+    // Locate marker: "// Lấy toàn bộ dữ liệu: tất cả support cards, nhân vật, scenarios" - replace logic below until before const combinations = [] existing.
+    // We'll insert easier by redefining combinations before it's used
+    // Add after we fetch options (right after console logs)
+    // ------------------------------
+    // Build combinations (new logic)
+    // ------------------------------
     const combinations = [];
-    const availableCharacters = options.characters; // Lấy tất cả characters
-    const availableCards = options.supportCards; // Lấy tất cả support cards
-    const availableScenarios = options.scenarios.length > 0 ? options.scenarios : ['URA Finals']; // Lấy tất cả scenarios
-    
-    console.log(`📊 Creating optimized combinations:`);
-    console.log(`   👤 Characters: ${availableCharacters.length}`);
-    console.log(`   🎴 Support Cards: ${availableCards.length}`);
-    console.log(`   📖 Scenarios: ${availableScenarios.length}`);
-    
-    // Tối ưu hóa combinations theo yêu cầu
-    // Tính toán số lượng combinations cần thiết để cover toàn bộ dữ liệu
-    
-    const totalCards = availableCards.length;
-    const totalCharacters = availableCharacters.length;
-    const totalScenarios = availableScenarios.length;
-    
-    // Tính số lần cần chọn 6 cards để cover tất cả cards
-    const fullCardCombinations = Math.ceil(totalCards / 6);
-    
-    // Tính số cards còn lại sau khi chọn đủ 6 cards
-    const remainingCards = totalCards % 6;
-    
-    // Tính tổng số combinations cần thiết
-    // Phải đảm bảo mỗi nhân vật được test ít nhất 1 lần
-    const minCombinationsForCharacters = totalCharacters;
-    const combinationsForCards = fullCardCombinations + (remainingCards > 0 ? 1 : 0);
-    
-    // Lấy số lớn hơn để đảm bảo cover cả cards và characters
-    const totalCombinations = Math.max(minCombinationsForCharacters, combinationsForCards);
-    
-    console.log(`   🔢 Calculation:`);
-    console.log(`      Full card combinations (6 cards each): ${fullCardCombinations}`);
-    console.log(`      Remaining cards: ${remainingCards}`);
-    console.log(`      Combinations needed for cards: ${combinationsForCards}`);
-    console.log(`      Combinations needed for characters: ${minCombinationsForCharacters}`);
-    console.log(`      Total combinations needed: ${totalCombinations} (max of both)`);
-    
-    const usedCharacters = [];
-    const usedScenarios = [];
-    const usedCards = [];
-    
-    for (let i = 0; i < totalCombinations; i++) {
-      // Select character (prioritize unused, then random)
-      let characterIndex;
-      if (usedCharacters.length < totalCharacters) {
-        characterIndex = getRandomUnusedIndex(usedCharacters, totalCharacters);
-      } else {
-        characterIndex = Math.floor(Math.random() * totalCharacters);
-      }
-      const character = availableCharacters[characterIndex];
-      usedCharacters.push(characterIndex);
-      
-      // Select scenario (prioritize unused, then random)
-      let scenarioIndex;
-      if (usedScenarios.length < totalScenarios) {
-        scenarioIndex = getRandomUnusedIndex(usedScenarios, totalScenarios);
-      } else {
-        scenarioIndex = Math.floor(Math.random() * totalScenarios);
-      }
-      const scenario = availableScenarios[scenarioIndex];
-      usedScenarios.push(scenarioIndex);
-      
-      // Select cards based on combination number
-      let cardCount;
-      if (i < combinationsForCards) {
-        // Các lần trong phạm vi cards cần thiết
-        if (i < fullCardCombinations - 1) {
-          // Các lần đầu: chọn 6 cards
-          cardCount = 6;
-        } else if (i === fullCardCombinations - 1) {
-          // Lần cuối cùng của full combinations: chọn 6 cards hoặc ít hơn nếu cần
-          cardCount = Math.min(6, totalCards - (fullCardCombinations - 1) * 6);
-        } else if (remainingCards > 0) {
-          // Lần cuối cùng: chọn cards còn lại (chỉ nếu có cards còn lại)
-          cardCount = remainingCards;
-        } else {
-          // Không có cards còn lại
-          cardCount = 0;
-        }
-      } else {
-        // Các lần còn lại (để cover characters): chọn 6 cards hoặc ít hơn
-        const remainingUnusedCards = totalCards - usedCards.length;
-        cardCount = Math.min(6, Math.max(0, remainingUnusedCards));
-      }
-      
-      let combinationCards = [];
-      if (cardCount > 0) {
-        const cardIndices = getRandomUniqueIndices(cardCount, totalCards, usedCards);
-        combinationCards = cardIndices.map(index => availableCards[index]);
-        usedCards.push(...cardIndices);
-      }
-      
+
+    // Phase 1: each character with scenario (cycling) ; first N (scenario count) allowScenarioEvent true
+    options.characters.forEach((char, idx) => {
+      const scenario = options.scenarios[idx % options.scenarios.length] || 'URA Finals';
       combinations.push({
-        character,
+        character: char,
         scenario,
-        cards: combinationCards
+        cards: [],
+        allowScenarioEvent: idx < options.scenarios.length
       });
-      
-      console.log(`   Combination ${i + 1}: Character ${characterIndex + 1}/${totalCharacters} (${usedCharacters.length} used), Scenario ${scenarioIndex + 1}/${totalScenarios} (${usedScenarios.length} used), Cards: ${combinationCards.length}/${cardCount} (${usedCards.length} used)`);
-      console.log(`   📋 Combination details:`);
-      console.log(`      👤 Character: ${character.alt || character.title || 'Unknown'}`);
-      console.log(`      📖 Scenario: ${scenario}`);
-      console.log(`      🎴 Cards: ${combinationCards.length} cards`);
-    }
+    });
+
+    // Phase 2: each support card alone with scenario cycling
+    options.supportCards.forEach((card, idx) => {
+      const scenario = options.scenarios[idx % options.scenarios.length] || 'URA Finals';
+      combinations.push({
+        character: null,
+        scenario,
+        cards: [card],
+        allowScenarioEvent: false
+      });
+    });
+
+    console.log(`📊 Total combinations generated: ${combinations.length}`);
+
+    // === old combination generation block skipped ===
+    /*
+    ...
+    */
 
     const allEvents = [];
     let combinationCount = 0;
@@ -522,7 +485,7 @@ async function scrapeTrainingEvents(headlessMode = true) {
     for (const combination of combinations) {
       combinationCount++;
       console.log(`\n🔄 Testing combination ${combinationCount}/${combinations.length}`);
-      console.log(`   🎴 Testing: ${combination.cards.length} cards + ${combination.scenario} + ${combination.character.alt || combination.character.title || 'Unknown'}`);
+      console.log(`   🎴 Testing: ${combination.cards.length} cards + ${combination.scenario} + ${combination.character?.alt || combination.character?.title || 'Unknown'}`);
 
       try {
         // Xóa state hiện tại trước khi chọn mới
@@ -549,12 +512,14 @@ async function scrapeTrainingEvents(headlessMode = true) {
           console.log(`   ⚠️ Error selecting scenario: ${scenarioError.message}`);
         }
         
-        // Select character
-        try {
-          await selectCharacter(page, combination.character);
-          await waitTimeout(600);
-        } catch (characterError) {
-          console.log(`   ⚠️ Error selecting character: ${characterError.message}`);
+        // Select character if present
+        if (combination.character) {
+          try {
+            await selectCharacter(page, combination.character);
+            await waitTimeout(600);
+          } catch (characterError) {
+            console.log(`   ⚠️ Error selecting character: ${characterError.message}`);
+          }
         }
         
         // Wait a bit for Event Viewer to load
@@ -627,7 +592,7 @@ async function scrapeTrainingEvents(headlessMode = true) {
     
     // Load final results from JSON to display summary
     try {
-      const finalResults = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'all_training_events.json'), 'utf8'));
+      const finalResults = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'events.json'), 'utf8'));
       
       // Hiển thị thông tin chi tiết về kết quả
       console.log('\n📋 Final Results summary:');
@@ -647,7 +612,7 @@ async function scrapeTrainingEvents(headlessMode = true) {
     console.log('\n📋 Combination details:');
     allEvents.forEach((result, index) => {
       console.log(`   Combination ${index + 1}:`);
-      console.log(`      Character: ${result.combination.character.alt || result.combination.character.title || 'Unknown'}`);
+      console.log(`      Character: ${result.combination.character?.alt || result.combination.character?.title || 'Unknown'}`);
       console.log(`      Scenario: ${result.combination.scenario}`);
       console.log(`      Cards: ${result.combination.cards.length} cards`);
       console.log(`      Events found: ${result.events.length}`);
@@ -656,8 +621,8 @@ async function scrapeTrainingEvents(headlessMode = true) {
       }
     });
     
-    console.log('\n💾 Results saved to data/all_training_events.json');
-    console.log('📁 File location: ' + path.join(__dirname, 'data', 'all_training_events.json'));
+    console.log('\n💾 Results saved to data/events.json');
+    console.log('📁 File location: ' + path.join(DATA_DIR, 'events.json'));
     console.log('📄 Format: Simplified JSON with progress tracking');
 
   } catch (error) {
@@ -1236,24 +1201,27 @@ async function scrapeEventsFromEventViewer(page, combination) {
     
     let allEvents = [];
     
-    // Click through all images sequentially by index
-    for (let i = 0; i < imageHandles.length; i++) {
+    const allowScenario = combination.allowScenarioEvent;
+    const finalIndex = allowScenario ? imageHandles.length : imageHandles.length - 1;
+
+    // Click through relevant images sequentially
+    for (let i = 0; i < finalIndex; i++) {
+      // Scope owner variables inside loop to avoid bleed-over
+      let ownerType;
+      let ownerName;
       // Determine who this icon represents
-      let ownerType = 'unknown';
-      let ownerName = 'Unknown';
-      const totalImages = imageHandles.length;
-      if (i === 0) {
-        // First icon is always Character
-        ownerType = 'character';
-        ownerName = (combination.character?.alt || combination.character?.title || 'Unknown');
-      } else if (i === totalImages - 1) {
-        // Last icon is Scenario
+      const isScenarioIcon = allowScenario && i === imageHandles.length - 1;
+
+      if (isScenarioIcon) {
         ownerType = 'scenario';
         ownerName = combination.scenario;
+      } else if (combination.character && i === 0) {
+        ownerType = 'character';
+        ownerName = combination.character?.alt || combination.character?.title || 'Unknown';
       } else {
-        // Icons in between correspond to support cards in order of selection slots
-        const cardIdx = i - 1;
-        const cardObj = combination.cards[cardIdx];
+        // support icon
+        const offset = combination.character ? i - 1 : i;
+        const cardObj = combination.cards[offset];
         ownerType = 'support';
         ownerName = cardObj ? (cardObj.alt || cardObj.title || 'Unknown') : 'Unknown';
       }
@@ -1266,15 +1234,16 @@ async function scrapeEventsFromEventViewer(page, combination) {
         await imageHandles[i].click();
         await waitTimeout(800);
         
-        // Get event items after clicking
-        const eventHandles = await page.$$('.compatibility_viewer_item__SWULM');
-        console.log(`    📋 Found ${eventHandles.length} events for image ${i + 1}`);
-        
-        for (let j = 0; j < eventHandles.length; j++) {
+        // Dynamically collect handles each time to avoid detached nodes
+        let j = 0;
+        while (true) {
+          const eventHandles = await collectAllEventHandles(page);
+          if (j >= eventHandles.length) break;
+          const handle = eventHandles[j];
           try {
-            await eventHandles[j].evaluate(el => el.scrollIntoView({behavior: 'auto', block: 'center'}));
+            await handle.evaluate(el => el.scrollIntoView({behavior: 'auto', block: 'center'}));
             await waitTimeout(200);
-            await eventHandles[j].click();
+            await handle.click();
             await waitTimeout(500);
             
             // Get popup detail (tooltip)
@@ -1524,9 +1493,24 @@ async function scrapeEventsFromEventViewer(page, combination) {
             });
             
             if (detail && detail.event) {
+              // Get owner image src
+              const ownerImageSrc = await imageHandles[i].evaluate(el => el.src);
+              // Build owner detail URL based on image ID
+              let ownerUrl = null;
+              const extractedId = extractIdFromImageUrl(ownerImageSrc);
+              if (extractedId) {
+                if (ownerType === 'character') {
+                  ownerUrl = `https://gametora.com/umamusume/characters/${extractedId.replace(/_.*/, '')}`;
+                } else if (ownerType === 'support') {
+                  ownerUrl = `https://gametora.com/umamusume/supports/${extractedId}`;
+                }
+              }
+
               allEvents.push({
                 ownerType,
                 ownerName,
+                ownerImage: ownerImageSrc,
+                ownerUrl,
                 event: detail
               });
               console.log(`      ✅ Added event: ${detail.event} (Type: ${detail.type}) -> ${ownerType}: ${ownerName}`);
@@ -1539,6 +1523,7 @@ async function scrapeEventsFromEventViewer(page, combination) {
             await waitTimeout(100);
           } catch (eventError) {
             console.log(`    ⚠️ Error processing event ${j + 1}: ${eventError.message}`);
+            j++;
           }
         }
       } catch (imageError) {
@@ -1679,27 +1664,8 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
     console.log(`  💾 Saving progress to JSON (${combinationCount}/${totalCombinations})...`);
     
     // Load mapping data
-    console.log('  🔗 Loading mapping data...');
-    const umaData = loadJsonFile(path.join(__dirname, 'data', 'all_uma_events.json'));
-    const supportData = loadJsonFile(path.join(__dirname, 'data', 'all_support_events.json'));
-    
-    let umaMapping = new Map();
-    let supportMapping = new Map();
-    
-    if (umaData) {
-      umaMapping = createUmaMapping(umaData);
-      console.log(`  ✅ Loaded mapping for ${umaMapping.size} characters`);
-    } else {
-      console.log('  ⚠️ Could not load uma mapping data');
-    }
-    
-    if (supportData) {
-      supportMapping = createSupportMapping(supportData);
-      console.log(`  ✅ Loaded mapping for ${supportMapping.size} support cards`);
-    } else {
-      console.log('  ⚠️ Could not load support mapping data');
-    }
-    
+    // (Old inline dynamic mapping block removed – we now use mapping files later)
+
     // Tạo cấu trúc tối ưu
     const optimizedData = {
       events: [], // unique events pool
@@ -1714,28 +1680,18 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
       timestamp: new Date().toISOString()
     };
 
-    // 1. Thu thập tất cả event duy nhất (theo nội dung)
-    const eventMap = new Map(); // key: content, value: {id, ...event}
-    const eventIdMap = new Map(); // key: content, value: id
+    // 1. Thu thập tất cả event (không lọc trùng)
+    let eventCounter = 0;
     allEvents.forEach(result => {
       if (result.events && result.events.length > 0) {
         result.events.forEach(evObj => {
           const ev = evObj.event;
-          const eventKey = JSON.stringify({
-            event: ev.event,
-            type: ev.type,
-            choices: ev.choices || []
-          });
-          if (!eventMap.has(eventKey)) {
-            const eventId = `event_${eventMap.size + 1}`;
-            eventMap.set(eventKey, { id: eventId, ...ev });
-            eventIdMap.set(eventKey, eventId);
-          }
+          const eventId = `event_${++eventCounter}`;
+          optimizedData.events.push({ id: eventId, ...ev });
         });
       }
     });
-    optimizedData.events = Array.from(eventMap.values());
-    console.log(`  ✅ Collected ${optimizedData.events.length} unique events`);
+    console.log(`  ✅ Collected ${optimizedData.events.length} events (no dedup)`);
 
     // 2. Lưu character -> group -> eventIds (đã sửa để tránh duplicate)
     const charMap = new Map();
@@ -1751,11 +1707,14 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
 
           const eventType = ev.type || 'Unknown';
           const eventKey = JSON.stringify({
+            ownerType: ownerType,
+            ownerName: ownerName,
             event: ev.event,
             type: ev.type,
             choices: ev.choices || []
           });
-          const eventId = eventIdMap.get(eventKey);
+          const eventId = `event_${++eventCounter}`;
+          optimizedData.events.push({ id: eventId, ...ev });
 
           const targetMap = ownerType === 'character' ? charMap : ownerType === 'support' ? cardMap : ownerType === 'scenario' ? scenarioMap : null;
           if (!targetMap) return;
@@ -1789,10 +1748,22 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
       });
     });
 
+    // --------------------
+    // Enhance with mapping from existing data files
+    // --------------------
+    const umaDataMap = loadJsonFile(path.join(DATA_DIR, 'uma_char.json')) || [];
+    const supportDataMap = loadJsonFile(path.join(DATA_DIR, 'support_card.json')) || [];
+    const umaMapping = createUmaMapping(umaDataMap);
+    const supportMapping = createSupportMapping(supportDataMap);
+
+    const enhancedData = enhanceTrainingEventsData(optimizedData, umaMapping, supportMapping);
+
+    // Now continue detail mapping for skills/status on enhancedData.events
+
     // Load skills and status data for detail mapping
     console.log('  🔧 Loading skills & status database for detail mapping...');
-    const skillsDB = loadJsonFile(path.join(__dirname, 'data', 'all_skills.json')) || [];
-    const statusDB = loadJsonFile(path.join(__dirname, 'data', 'all_status.json')) || { positive_conditions: [], negative_conditions: [] };
+    const skillsDB = loadJsonFile(path.join(DATA_DIR, 'skills.json')) || [];
+    const statusDB = loadJsonFile(path.join(DATA_DIR, 'conditions.json')) || { positive_conditions: [], negative_conditions: [] };
 
     const statusList = [...statusDB.positive_conditions, ...statusDB.negative_conditions];
 
@@ -1806,8 +1777,8 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
       return statusList.find(st => lower.includes(st.condition.toLowerCase()));
     };
 
-    // Add detail to segments inside optimizedData events
-    optimizedData.events.forEach(ev => {
+    // Add detail to segments inside enhancedData events
+    enhancedData.events.forEach(ev => {
       if (ev.choices) {
         ev.choices.forEach(ch => {
           if (ch && Array.isArray(ch.effects)) {
@@ -1850,8 +1821,7 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
     });
 
     // Apply mapping to enhance data with names and imageUrls
-    console.log('  🔧 Applying mapping to enhance character/support data...');
-    const enhancedData = enhanceTrainingEventsData(optimizedData, umaMapping, supportMapping);
+    // Mapping already applied above; using enhancedData
     
     // Calculate mapping statistics
     const mappedCharacters = enhancedData.characters.filter(c => c.name !== c.id).length;
@@ -1859,10 +1829,35 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
     
     // Save enhanced data to file
     fs.writeFileSync(
-      path.join(__dirname, 'data', 'all_training_events.json'),
+      path.join(DATA_DIR, 'events.json'),
       JSON.stringify(enhancedData, null, 2)
     );
     
+    // ---------------- DEBUG TXT ----------------
+    const eventLookup = new Map();
+    enhancedData.events.forEach(ev => eventLookup.set(ev.id, ev));
+
+    let debugLines = [];
+
+    const pushOwner = (ownerArr, typeLabel) => {
+      ownerArr.forEach(owner => {
+        debugLines.push(`${typeLabel}: ${owner.name || owner.id}`);
+        owner.eventGroups.forEach(group => {
+          const evNames = group.eventIds.map(id => eventLookup.get(id)?.event || id);
+          debugLines.push(`  ${group.type} (${evNames.length})`);
+          evNames.forEach(nm => debugLines.push(`    - ${nm}`));
+        });
+        debugLines.push('');
+      });
+    };
+
+    pushOwner(enhancedData.characters, 'Character');
+    pushOwner(enhancedData.supportCards, 'Support');
+    pushOwner(enhancedData.scenarios, 'Scenario');
+
+    fs.writeFileSync(path.join(DATA_DIR, 'event.txt'), debugLines.join("\n"), 'utf-8');
+    // -------------------------------------------
+
     console.log(`  ✅ Progress saved: ${combinationCount}/${totalCombinations} (${enhancedData.progress.percentage}%)`);
     console.log(`     👤 Characters: ${enhancedData.characters.length} (mapped: ${mappedCharacters}/${enhancedData.characters.length})`);
     console.log(`     🎴 Support Cards: ${enhancedData.supportCards.length} (mapped: ${mappedCards}/${enhancedData.supportCards.length})`);
