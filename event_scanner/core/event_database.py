@@ -113,7 +113,7 @@ class EventDatabase:
 
         if best:
             best_name, best_score, _ = best
-            if best_score >= 70:  # hạ ngưỡng một chút sau hiệu chỉnh
+            if best_score >= self.THRESHOLD_SCORE:
                 Logger.info(f"Matched event '{best_name}' with score {best_score:.1f}%")
                 return self._events[best_name]
 
@@ -155,6 +155,10 @@ class EventDatabase:
         )
 
     # --------------------------- internal helpers -------------------------
+
+    # Matching threshold for event similarity
+    THRESHOLD_SCORE = 85  # Adjust this value to make matching stricter (0-100)
+
     def _process_file(self, data: object) -> None:
         """Extract events from *data* in different shapes.
 

@@ -18,7 +18,11 @@ DEFAULT_SETTINGS = {
     'ocr_language': 'eng',
     'window_position': None,
     'auto_close_popup': True,
-    'popup_timeout': 8
+    'popup_timeout': 8,
+    # Fuzzy matching score threshold (0-100)
+    'match_threshold': 85,
+    # Whether to use GPU (CUDA) for OCR if available
+    'use_gpu': False
 }
 
 
@@ -71,50 +75,38 @@ class SettingsManager:
 
 
 class HistoryManager:
-    """Manager for event history"""
+    """Manager for event history (session-only, no disk persistence)"""
     
     def __init__(self):
+        # Keep history only for the current session
         self.history = []
-        self.load_history()
-    
-    def load_history(self):
-        """Load history from file"""
-        self.history = FileManager.load_pickle(HISTORY_FILE)
-        if self.history:
-            Logger.info(f"History loaded with {len(self.history)} entries")
-        else:
-            Logger.info("No history found, starting fresh")
-    
-    def save_history(self) -> bool:
-        """Save history to file"""
-        success = FileManager.save_pickle(self.history, HISTORY_FILE)
-        if success:
-            Logger.debug("History saved successfully")
-        else:
-            Logger.error("Failed to save history")
-        return success
-    
+        # Do not load from or save to disk (previously used event_history.pkl)
+        Logger.info("History initialised for current session – persistence disabled")
+
+    # ------------------------------------------------------------------
+    # Public API remains the same, but without disk I/O
+    # ------------------------------------------------------------------
+
     def add_entry(self, event: Dict, texts: List[str]):
-        """Add new entry to history"""
+        """Add new entry to history (in-memory only)"""
         entry = {
             'timestamp': datetime.now(),
             'event': event,
-            'texts': texts
+            'texts': texts,
         }
         self.history.insert(0, entry)
-        
-        # Keep only last 100 entries
+
+        # Keep only the last 100 entries to avoid unbounded growth
         if len(self.history) > 100:
             self.history = self.history[:100]
-        
-        self.save_history()
         Logger.debug(f"Added history entry: {event.get('name', 'Unknown')}")
-    
+
     def clear(self):
-        """Clear all history"""
+        """Clear all history for this session"""
         self.history = []
-        self.save_history()
-        Logger.info("History cleared")
+        Logger.info("History cleared (session only)")
+
+    # All other helper methods (get_history, search, stats …) are unchanged below
     
     def get_history(self) -> List[Dict]:
         """Get all history entries"""

@@ -9,7 +9,9 @@
     59
   ],
   "ocr_language": "eng",
-  "window_position": "800x700+1100+20",
+  "window_position": "800x700+882+78",
   "auto_close_popup": true,
-  "popup_timeout": 8
+  "popup_timeout": 8,
+  "match_threshold": 85,
+  "use_gpu": true
 }

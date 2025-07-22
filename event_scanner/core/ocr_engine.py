@@ -42,6 +42,7 @@ class OCREngine:
             lang_code = "en"
 
         self.language = lang_code
+        self.gpu = gpu  # expose flag
         self.reader = easyocr.Reader([lang_code], gpu=gpu, verbose=False)
         Logger.info(f"EasyOCR reader initialised (gpu={gpu}).")
 

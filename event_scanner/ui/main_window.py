@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QTabWidget, QFrame, QTextEdit, QListWidget,
     QMessageBox, QDoubleSpinBox, QCheckBox, QGroupBox, QScrollArea,
-    QSplitter, QComboBox, QFileDialog, QApplication
+    QSplitter, QComboBox, QFileDialog, QApplication, QSpinBox
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSize
 from PyQt6.QtGui import QFont, QPixmap, QImage
@@ -51,6 +51,9 @@ class MainWindow(QMainWindow):
         self.settings = SettingsManager()
         self.history = HistoryManager()
         self.event_db = EventDatabase()
+        # Apply user-defined threshold at startup
+        from event_scanner.core.event_database import EventDatabase as _EDB
+        _EDB.THRESHOLD_SCORE = int(self.settings.get('match_threshold', 85) or 85)
         # Track the last event name currently displayed to avoid reopening same popup
         self.last_event_name: Optional[str] = None
         # Track an event name that the user manually dismissed so we don't immediately reopen it
@@ -80,7 +83,8 @@ class MainWindow(QMainWindow):
         """Initialize OCR engine"""
         try:
             language = self.settings.get('ocr_language', 'eng') or 'eng'
-            self.ocr_engine = OCREngine(language)
+            use_gpu = bool(self.settings.get('use_gpu', False))
+            self.ocr_engine = OCREngine(language, gpu=use_gpu)
             Logger.info("OCR engine initialized")
         except Exception as e:
             Logger.error(f"Failed to initialize OCR: {e}")
@@ -380,6 +384,30 @@ class MainWindow(QMainWindow):
         interval_layout.addStretch(1)
         
         scanner_layout.addLayout(interval_layout)
+
+        # Match threshold setting
+        threshold_layout = QHBoxLayout()
+        threshold_label = QLabel("🎯 Match Threshold (%):")
+        threshold_layout.addWidget(threshold_label)
+
+        self.threshold_spinbox = QSpinBox()
+        self.threshold_spinbox.setRange(50, 100)
+        threshold_value = self.settings.get('match_threshold', 85)
+        self.threshold_spinbox.setValue(int(threshold_value) if threshold_value is not None else 85)
+        threshold_layout.addWidget(self.threshold_spinbox)
+        threshold_layout.addStretch(1)
+
+        scanner_layout.addLayout(threshold_layout)
+
+        # Use GPU checkbox
+        gpu_layout = QHBoxLayout()
+        self.gpu_checkbox = QCheckBox("⚡ Use GPU (CUDA) if available")
+        self.gpu_checkbox.setChecked(bool(self.settings.get('use_gpu', False)))
+        gpu_layout.addWidget(self.gpu_checkbox)
+        gpu_layout.addStretch(1)
+
+        scanner_layout.addLayout(gpu_layout)
+        
         tab_layout.addWidget(scanner_group)
         
         # Popup settings group
@@ -399,6 +427,21 @@ class MainWindow(QMainWindow):
         auto_close_layout.addStretch(1)
         
         popup_layout.addLayout(auto_close_layout)
+
+        # Popup timeout setting
+        timeout_layout = QHBoxLayout()
+        timeout_label = QLabel("⏲️ Popup Timeout (s):")
+        timeout_layout.addWidget(timeout_label)
+
+        self.timeout_spinbox = QSpinBox()
+        self.timeout_spinbox.setRange(1, 30)
+        self.timeout_spinbox.setValue(int(self.settings.get('popup_timeout', 8)))
+        timeout_layout.addWidget(self.timeout_spinbox)
+        timeout_layout.addStretch(1)
+
+        popup_layout.addLayout(timeout_layout)
+
+        # Add popup group to main settings tab layout (was accidentally removed)
         tab_layout.addWidget(popup_group)
         
         # Save button
@@ -729,8 +772,8 @@ class MainWindow(QMainWindow):
                 Logger.error(f"Failed to handle existing popup: {e}")
         
         # Keep popup visible while event is still detected ⇒ disable auto_close
-        auto_close = False
-        timeout = 0
+        auto_close = self.auto_close_checkbox.isChecked()
+        timeout = self.settings.get('popup_timeout', 8)
         
         try:
             # Ensure main window is active first
@@ -835,9 +878,25 @@ class MainWindow(QMainWindow):
         """Save application settings"""
         self.settings.set('scan_interval', self.interval_spinbox.value())
         self.settings.set('auto_close_popup', self.auto_close_checkbox.isChecked())
+        self.settings.set('match_threshold', self.threshold_spinbox.value())
+        self.settings.set('popup_timeout', self.timeout_spinbox.value())
+        self.settings.set('use_gpu', self.gpu_checkbox.isChecked())
+
+        # Apply threshold immediately
+        from event_scanner.core.event_database import EventDatabase
+        EventDatabase.THRESHOLD_SCORE = self.threshold_spinbox.value()
         
+        # Reinitialize OCR engine if GPU flag changed
+        previous_gpu = getattr(self.ocr_engine, 'gpu', None) if self.ocr_engine else None
+        new_gpu = self.gpu_checkbox.isChecked()
+
         if self.settings.save_settings():
             QMessageBox.information(self, "Success", "Settings saved!")
+            # Re-init OCR if GPU setting changed
+            if previous_gpu != new_gpu:
+                if self.scanning:
+                    self.stop_scanning()
+                self.init_ocr()
         else:
             QMessageBox.critical(self, "Error", "Failed to save settings")
     
