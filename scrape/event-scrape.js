@@ -264,7 +264,7 @@ function cleanEventName(rawName) {
     return cleaned;
 }
 
-const SPEED_FACTOR = 2;
+const SPEED_FACTOR = 1;
 function waitTimeout(ms) {
   return new Promise(resolve => setTimeout(resolve, ms * SPEED_FACTOR));
 }
@@ -422,7 +422,7 @@ async function scrapeTrainingEvents(headlessMode = true) {
     const page = await browser.newPage();
     
     // Set page-level timeouts (giảm xuống)
-    page.setDefaultTimeout(30000);
+    page.setDefaultTimeout(20000);
     page.setDefaultNavigationTimeout(30000);
     
     // Navigate to the Training Event Helper page
@@ -1234,16 +1234,15 @@ async function scrapeEventsFromEventViewer(page, combination) {
         await imageHandles[i].click();
         await waitTimeout(800);
         
-        // Dynamically collect handles each time to avoid detached nodes
-        let j = 0;
-        while (true) {
-          const eventHandles = await collectAllEventHandles(page);
-          if (j >= eventHandles.length) break;
-          const handle = eventHandles[j];
+        // Get event items after clicking (use helper to load all lazily rendered items)
+        const eventHandles = await collectAllEventHandles(page);
+        console.log(`    📋 Found ${eventHandles.length} events for image ${i + 1}`);
+        
+        for (let j = 0; j < eventHandles.length; j++) {
           try {
-            await handle.evaluate(el => el.scrollIntoView({behavior: 'auto', block: 'center'}));
+            await eventHandles[j].evaluate(el => el.scrollIntoView({behavior: 'auto', block: 'center'}));
             await waitTimeout(200);
-            await handle.click();
+            await eventHandles[j].click();
             await waitTimeout(500);
             
             // Get popup detail (tooltip)
@@ -1523,7 +1522,6 @@ async function scrapeEventsFromEventViewer(page, combination) {
             await waitTimeout(100);
           } catch (eventError) {
             console.log(`    ⚠️ Error processing event ${j + 1}: ${eventError.message}`);
-            j++;
           }
         }
       } catch (imageError) {

@@ -713,7 +713,9 @@ class MainWindow(QMainWindow):
                                 self.last_event_name = event['name']
                             # update source frequency
                             for src in event.get('sources', []):
-                                self.event_db.increment_source(src['name'])
+                                src_name = src.get('name')
+                                if src_name:
+                                    self.event_db.increment_source(src_name)
                             self.event_detected_signal.emit(event)
                             # Add to history
                             self.history.add_entry(event, texts)

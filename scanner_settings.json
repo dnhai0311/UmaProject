@@ -3,15 +3,15 @@
   "confidence_threshold": 0.3,
   "theme": "light",
   "last_region": [
-    780,
-    471,
-    371,
-    109
+    783,
+    466,
+    390,
+    94
   ],
   "ocr_language": "eng",
   "window_position": "800x700+1100+20",
   "auto_close_popup": true,
   "popup_timeout": 8,
-  "match_threshold": 85,
+  "match_threshold": 70,
   "use_gpu": true
 }

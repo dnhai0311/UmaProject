@@ -128,13 +128,21 @@ class EventDatabase:
                     srcs = var.get('sources', [])
                     if not srcs:
                         return 0
-                    return max(self._source_freq.get(s['name'], 0) for s in srcs)
+                    # Safely retrieve name, default to empty string if missing
+                    return max(
+                        self._source_freq.get(s.get('name', ''), 0)
+                        for s in srcs
+                    )
 
                 variants_sorted = sorted(variants, key=variant_score, reverse=True)
                 chosen = variants_sorted[0]
+                # Safely determine the first source name (if any) to avoid IndexError when the list is empty
+                sources = chosen.get('sources', []) or []
+                first_source_name = sources[0].get('name', '?') if sources else '?'
+
                 Logger.info(
                     f"Matched event '{best_name}' ({len(variants)} variants) – chosen source "
-                    f"{chosen.get('sources',[{}])[0].get('name','?')} with score {best_score:.1f}%"
+                    f"{first_source_name} with score {best_score:.1f}%"
                 )
                 return chosen
 

@@ -114,6 +114,27 @@ class EventPopup(QDialog):
             type_label.setFont(QFont("Arial", 11))
             type_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             header_layout.addWidget(type_label)
+
+        # Add source information (character, support card, scenario)
+        sources = self.event_data.get('sources', []) or []
+        if sources:
+            char_names = [s.get('name') for s in sources if s.get('type') == 'character']
+            support_names = [s.get('name') for s in sources if s.get('type') == 'support_card']
+            scenario_names = [s.get('name') for s in sources if s.get('type') == 'scenario']
+
+            def add_source_label(icon: str, label_text: str):
+                lbl = QLabel(f"{icon} {label_text}")
+                lbl.setStyleSheet("color: white; font-size: 11px;")
+                lbl.setFont(QFont("Arial", 11))
+                lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                header_layout.addWidget(lbl)
+
+            if char_names:
+                add_source_label("👤 Character:", ", ".join(char_names))
+            if support_names:
+                add_source_label("💳 Support Card:", ", ".join(support_names))
+            if scenario_names:
+                add_source_label("📚 Scenario:", ", ".join(scenario_names))
         
         main_layout.addWidget(header_frame)
         
@@ -187,9 +208,10 @@ class EventPopup(QDialog):
                         effect_str = str(effect_data) if effect_data else (choice.get('effect', '') or '')
 
                     if effect_str:
-                        effect_label = QLabel(f"💡 Effect: {effect_str}")
-                        effect_label.setStyleSheet("color: white;")
-                        effect_label.setFont(QFont("Arial", 13))
+                        # Show effects without the 'Effect:' prefix and use a highlighted color
+                        effect_label = QLabel(effect_str)
+                        effect_label.setStyleSheet("color: #f9e79f; font-weight: bold;")  # Light yellow highlight
+                        effect_label.setFont(QFont("Arial", 13, QFont.Weight.DemiBold))
                         effect_label.setWordWrap(True)
                         choice_layout.addWidget(effect_label)
                 else:
@@ -227,7 +249,7 @@ class EventPopup(QDialog):
                 effect_label = QLabel()
                 effect_label.setTextFormat(Qt.TextFormat.RichText)
                 effect_label.setText('<br>'.join(html_lines_nc))
-                effect_label.setStyleSheet("color: white;")
+                effect_label.setStyleSheet("color: #f9e79f; font-weight: bold;")
                 effect_label.setFont(QFont("Arial", 13))  # Increased from 10 to 13
                 effect_label.setWordWrap(True)
                 effect_layout.addWidget(effect_label)
