@@ -15,14 +15,15 @@ from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QTabWidget, QFrame, QTextEdit, QListWidget,
     QMessageBox, QDoubleSpinBox, QCheckBox, QGroupBox, QScrollArea,
-    QSplitter, QComboBox, QFileDialog, QApplication, QSpinBox
+    QSplitter, QComboBox, QFileDialog, QApplication, QSpinBox,
+    QTreeWidget, QTreeWidgetItem
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSize
 from PyQt6.QtGui import QFont, QPixmap, QImage
 
 from event_scanner.core import ImageProcessor, EventDatabase, OCREngine
 from event_scanner.services import SettingsManager, HistoryManager
-from event_scanner.ui import EventPopup, RegionSelector, StatRecommendationsTab
+from event_scanner.ui import RegionSelector, StatRecommendationsTab
 # from event_scanner.ui.ai_learning_dialog import AILearningDialog  # Removed AI feature
 from event_scanner.ui.training_events_tab import TrainingEventsTab
 from event_scanner.utils import Logger
@@ -72,13 +73,31 @@ class MainWindow(QMainWindow):
         # Set window flags to ensure main window stays active and on top
         self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowStaysOnTopHint)
         
+        # Remove default status bar to avoid gray background
+        try:
+            self.setStatusBar(None)
+        except Exception:
+            pass
+
         self.init_ocr()
         self.setup_ui()
+
+        # Completely disable default status bar (remove gray area with 'Ready')
+        from PyQt6.QtWidgets import QStatusBar
+        empty_sb = QStatusBar()
+        empty_sb.setSizeGripEnabled(False)
+        empty_sb.setFixedHeight(0)
+        empty_sb.setStyleSheet("QStatusBar{background:transparent;border:none;}")
+        self.setStatusBar(empty_sb)
+
+        # Apply theme from settings (dark default)
+        theme_name = self.settings.get('theme', 'dark')
+        self.apply_theme(theme_name)
         self.connect_signals()
         
         # Setup window properties
         self.setWindowTitle("Uma Event Scanner")
-        self.resize(800, 700)
+        self.resize(560, 700)
         self.setMinimumSize(700, 600)
         self.position_window()
     
@@ -105,20 +124,7 @@ class MainWindow(QMainWindow):
         main_layout.setContentsMargins(15, 15, 15, 15)
         main_layout.setSpacing(15)
         
-        # Title bar
-        title_frame = QFrame()
-        title_frame.setStyleSheet("background-color: #2c3e50; color: white;")
-        title_frame.setMinimumHeight(60)
-        
-        title_layout = QVBoxLayout(title_frame)
-        title_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        title_label = QLabel("🎯 Uma Event Scanner")
-        title_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_layout.addWidget(title_label)
-        
-        main_layout.addWidget(title_frame)
+        # (Removed title bar for more compact UI)
         
         # Tab widget
         self.tab_widget = QTabWidget()
@@ -133,11 +139,11 @@ class MainWindow(QMainWindow):
         
         # Status bar
         status_frame = QFrame()
-        status_frame.setStyleSheet("background-color: #34495e; color: white;")
+        status_frame.setObjectName("statusBar")
         status_frame.setFixedHeight(30)
         
         status_layout = QHBoxLayout(status_frame)
-        status_layout.setContentsMargins(15, 0, 15, 0)
+        status_layout.setContentsMargins(0, 0, 0, 0)
         
         self.status_label = QLabel("Ready")
         self.status_label.setFont(QFont("Arial", 9))
@@ -148,12 +154,12 @@ class MainWindow(QMainWindow):
     def setup_training_events_tab(self):
         """Set up the training events tab"""
         self.training_events_tab = TrainingEventsTab()
-        self.tab_widget.addTab(self.training_events_tab, "🎴 Training Events")
+        self.tab_widget.addTab(self.training_events_tab, "📚 Training")
     
     def setup_stat_recommendations_tab(self):
         """Set up the stat recommendations tab"""
         self.stat_recommendations_tab = StatRecommendationsTab()
-        self.tab_widget.addTab(self.stat_recommendations_tab, "📊 Stat Recommendations")
+        self.tab_widget.addTab(self.stat_recommendations_tab, "📊 Stats")
     
     def setup_scanner_tab(self):
         """Set up the scanner tab"""
@@ -173,65 +179,19 @@ class MainWindow(QMainWindow):
         
         select_btn = QPushButton("🎯 Select Region")
         select_btn.clicked.connect(self.select_region)
-        select_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #3498db; 
-                color: white; 
-                font-weight: bold; 
-                padding: 5px 15px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #2980b9;
-            }
-            QPushButton:pressed {
-                background-color: #1c6ea4;
-                border: 2px solid #0d4e77;
-            }
-        """)
-        region_layout.addWidget(select_btn)
         
         preview_btn = QPushButton("👁️ Preview")
         preview_btn.clicked.connect(self.preview_region)
-        preview_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #e67e22; 
-                color: white; 
-                font-weight: bold; 
-                padding: 5px 15px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #d35400;
-            }
-            QPushButton:pressed {
-                background-color: #a04000;
-                border: 2px solid #783000;
-            }
-        """)
-        region_layout.addWidget(preview_btn)
 
         # Button to clear the last/dismissed event so pop-up can re-appear
         clear_event_btn = QPushButton("🧹 Clear Event")
         clear_event_btn.clicked.connect(self.clear_last_event)
-        clear_event_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #7f8c8d; 
-                color: white; 
-                font-weight: bold; 
-                padding: 5px 15px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #707b7c;
-            }
-            QPushButton:pressed {
-                background-color: #5d6d7e;
-                border: 2px solid #4d565e;
-            }
-        """)
-        region_layout.addWidget(clear_event_btn)
         
+        # Add buttons to layout
+        region_layout.addWidget(select_btn)
+        region_layout.addWidget(preview_btn)
+        region_layout.addWidget(clear_event_btn)
+        # add group to tab
         tab_layout.addWidget(region_group)
         
         # Control group
@@ -243,51 +203,13 @@ class MainWindow(QMainWindow):
         
         self.start_btn = QPushButton("▶️ Start Scanning")
         self.start_btn.clicked.connect(self.start_scanning)
-        self.start_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #27ae60; 
-                color: white; 
-                font-weight: bold; 
-                padding: 8px 20px;
-                border-radius: 4px;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #2ecc71;
-            }
-            QPushButton:pressed, QPushButton:disabled {
-                background-color: #1e8449;
-                border: 2px solid #145a32;
-            }
-            QPushButton:disabled {
-                color: rgba(255, 255, 255, 180);
-            }
-        """)
-        control_layout.addWidget(self.start_btn)
         
         self.stop_btn = QPushButton("⏹️ Stop")
         self.stop_btn.clicked.connect(self.stop_scanning)
         self.stop_btn.setEnabled(False)
-        self.stop_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #e74c3c; 
-                color: white; 
-                font-weight: bold; 
-                padding: 8px 20px;
-                border-radius: 4px;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #c0392b;
-            }
-            QPushButton:pressed, QPushButton:disabled {
-                background-color: #a93226;
-                border: 2px solid #7b241c;
-            }
-            QPushButton:disabled {
-                color: rgba(255, 255, 255, 180);
-            }
-        """)
+
+        # Add buttons to control layout
+        control_layout.addWidget(self.start_btn)
         control_layout.addWidget(self.stop_btn)
         
         # --- đã xoá nút Test JSON và hàm test_with_json_data để loại bỏ code test ---
@@ -300,16 +222,52 @@ class MainWindow(QMainWindow):
         
         results_layout = QVBoxLayout(results_group)
         results_layout.setContentsMargins(10, 15, 10, 15)
-        
+
+        splitter = QSplitter()
+        splitter.setOrientation(Qt.Orientation.Horizontal)
+        splitter.setHandleWidth(2)
+        splitter.setStyleSheet("QSplitter::handle { background-color: #555; }")
+
+        # Event summary (centered labels)
+        self.summary_widget = QWidget()
+        self.summary_widget.setMaximumWidth(230)
+        sum_layout = QVBoxLayout(self.summary_widget)
+        sum_layout.addStretch(1)
+        self.lbl_name = QLabel()
+        self.lbl_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_name.setWordWrap(True)
+        self.lbl_type = QLabel()
+        self.lbl_type.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_owner = QLabel()
+        self.lbl_owner.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        sum_layout.addWidget(self.lbl_name)
+        sum_layout.addWidget(self.lbl_type)
+        sum_layout.addWidget(self.lbl_owner)
+        sum_layout.addStretch(1)
+        splitter.addWidget(self.summary_widget)
+
+        # Detail panel (similar layout to summary)
+        self.detail_widget = QWidget()
+        detail_layout = QVBoxLayout(self.detail_widget)
+        detail_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        detail_layout.addStretch(1)
+        self.detail_layout = detail_layout  # keep for update
+        detail_layout.addStretch(1)
+        splitter.addWidget(self.detail_widget)
+
+        # Hidden log text to maintain update_results without refactor
+        from PyQt6.QtWidgets import QTextEdit
         self.result_text = QTextEdit()
-        self.result_text.setReadOnly(True)
-        self.result_text.setFont(QFont("Consolas", 10))
-        results_layout.addWidget(self.result_text)
-        
+        # Keep for logging but not added to layout to avoid extra splitter handle
+        self.result_text.hide()
+
+        splitter.setSizes([200, 400])
+        results_layout.addWidget(splitter)
+
         tab_layout.addWidget(results_group)
         tab_layout.setStretch(2, 1)  # Make results group stretch
         
-        self.tab_widget.addTab(tab, "Scanner")
+        self.tab_widget.addTab(tab, "🖥️ Scanner")
     
     def setup_history_tab(self):
         """Set up the history tab"""
@@ -326,15 +284,13 @@ class MainWindow(QMainWindow):
         
         refresh_btn = QPushButton("🔄 Refresh")
         refresh_btn.clicked.connect(self.refresh_history)
-        refresh_btn.setStyleSheet("background-color: #3498db; color: white; font-weight: bold; padding: 5px 15px;")
-        controls_layout.addWidget(refresh_btn)
-        
+
         clear_btn = QPushButton("🗑️ Clear")
         clear_btn.clicked.connect(self.clear_history)
-        clear_btn.setStyleSheet("background-color: #e74c3c; color: white; font-weight: bold; padding: 5px 15px;")
-        controls_layout.addWidget(clear_btn)
-        
+
         controls_layout.addStretch(1)
+        controls_layout.addWidget(refresh_btn)
+        controls_layout.addWidget(clear_btn)
         
         tab_layout.addWidget(controls_group)
         
@@ -353,7 +309,7 @@ class MainWindow(QMainWindow):
         tab_layout.addWidget(history_group)
         tab_layout.setStretch(1, 1)  # Make history list stretch
         
-        self.tab_widget.addTab(tab, "History")
+        self.tab_widget.addTab(tab, "📜 History")
         
         # Initialize history display
         self.refresh_history()
@@ -444,35 +400,36 @@ class MainWindow(QMainWindow):
 
         popup_layout.addLayout(timeout_layout)
 
+        # Theme toggle
+        theme_layout = QHBoxLayout()
+        self.theme_checkbox = QCheckBox("🌙 Dark Theme")
+        is_dark = (self.settings.get('theme', 'dark') == 'dark')
+        self.theme_checkbox.setChecked(is_dark)
+        def _on_theme_toggle(checked):
+            self.apply_theme('dark' if checked else 'light')
+            # persist immediately
+            self.settings.set('theme', 'dark' if checked else 'light')
+            self.settings.save_settings()
+        self.theme_checkbox.toggled.connect(_on_theme_toggle)
+        theme_layout.addWidget(self.theme_checkbox)
+        theme_layout.addStretch(1)
+        popup_layout.addLayout(theme_layout)
+        
         # Add popup group to main settings tab layout (was accidentally removed)
         tab_layout.addWidget(popup_group)
         
         # Save button
         save_btn = QPushButton("💾 Save Settings")
         save_btn.clicked.connect(self.save_settings)
-        save_btn.setStyleSheet("""
-            background-color: #27ae60;
-            color: white;
-            font-weight: bold;
-            padding: 10px 30px;
-            border: none;
-            border-radius: 4px;
-        """)
-        
-        btn_layout = QHBoxLayout()
-        btn_layout.addStretch(1)
-        btn_layout.addWidget(save_btn)
-        btn_layout.addStretch(1)
-        
-        tab_layout.addLayout(btn_layout)
+        tab_layout.addWidget(save_btn, alignment=Qt.AlignmentFlag.AlignRight)
         tab_layout.addStretch(1)
         
-        self.tab_widget.addTab(tab, "Settings")
+        self.tab_widget.addTab(tab, "⚙️ Settings")
     
     def connect_signals(self):
         """Connect signals to slots"""
         self.update_results_signal.connect(self.update_results)
-        self.event_detected_signal.connect(self.show_event_popup)
+        self.event_detected_signal.connect(self.display_event_in_results)
     
     def position_window(self):
         """Position the window on the screen"""
@@ -480,6 +437,8 @@ class MainWindow(QMainWindow):
         if not screen:
             return
             
+        self.resize(560, self.height())
+
         screen_geometry = screen.geometry()
         
         # Position on the right side of the screen
@@ -628,23 +587,17 @@ class MainWindow(QMainWindow):
         
         # Update UI to show active scanning state
         self.status_label.setText("🔄 Scanning active...")
-        self.status_label.setStyleSheet("color: #2ecc71; font-weight: bold;")
+        self.status_label.setProperty("state","running")
+        self.status_label.style().unpolish(self.status_label)
+        self.status_label.style().polish(self.status_label)
         
         # Change window title to indicate scanning is active
         self.setWindowTitle("Uma Event Scanner - [SCANNING ACTIVE]")
         
         # Highlight the control group to indicate active scanning
-        self.control_group.setStyleSheet("""
-            QGroupBox {
-                border: 2px solid #27ae60;
-                border-radius: 5px;
-                margin-top: 1ex;
-            }
-            QGroupBox::title {
-                color: #27ae60;
-                font-weight: bold;
-            }
-        """)
+        self.control_group.setProperty("active", True)
+        self.control_group.style().unpolish(self.control_group)
+        self.control_group.style().polish(self.control_group)
         
         # Start scanning thread
         self.scan_thread = threading.Thread(target=self.scan_loop, daemon=True)
@@ -660,13 +613,17 @@ class MainWindow(QMainWindow):
         
         # Update UI to show stopped state
         self.status_label.setText("⏹️ Scanning stopped")
-        self.status_label.setStyleSheet("color: #e74c3c; font-weight: bold;")
+        self.status_label.setProperty("state","stopped")
+        self.status_label.style().unpolish(self.status_label)
+        self.status_label.style().polish(self.status_label)
         
         # Reset window title
         self.setWindowTitle("Uma Event Scanner")
         
         # Reset control group style
-        self.control_group.setStyleSheet("")
+        self.control_group.setProperty("active", False)
+        self.control_group.style().unpolish(self.control_group)
+        self.control_group.style().polish(self.control_group)
         
         Logger.info("Scanning stopped")
     
@@ -752,72 +709,53 @@ class MainWindow(QMainWindow):
         for i, text in enumerate(texts, 1):
             self.result_text.append(f"[{i}] {text}")
     
-    def show_event_popup(self, event: Optional[Dict]):
-        """Show event popup (called in main thread)"""
-        # If event is None ⇒ hide any existing popup
-        if not event:
-            if hasattr(self, 'current_popup') and self.current_popup:
-                try:
-                    self.current_popup.close()
-                    self.current_popup = None
-                except Exception as e:
-                    Logger.error(f"Failed to close popup: {e}")
+    def display_event_in_results(self, event):
+        """Append event details to result_text viewer."""
+        if event is None:
+            self.result_text.append("No event matched.\n")
             return
-            
-        # Log event details for debugging
-        Logger.debug(f"Showing event popup. Event data: {str(event)}")
-            
-        if hasattr(self, 'current_popup') and self.current_popup:
-            # If the same event is already displayed, just ensure visible and return
-            try:
-                if self.current_popup.event_data.get('name') == event.get('name'):
-                    self.ensure_popup_visible()
-                    return
-                else:
-                    self.current_popup.close()
-                    self.current_popup = None
-            except Exception as e:
-                Logger.error(f"Failed to handle existing popup: {e}")
-        
-        # Keep popup visible while event is still detected ⇒ disable auto_close
-        auto_close = self.auto_close_checkbox.isChecked()
-        timeout = self.settings.get('popup_timeout', 8)
-        
-        try:
-            # Ensure main window is active first
-            self.activateWindow()
-            self.raise_()
-            QApplication.processEvents()
-            
-            # Kiểm tra và đảm bảo event có các trường cần thiết
-            if 'name' not in event:
-                Logger.warning(f"Event missing 'name' field: {str(event)}")
-                event['name'] = "Unknown Event"
-                
-            if 'choices' not in event or not isinstance(event['choices'], list):
-                Logger.warning(f"Event missing 'choices' field or invalid format: {str(event)}")
-                event['choices'] = []
-            
-            # Create new popup with self as parent for proper positioning
-            self.current_popup = EventPopup(self, event, auto_close, timeout)
-            
-            # Connect close signal
-            self.current_popup.finished.connect(self.on_popup_closed)
-            
-            # Display the popup (this should make it appear)
-            self.current_popup.show()
-            self.current_popup.activateWindow()
-            self.current_popup.raise_()
-            
-            # Ensure popup is visible with timer
-            QTimer.singleShot(100, lambda: self.ensure_popup_visible())
-            QTimer.singleShot(500, lambda: self.ensure_popup_visible())  # Additional check after 500ms
-            
-            # Log success
-            Logger.info(f"Event popup shown: {event.get('name', 'Unknown Event')}")
-        except Exception as e:
-            Logger.error(f"Failed to show event popup: {e}")
-            QMessageBox.critical(self, "Error", f"Failed to show event popup: {e}")
+
+        owners = ", ".join(s.get('name','') for s in event.get('sources', []) if s.get('name')) or "?"
+
+        self.lbl_name.setText(f"<b>{event.get('name','Unknown')}</b>")
+        self.lbl_name.setTextFormat(Qt.TextFormat.RichText)
+
+        self.lbl_type.setText(f"<i>{event.get('type','')}</i>")
+        self.lbl_type.setTextFormat(Qt.TextFormat.RichText)
+
+        self.lbl_owner.setText(f"<b>{owners}</b>")
+        self.lbl_owner.setTextFormat(Qt.TextFormat.RichText)
+
+        self.show_event_details(event)
+
+    def on_event_item_clicked(self, *args):
+        return
+
+    def show_event_details(self, event: dict):
+        # Clear previous detail
+        # remove all widgets between stretches (index 1 .. count-2)
+        while self.detail_layout.count() > 2:
+            item = self.detail_layout.takeAt(1)
+            if item.widget():
+                item.widget().deleteLater()
+
+        # Build labels
+        choices = event.get('choices',[])
+        if choices:
+            for ch in choices:
+                lbl_choice = QLabel(f"<b>{ch.get('choice','')}</b>")
+                lbl_choice.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                lbl_choice.setTextFormat(Qt.TextFormat.RichText)
+                self.detail_layout.insertWidget(self.detail_layout.count()-1, lbl_choice)
+
+                for seg in ch.get('effects', []):
+                    eff = QLabel(f"– {seg.get('raw','')}")
+                    eff.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                    self.detail_layout.insertWidget(self.detail_layout.count()-1, eff)
+
+    # Event popup removed – no-op
+    def show_event_popup(self, *args, **kwargs):
+        return
     
     def ensure_popup_visible(self):
         """Make sure popup is visible"""
@@ -867,19 +805,18 @@ class MainWindow(QMainWindow):
             entry = history_entries[index]
             event_data = entry['event']
             
-            # Show event popup
-            self.current_popup = EventPopup(self, event_data, False, 0)
-            self.current_popup.show()
-            self.current_popup.raise_()
-            self.current_popup.activateWindow()
+            # Display event in panels instead of popup
+            self.display_event_in_results(event_data)
+            owners = ", ".join(s.get('name','') for s in event_data.get('sources', []) if s.get('name')) or "?"
+            self.lbl_name.setText(f"<b>{event_data.get('name','Unknown')}</b>")
+            self.lbl_type.setText(f"<i>{event_data.get('type','')}</i>")
+            self.lbl_owner.setText(f"<b>{owners}</b>")
     
     def clear_last_event(self):
         """Clear the last event name and any dismissed event name, closing any current popup."""
         self.last_event_name = None
         self.dismissed_event_name = None
-        if self.current_popup:
-            self.current_popup.close()
-            self.current_popup = None
+        # No popup now – nothing to close
         Logger.info("Last event name and dismissed event name cleared.")
     
     def save_settings(self):
@@ -918,6 +855,18 @@ class MainWindow(QMainWindow):
         self.settings.save_settings()
         
         event.accept()
+
+    # ---------------- Theme helper ----------------
+    def apply_theme(self, theme_name: str):
+        """Load stylesheet by theme name ('dark' or 'light')."""
+        import os
+        file_name = 'style.qss' if theme_name == 'dark' else 'style_light.qss'
+        qss_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'resources', file_name))
+        if os.path.exists(qss_path):
+            with open(qss_path, 'r', encoding='utf-8') as fh:
+                QApplication.instance().setStyleSheet(fh.read())
+        else:
+            QApplication.instance().setStyleSheet("")
 
 
 # For testing purposes

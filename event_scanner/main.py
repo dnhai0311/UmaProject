@@ -15,6 +15,12 @@ def main():
     try:
         # Create the application
         app = QApplication(sys.argv)
+
+        # Load global stylesheet
+        qss_path = os.path.join(os.path.dirname(__file__), 'resources', 'style.qss')
+        if os.path.exists(qss_path):
+            with open(qss_path, 'r', encoding='utf-8') as fh:
+                app.setStyleSheet(fh.read())
         
         # Set application name and organization
         app.setApplicationName("Uma Event Scanner")

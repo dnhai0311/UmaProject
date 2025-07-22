@@ -1,0 +1,128 @@
+/* Uma Event Scanner - Dark Theme QSS */
+
+/* -------- Generic Widgets -------- */
+QWidget {
+    background-color: #1e1e2f;
+    color: #ecf0f1;
+    font-family: "Segoe UI", "Arial";
+    font-size: 11px;
+}
+
+/* Headers & Titles */
+QLabel#header {
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Push Buttons */
+QPushButton {
+    background-color: #d35400;
+    color: #ffffff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+}
+QPushButton:hover {
+    background-color: #e67e22;
+}
+QPushButton:pressed {
+    background-color: #b94800;
+}
+
+/* Tab Widget */
+QTabWidget::pane {
+    border: 1px solid #2a2a40;
+    top: -1px;
+}
+QTabBar::tab {
+    background: #2a2a40;
+    padding: 8px 16px;
+    margin-right: 2px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+QTabBar::tab:selected {
+    background: #d35400;
+}
+QTabBar::tab:hover {
+    background: #e67e22;
+}
+
+/* Scroll Area */
+QScrollArea {
+    border: none;
+}
+
+/* Line edits & text areas */
+QLineEdit, QTextEdit, QPlainTextEdit, QSpinBox, QDoubleSpinBox {
+    background: #2a2a40;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 4px;
+    color: #ecf0f1;
+}
+
+/* Checkboxes */
+QCheckBox {
+    spacing: 6px;
+}
+QCheckBox::indicator {
+    width: 14px;
+    height: 14px;
+}
+QCheckBox::indicator:unchecked {
+    border: 1px solid #777;
+    background: #1e1e2f;
+}
+QCheckBox::indicator:checked {
+    border: 1px solid #d35400;
+    background: #d35400;
+}
+
+/* ToolTips */
+QToolTip {
+    background-color: #2a2a40;
+    color: #ecf0f1;
+    border: 1px solid #444;
+} 
+
+/* Event Popup specific */
+#eventHeader {
+    background-color: #d35400;
+    padding: 10px;
+    border-radius: 4px;
+}
+#eventName {
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: bold;
+}
+#eventType {
+    color: #ecf0f1;
+    font-size: 11px;
+}
+#choiceFrame {
+    border-radius: 4px;
+    padding: 12px;
+} 
+
+#titleBar {
+    background-color: #2c3e50;
+    color: #ffffff;
+}
+#statusBar {
+    background-color: #34495e;
+    color: #ecf0f1;
+} 
+
+QLabel[state="running"] { color: #2ecc71; font-weight: bold; }
+QLabel[state="stopped"] { color: #e74c3c; font-weight: bold; }
+
+QGroupBox {
+    margin-top: 8px;
+    padding-top: 6px;
+    border: 1px solid #333;
+}
+QGroupBox::title { subcontrol-origin: margin; left: 6px; padding: 0 3px; }
+QGroupBox[active="false"] { border: 1px solid #444; } 

@@ -1,15 +1,15 @@
 {
   "scan_interval": 2.0,
   "confidence_threshold": 0.3,
-  "theme": "light",
+  "theme": "dark",
   "last_region": [
-    783,
-    466,
-    390,
-    94
+    789,
+    463,
+    370,
+    118
   ],
   "ocr_language": "eng",
-  "window_position": "800x700+1100+20",
+  "window_position": "700x700+1200+20",
   "auto_close_popup": true,
   "popup_timeout": 8,
   "match_threshold": 70,
