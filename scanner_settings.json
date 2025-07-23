@@ -15,7 +15,7 @@
   "match_threshold": 70,
   "use_gpu": true,
   "splitter_sizes": [
-    230,
-    461
+    229,
+    458
   ]
 }

@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QTabWidget, QFrame, QTextEdit, QListWidget,
     QMessageBox, QDoubleSpinBox, QCheckBox, QGroupBox, QScrollArea,
     QSplitter, QComboBox, QFileDialog, QApplication, QSpinBox,
-    QTreeWidget, QTreeWidgetItem
+    QTreeWidget, QTreeWidgetItem, QSizePolicy
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSize
 from PyQt6.QtGui import QFont, QPixmap, QImage
@@ -275,7 +275,7 @@ class MainWindow(QMainWindow):
         # Detail panel with scroll
         self.detail_widget = QWidget()
         detail_layout = QVBoxLayout(self.detail_widget)
-        detail_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+        detail_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         detail_layout.addStretch(1)
         self.detail_layout = detail_layout  # keep for update
         detail_layout.addStretch(1)
@@ -283,6 +283,7 @@ class MainWindow(QMainWindow):
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll_area.setWidget(self.detail_widget)
         splitter.addWidget(scroll_area)
 
@@ -819,6 +820,7 @@ class MainWindow(QMainWindow):
         if choices:
             for idx, ch in enumerate(choices):
                 lbl_choice = QLabel(f"<b>{ch.get('choice','')}</b>")
+                lbl_choice.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                 lbl_choice.setWordWrap(True)
                 lbl_choice.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 lbl_choice.setTextFormat(Qt.TextFormat.RichText)
@@ -846,6 +848,7 @@ class MainWindow(QMainWindow):
                     else:
                         html = f"<span style='font-size:{DETAIL_FONT_PT}pt;'>{raw_text}</span>"
                     eff = QLabel(html)
+                    eff.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                     eff.setWordWrap(True)
                     eff.setAlignment(Qt.AlignmentFlag.AlignCenter)
                     eff.setTextFormat(Qt.TextFormat.RichText)
@@ -857,8 +860,10 @@ class MainWindow(QMainWindow):
                         det = seg["detail"].get("effect") or ", ".join(str(v) for v in seg["detail"].values())
                         det_html = f"<span style='color:#95A5A6; font-style:italic; font-size:{DETAIL_FONT_PT - 1}pt;'>{det}</span>"
                         det_lbl = QLabel(det_html)
+                        det_lbl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                         det_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
                         det_lbl.setTextFormat(Qt.TextFormat.RichText)
+                        det_lbl.setWordWrap(True)
                         det_font = QFont("Arial", DETAIL_FONT_PT - 1)
                         det_font.setItalic(True)
                         det_lbl.setFont(det_font)
@@ -867,6 +872,7 @@ class MainWindow(QMainWindow):
                 # Insert separator between choices (except after last)
                 if idx < len(choices) - 1:
                     sep = QLabel("<span style='color:#666;'>──────────────</span>")
+                    sep.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                     sep.setAlignment(Qt.AlignmentFlag.AlignCenter)
                     sep.setTextFormat(Qt.TextFormat.RichText)
                     sep.setFont(QFont("Arial", DETAIL_FONT_PT))
