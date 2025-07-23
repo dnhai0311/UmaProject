@@ -233,38 +233,8 @@ function enhanceTrainingEventsData(trainingData, umaMapping, supportMapping) {
 
 // ===== END MAPPING FUNCTIONS =====
 
-// Function to clean event names by removing unwanted prefixes
-function cleanEventName(rawName) {
-    if (!rawName) return '';
-    
-    let cleaned = rawName.trim();
-    
-    // Loại bỏ comment hoặc dòng bắt đầu bằng //
-    if (cleaned.startsWith('//')) {
-        return null; // Bỏ qua dòng comment
-    }
-    
-    // Loại bỏ prefix là giờ (HH:MM /)
-    cleaned = cleaned.replace(/^\d{1,2}:\d{2}\s*\/\s*/, '');
-    
-    // Loại bỏ prefix là số trong ngoặc (9999)
-    cleaned = cleaned.replace(/^\(\d+\)\s*/, '');
-    
-    // Loại bỏ prefix là số và dấu /
-    cleaned = cleaned.replace(/^\d+\s*\/\s*/, '');
-    
-    // Loại bỏ // ở đầu (nếu còn sót)
-    cleaned = cleaned.replace(/^\/\/+/, '');
-    
-    // Nếu sau khi làm sạch mà vẫn còn // ở đầu hoặc quá ngắn, bỏ qua
-    if (cleaned.startsWith('//') || cleaned.length < 2) {
-        return null;
-    }
-    
-    return cleaned;
-}
 
-const SPEED_FACTOR = 1;
+const SPEED_FACTOR = 1.5;
 function waitTimeout(ms) {
   return new Promise(resolve => setTimeout(resolve, ms * SPEED_FACTOR));
 }
@@ -301,40 +271,6 @@ async function collectAllEventHandles(page) {
 
   return await page.$$('.compatibility_viewer_item__SWULM');
 }
-
-// Helper function to get random index from unused items
-function getRandomUnusedIndex(usedIndices, max) {
-  const unusedIndices = [];
-  for (let i = 0; i < max; i++) {
-    if (!usedIndices.includes(i)) {
-      unusedIndices.push(i);
-    }
-  }
-  if (unusedIndices.length === 0) return Math.floor(Math.random() * max);
-  return unusedIndices[Math.floor(Math.random() * unusedIndices.length)];
-}
-
-// Helper function to get random unique indices, prioritizing unused
-function getRandomUniqueIndices(count, max, usedIndices = []) {
-  const indices = [];
-  const localUsed = [...usedIndices];
-  
-  while (indices.length < count) {
-    let randomIndex;
-    if (localUsed.length < max) {
-      randomIndex = getRandomUnusedIndex(localUsed, max);
-    } else {
-      randomIndex = Math.floor(Math.random() * max);
-    }
-    
-    if (!indices.includes(randomIndex)) {
-      indices.push(randomIndex);
-      localUsed.push(randomIndex);
-    }
-  }
-  return indices;
-}
-
 // Helper function to scroll to element and ensure it's visible before clicking
 async function scrollToAndClick(page, selector, description = 'element') {
   console.log(`  🎯 Scrolling to and clicking ${description} (${selector})`);
@@ -1529,31 +1465,7 @@ async function scrapeEventsFromEventViewer(page, combination) {
       }
     }
     
-    // Remove duplicates per owner + event content
-    const eventMap = new Map();
-    let duplicateCount = 0;
-
-    allEvents.forEach(evObj => {
-      if (evObj && evObj.event && evObj.event.event) {
-        const keyContent = JSON.stringify({
-          ownerType: evObj.ownerType,
-          ownerName: evObj.ownerName,
-          event: evObj.event.event,
-          type: evObj.event.type,
-          choices: evObj.event.choices ? evObj.event.choices.map(c => ({ choice: c.choice, effects: c.effects })) : []
-        });
-        if (!eventMap.has(keyContent)) {
-          eventMap.set(keyContent, evObj);
-        } else {
-          duplicateCount++;
-        }
-      }
-    });
-
-    const uniqueEvents = Array.from(eventMap.values());
-    console.log(`  ✅ Found ${uniqueEvents.length} unique owner-tagged events (removed ${duplicateCount} duplicates)`);
-
-    return uniqueEvents;
+    return allEvents;
   } catch (error) {
     console.log('  ❌ Error scraping events:', error.message);
     return [];

@@ -5,7 +5,7 @@ QWidget {
     background-color: #1e1e2f;
     color: #ecf0f1;
     font-family: "Segoe UI", "Arial";
-    font-size: 11px;
+    font-size: 13px;
 }
 
 /* Headers & Titles */

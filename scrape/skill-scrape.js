@@ -4,6 +4,12 @@ const path = require('path');
 const DATA_DIR = path.resolve(__dirname, '..', 'data');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 
+const skillsFile = path.join(DATA_DIR, 'skills.json');
+if (fs.existsSync(skillsFile)) {
+  fs.unlinkSync(skillsFile);
+  console.log('🗑️ Deleted old skills.json');
+}
+
 (async () => {
   console.log('🚀 Starting Skill scraping...');
   
@@ -44,7 +50,7 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
     await page.waitForSelector('.skills_skill_table___bTic');
 
     // Get all skill data with updated selector
-    const skills = await page.evaluate(() => {
+    let skills = await page.evaluate(() => {
       const skillElements = Array.from(document.querySelectorAll('.skills_skill_table___bTic .skills_table_row_ja__pAfOT, .skills_table_row_ja__pAfOT.skills_stripes__Ka1Md'))
         .filter(element => {
           // Kiểm tra xem element có đang hiển thị không
@@ -63,6 +69,16 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
         return { imageUrl, name, effect };
       }).filter(skill => skill.name !== '');  // Lọc để tránh hàng rỗng
     });
+
+    {
+      const seen = new Set();
+      skills = skills.filter(sk => {
+        if (!sk) return false;
+        if (seen.has(sk.name)) return false;
+        seen.add(sk.name);
+        return true;
+      });
+    }
     console.log(`🔗 Found ${skills.length} skills.`);
 
     // Build output with a simple progress display

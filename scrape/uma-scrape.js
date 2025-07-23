@@ -6,6 +6,12 @@ const path = require('path');
 const dataDir = path.resolve(__dirname, '..', 'data');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
 
+const umaFile = path.join(dataDir, 'uma_char.json');
+if (fs.existsSync(umaFile)) {
+  fs.unlinkSync(umaFile);
+  console.log('🗑️ Deleted old uma_char.json');
+}
+
 function cleanEventName(rawName) {
     if (!rawName) return '';
     

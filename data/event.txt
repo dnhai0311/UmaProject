@@ -1,0 +1,715 @@
+Character: Agnes Tachyon (Original)
+  Costume Events (3)
+    - Expression of Conviction
+    - Obtain Data!
+    - Tachyon the Spoiled Child
+  Events With Choices (4)
+    - At Tachyon's Pace
+    - The Strongest Collaborator?!
+    - The Pressure of Justice?
+    - Hamburger Helper!
+  Date Events (5)
+    - Medicine That Makes You Faster?
+    - The Significance of Research
+    - No Shortcuts
+    - A Gift From the Dark Sky
+    - Body Modification!
+  Secret Events (1)
+    - Report: A Clear Gaze
+  Special Events (9)
+    - Bonus at start
+    - Failed training (Get Well Soon!)
+    - Failed training (Don't Overdo It!)
+    - Extra Training
+    - At Summer Camp (Year 2)
+    - Dance Lesson
+    - New Year's Resolutions
+    - New Year's Shrine Visit
+    - Acupuncture (Just an Acupuncturist, No Worries! ☆)
+  After a Race (9)
+    - G1 (1st)
+    - G1 (2nd-5th)
+    - G1 (6th or worse)
+    - G2/G3 (1st)
+    - G2/G3 (2nd-5th)
+    - G2/G3 (6th or worse)
+    - OP/Pre-OP (1st)
+    - OP/Pre-OP (2nd-5th)
+    - OP/Pre-OP (6th or worse)
+  Events Without Choices (15)
+    - Report: Uncertain Promises
+    - Report: Will
+    - Report: Change of Course
+    - Report: Confession
+    - Report: The Final Factor
+    - Boredom is Excruciating
+    - Rumored Microbes
+    - Midnight Pool
+    - Energetic Brain Cells
+    - Master Trainer
+    - On the Psychological Effects of Others' Emotions
+    - Coffee Trap?
+    - Keep the Lecturing to a Minimum
+    - What Is There to Gain from Helping Others?
+    - Engrossed in Research!
+
+Character: Air Groove (Original)
+  Costume Events (3)
+    - Flowers for You
+    - A Beautiful Stress Relief Method?
+    - Guidepost
+  Events With Choices (7)
+    - Empress and Monarch
+    - Operation: Flowerbed
+    - Empress and Emperor
+    - Seize Her!
+    - Take Good Care of Your Tail
+    - Suggestion Box of Freedom
+    - A Taste of Effort
+  Date Events (5)
+    - A Little Encounter
+    - Sweet Potato Cake
+    - Imprinted Memories
+    - A Blinking Light Means Stop
+    - Smoldering Silently
+  Secret Events (1)
+    - After the Shuka Sho: Reign
+  Special Events (9)
+    - Bonus at start
+    - Failed training (Get Well Soon!)
+    - Failed training (Don't Overdo It!)
+    - Extra Training
+    - At Summer Camp (Year 2)
+    - Dance Lesson
+    - New Year's Resolutions
+    - New Year's Shrine Visit
+    - Acupuncture (Just an Acupuncturist, No Worries! ☆)
+  After a Race (9)
+    - G1 (1st)
+    - G1 (2nd-5th)
+    - G1 (6th or worse)
+    - G2/G3 (1st)
+    - G2/G3 (2nd-5th)
+    - G2/G3 (6th or worse)
+    - OP/Pre-OP (1st)
+    - OP/Pre-OP (2nd-5th)
+    - OP/Pre-OP (6th or worse)
+  Events Without Choices (11)
+    - To Be a Scepter
+    - Ideals for Whose Benefit?
+    - She Who Races Ahead
+    - Please Rise
+    - Mother and Daughter
+    - Confused by a Joke
+    - Your Ideal
+    - Flowers and Distraction
+    - A Glint of Anger
+    - After the Sticker Demon!
+    - Of Storms and Flowers
+
+Character: Biwa Hayahide (Original)
+  Costume Events (3)
+    - To Keep, or Not to Keep?
+    - A Realistic Fairytale
+    - Theory, the Greatest Weapon
+  Events With Choices (4)
+    - Memories of Cooking and Sisterhood
+    - A New Side
+    - Battle With a Raging Dragon
+    - Banana Fiend ♪
+  Date Events (5)
+    - Reading in a Cafe
+    - Sharp Contrast
+    - Emergency Presentation
+    - Hide and Seek Master
+    - Game Theory
+  Secret Events (2)
+    - Our Method
+    - After the Takarazuka Kinen: The Top
+  Special Events (9)
+    - Bonus at start
+    - Failed training (Get Well Soon!)
+    - Failed training (Don't Overdo It!)
+    - Extra Training
+    - At Summer Camp (Year 2)
+    - Dance Lesson
+    - New Year's Resolutions
+    - New Year's Shrine Visit
+    - Acupuncture (Just an Acupuncturist, No Worries! ☆)
+  After a Race (9)
+    - G1 (1st)
+    - G1 (2nd-5th)
+    - G1 (6th or worse)
+    - G2/G3 (1st)
+    - G2/G3 (2nd-5th)
+    - G2/G3 (6th or worse)
+    - OP/Pre-OP (1st)
+    - OP/Pre-OP (2nd-5th)
+    - OP/Pre-OP (6th or worse)
+  Events Without Choices (12)
+    - A Description of the Present Moment
+    - Principles Beyond Recollection
+    - Fact
+    - The Peer Effect
+    - Authoring the Equation
+    - Emphasis on Nutrition?
+    - Master Trainer
+    - Dear Sister
+    - Expanding Gloom
+    - Unforeseen Circumstances
+    - If You're All Watching
+    - Optimal Glasses
+
+Character: Curren Chan (Original)
+  Costume Events (3)
+    - どんなカレンがお・す・き？
+    - カレン的SNSとの付き合い方♪
+    - これがカレンの勝負服
+  Events With Choices (4)
+    - せーのっ！
+    - World is……？
+    - お勉強させてもらいます♪
+    - いっしょに、食べよ？
+  Date Events (5)
+    - まずは、なかよくなるため
+    - もっと、つながるため
+    - すべては――のため
+    - 思い出の味
+    - ガタン、ゴトン、ころん
+  Secret Events (1)
+    - サマースプリントシリーズ制覇！
+  Special Events (9)
+    - Bonus at start
+    - Failed training (Get Well Soon!)
+    - Failed training (Don't Overdo It!)
+    - Extra Training
+    - At Summer Camp (Year 2)
+    - Dance Lesson
+    - New Year's Resolutions
+    - New Year's Shrine Visit
+    - Acupuncture (Just an Acupuncturist, No Worries! ☆)
+  After a Race (9)
+    - G1 (1st)
+    - G1 (2nd-5th)
+    - G1 (6th or worse)
+    - G2/G3 (1st)
+    - G2/G3 (2nd-5th)
+    - G2/G3 (6th or worse)
+    - OP/Pre-OP (1st)
+    - OP/Pre-OP (2nd-5th)
+    - OP/Pre-OP (6th or worse)
+  Events Without Choices (12)
+    - カワイイの本気
+    - カワイイの更新
+    - カワイイの計画……？
+    - カワイイの本音
+    - さみしんぼなの
+    - カワイイライブの後で……♪
+    - 名指導
+    - カワイイのその先へ
+    - ころんってしたいのー
+    - 映えの裏側
+    - これでカワイさバッチグー！
+    - カワイイを、伝えて？
+
+Character: Daiwa Scarlet (Original)
+  Costume Events (3)
+    - The Best Pose
+    - The Weight of Racewear
+    - Looking Good
+  Events With Choices (5)
+    - Her
+    - Recommended Restaurant
+    - Advice from an Older Student
+    - Enjoying Number One
+    - Can't Lose Sight of Number One!
+  Date Events (5)
+    - As a Model Student...
+    - Just a Little More
+    - Under the Evening Star
+    - Rained On
+    - How to Spend a Day Off
+  Secret Events (8)
+    - After the Tulip Sho: Embrace the Rage
+    - After the Tulip Sho: Ticked Off!
+    - After the Oka Sho: For the Oaken Plaque
+    - After the Oka Sho: Still Out of Reach
+    - The Japanese Derby
+    - After the Shuka Sho: Obviously!
+    - After the Shuka Sho: Aching Legs
+    - After the Tenno Sho (Autumn): They Haven't Changed
+  Special Events (9)
+    - Bonus at start
+    - Failed training (Get Well Soon!)
+    - Failed training (Don't Overdo It!)
+    - Extra Training
+    - At Summer Camp (Year 2)
+    - Dance Lesson
+    - New Year's Resolutions
+    - New Year's Shrine Visit
+    - Acupuncture (Just an Acupuncturist, No Worries! ☆)
+  After a Race (9)
+    - G1 (1st)
+    - G1 (2nd-5th)
+    - G1 (6th or worse)
+    - G2/G3 (1st)
+    - G2/G3 (2nd-5th)
+    - G2/G3 (6th or worse)
+    - OP/Pre-OP (1st)
+    - OP/Pre-OP (2nd-5th)
+    - OP/Pre-OP (6th or worse)
+  Events Without Choices (11)
+    - There Can Only Be One
+    - My Number One
+    - Empty Room
+    - Number-One Rival
+    - A Curious Rumor
+    - Master Trainer
+    - A Primo Connection
+    - Twintail Troubles
+    - My Perch
+    - A Dream? A Spell? Or a Revelation?
+    - Enthusiastic Reading
+
+Character: El Condor Pasa (Original)
+  Costume Events (3)
+    - Determination of the World's Strongest
+    - Cactus Feast
+    - Song of Courage
+  Events With Choices (4)
+    - A Personalized Mask
+    - Salsa Roja
+    - Go for the Extra-Large Pizza!
+    - Hot and Spicy!
+  Date Events (5)
+    - The Wrestler I Admire
+    - Shocking Retirement
+    - Renewed Resolve
+    - The Academy at Night
+    - Flower Language
+  Special Events (9)
+    - Bonus at start
+    - Failed training (Get Well Soon!)
+    - Failed training (Don't Overdo It!)
+    - Extra Training
+    - At Summer Camp (Year 2)
+    - Dance Lesson
+    - New Year's Resolutions
+    - New Year's Shrine Visit
+    - Acupuncture (Just an Acupuncturist, No Worries! ☆)
+  After a Race (9)
+    - G1 (1st)
+    - G1 (2nd-5th)
+    - G1 (6th or worse)
+    - G2/G3 (1st)
+    - G2/G3 (2nd-5th)
+    - G2/G3 (6th or worse)
+    - OP/Pre-OP (1st)
+    - OP/Pre-OP (2nd-5th)
+    - OP/Pre-OP (6th or worse)
+  Events Without Choices (13)
+    - Playing Hero
+    - A Fighting Spirit with No Outlet
+    - Unmasked
+    - Carnaval for Tomorrow
+    - Get the Party Started!
+    - Runaway Mambo
+    - ルチャリブレ魂
+    - Master Trainer
+    - Flying Higher than Anyone
+    - Stupid Time Difference...
+    - Source of Power
+    - El Especial Explosion!
+    - Forget Something?
+
+Character: Gold Ship (Original)
+  Costume Events (4)
+    - The Red of the Protagonist!
+    - A Date, Golshi Style
+    - A Sudden Episode from Golshi's Past!
+    - After the Takarazuka Kinen: Keyword 2
+  Events With Choices (7)
+    - Pair Discount Repeat Offender
+    - Which Did You Lose?
+    - My Part-Time Job Is... Crazy?
+    - The Day After, Voices Hoarse
+    - This One's For Keeps!
+    - Summer Camp (Year 3) Ends
+    - Killer Appetite!
+  Date Events (5)
+    - Legend of the Left Pinky
+    - Hello From About 1.5 Billion Years Ago
+    - And Then She...
+    - A Lovely Place
+    - Nighttime Park Visit
+  Secret Events (1)
+    - After the Takarazuka Kinen: Keyword 2
+  Special Events (7)
+    - Failed training (Don't Overdo It!)
+    - Extra Training
+    - At Summer Camp (Year 2)
+    - Dance Lesson
+    - New Year's Resolutions
+    - New Year's Shrine Visit
+    - Acupuncture (Just an Acupuncturist, No Worries! ☆)
+  After a Race (9)
+    - G1 (1st)
+    - G1 (2nd-5th)
+    - G1 (6th or worse)
+    - G2/G3 (1st)
+    - G2/G3 (2nd-5th)
+    - G2/G3 (6th or worse)
+    - OP/Pre-OP (1st)
+    - OP/Pre-OP (2nd-5th)
+    - OP/Pre-OP (6th or worse)
+  Events Without Choices (13)
+    - Moms Over Gods
+    - Aiming for Paris Fashion Week
+    - Aiming for Normiedom
+    - A Serious Battle
+    - Road to Eden
+    - The Seven Wonders of Golshi (Pending)
+    - Golshi the Fickle Maiden ☆
+    - Master Trainer
+    - The Start of a New Journey!
+    - Golshi in Big Trouble?!
+    - School Defense Squad?
+    - Golshi the Great Detective?
+    - Into the Sky?
+
+Character: Grass Wonder (Original)
+  Costume Events (3)
+    - Hidden Meaning
+    - Principles
+    - Hate to Lose
+  Events With Choices (5)
+    - Errands Have Perks
+    - Beauteaful
+    - Tracen Karuta Queen
+    - In Search of Refreshment
+    - Together for Tea
+  Date Events (5)
+    - Yamato Nadeshiko
+    - Childhoods Apart
+    - Nadeshiko Gal
+    - Childhood Dream
+    - Flower Vase
+  Special Events (9)
+    - Bonus at start
+    - Failed training (Get Well Soon!)
+    - Failed training (Don't Overdo It!)
+    - Extra Training
+    - At Summer Camp (Year 2)
+    - Dance Lesson
+    - New Year's Resolutions
+    - New Year's Shrine Visit
+    - Acupuncture (Just an Acupuncturist, No Worries! ☆)
+  After a Race (7)
+    - G1 (1st)
+    - G1 (2nd-5th)
+    - G1 (6th or worse)
+    - G2/G3 (1st)
+    - G2/G3 (2nd-5th)
+    - G2/G3 (6th or worse)
+    - OP/Pre-OP (2nd-5th)
+  Events Without Choices (11)
+    - The Beast's Successor
+    - Gathering of Legends
+    - Out of Reach
+    - Rival Awakening
+    - Flying Car
+    - Master Trainer
+    - The Journey Continues
+    - Tumult
+    - Competitive
+    - One Destination
+    - Help! Pre-Test Panic
+
+Character: Haru Urara (Original)
+  Costume Events (3)
+    - The Racewear I Love!
+    - Pair Interview!
+    - Tug of War Tournament!
+  Events With Choices (4)
+    - Arm-Wrestling Contest
+    - Looking for Something Important
+    - Sand Training!
+    - The Final Boss... Spe!
+  Date Events (5)
+    - A Little Detour!
+    - Parks Are Fun!
+    - Secret Day Off Plan!
+    - So Cool!
+    - Forgot to Eat!
+  Secret Events (1)
+    - After the Arima Kinen: Way, Way Better
+  Special Events (9)
+    - Bonus at start
+    - Failed training (Get Well Soon!)
+    - Failed training (Don't Overdo It!)
+    - Extra Training
+    - At Summer Camp (Year 2)
+    - Dance Lesson
+    - New Year's Resolutions
+    - New Year's Shrine Visit
+    - Acupuncture (Just an Acupuncturist, No Worries! ☆)
+  After a Race (9)
+    - G1 (1st)
+    - G1 (2nd-5th)
+    - G1 (6th or worse)
+    - G2/G3 (1st)
+    - G2/G3 (2nd-5th)
+    - G2/G3 (6th or worse)
+    - OP/Pre-OP (1st)
+    - OP/Pre-OP (2nd-5th)
+    - OP/Pre-OP (6th or worse)
+  Events Without Choices (14)
+    - Training, Urara Style
+    - Smiling With Everyone!
+    - Idol of the Shopping District!
+    - Fan Club Running Rampant!
+    - I'll Do My Best
+    - Her First...
+    - Detention Continues...
+    - Plenty of Charm!
+    - Master Trainer
+    - Sunny Spring Day
+    - Special ☆ Delicious?!
+    - How Many Steps Are There?!
+    - Let's Be Kangaroos!
+    - Mmm-Mmm Temptation!
+
+Character: King Halo (Original)
+  Costume Events (3)
+    - The Outfit That Suits Me Most
+    - Running Isn't Everything
+    - Manners Are Common Sense
+  Events With Choices (6)
+    - Movies Are Full of Learning Opportunities
+    - The King Knows No Exhaustion
+    - First-Rate in Studies Too
+    - After-School Soda
+    - Three Heads Are Better than One
+    - Sweet Tooth Temptation
+  Date Events (5)
+    - First-Rate Spot
+    - First-Rate Harvest
+    - First-Rate Terms
+    - Crowds Are No Problem
+    - Breaking Curfew is Second-Rate
+  Special Events (9)
+    - Bonus at start
+    - Failed training (Get Well Soon!)
+    - Failed training (Don't Overdo It!)
+    - Extra Training
+    - At Summer Camp (Year 2)
+    - Dance Lesson
+    - New Year's Resolutions
+    - New Year's Shrine Visit
+    - Acupuncture (Just an Acupuncturist, No Worries! ☆)
+  After a Race (9)
+    - G1 (1st)
+    - G1 (2nd-5th)
+    - G1 (6th or worse)
+    - G2/G3 (1st)
+    - G2/G3 (2nd-5th)
+    - G2/G3 (6th or worse)
+    - OP/Pre-OP (1st)
+    - OP/Pre-OP (2nd-5th)
+    - OP/Pre-OP (6th or worse)
+  Events Without Choices (12)
+    - To Pursue and Be Pursued
+    - We Made Our Debut
+    - My Legs
+    - First-Rate Resolve
+    - Beyond the Limelight
+    - The King's Worries
+    - Master Trainer
+    - First-Rate Umamusume
+    - Just Can't Stand It
+    - A First-Rate Laugh
+    - Phantom Dance Festival
+    - First-Rate... Predictions?
+
+Character: Maruzensky (Original)
+  Costume Events (3)
+    - Trendsetter
+    - Sewing Star
+    - My Favorite Things
+  Events With Choices (7)
+    - Hot Rod
+    - Let's Play ♪
+    - A Lady's Style ☆
+    - Let's Cook!
+    - The Road to a Rad Victory!
+    - Down to Dance!
+    - Nostalgia Fever ☆
+  Date Events (5)
+    - The Secret to Supporting Each Other
+    - Even Role Models Get Lonely
+    - Take the Wheel
+    - Meeting New People Is Trendy ☆
+    - The Fun Never Stops ♪
+  Secret Events (1)
+    - Fukushima in Summer
+  Special Events (9)
+    - Fukushima in Summer
+    - Failed training (Get Well Soon!)
+    - Failed training (Don't Overdo It!)
+    - Extra Training
+    - At Summer Camp (Year 2)
+    - Dance Lesson
+    - New Year's Resolutions
+    - New Year's Shrine Visit
+    - Acupuncture (Just an Acupuncturist, No Worries! ☆)
+  After a Race (9)
+    - G1 (1st)
+    - G1 (2nd-5th)
+    - G1 (6th or worse)
+    - G2/G3 (1st)
+    - G2/G3 (2nd-5th)
+    - G2/G3 (6th or worse)
+    - OP/Pre-OP (1st)
+    - OP/Pre-OP (2nd-5th)
+    - OP/Pre-OP (6th or worse)
+  Events Without Choices (12)
+    - Feeling Top Gear
+    - Walk the Walk
+    - To New Heights
+    - A Fun Race
+    - Bring It
+    - Virtual Car Race
+    - Master Trainer
+    - The Coolest Spot
+    - Golden Oldies?
+    - Big Trouble!
+    - A Totally Bomb ☆ New Feeling
+    - Shockingly Careless
+
+Scenario: URA Finals
+  Events With Choices (3)
+    - Exhilarating! What a Scoop!
+    - A Trainer's Knowledge
+    - Best Foot Forward!
+  Events Without Choices (3)
+    - A Three-Legged Race
+    - Happy Shoe Shopping
+    - Kiryuin's Day Off
+
+Scenario: Aoharu Hai
+  Events With Choices (1)
+    - A Team at Last
+  Events Without Choices (8)
+    - A Present from Director Akikawa!
+    - Team Power Increased: The Greatest Gift
+    - All Together! Say Cheese!
+    - A Happy Ending for the Team
+    - A Cheer Song for the Team!
+    - Team Trouble?
+    - A Secret Side of Kashimoto
+    - A Surprising Side of Kashimoto
+
+Scenario: Make a New Track
+  Events With Choices (31)
+    - 『全力』＆『普通』ダイエット！
+    - 『退学』を賭けた勝負
+    - ふたりと宿根草
+    - ひとり暮らしの生活
+    - じいちゃん子たちの集い
+    - アグネスデジタル、爆発す
+    - アルダンからは逃げ切れない
+    - タマモのゲームセンター奮闘記
+    - パワフル最強シンデレラ！
+    - ヴィクトリー倶楽部、参上！
+    - ゴルシちゃん主催！人狼は誰だ！？
+    - ドキドキフルーツフェス
+    - タイキとパールと外国語
+    - ブライアンがヤキモチ？
+    - ベガとスピカ
+    - マーベラス売りの少女
+    - マルゼンさんへの気持ち
+    - ワールドワイド・ウインディ
+    - カワイイを守りたい！
+    - サプライズ大作戦！
+    - ゴルシを治せ！？
+    - 凸凹コンビ
+    - 委員たちの井戸端会議
+    - 家族（？）でショッピング！
+    - 意外な美化委員
+    - 同じ傘の下で
+    - 甘えたがりのお年頃
+    - 怖くないって怖いです
+    - 名探偵のボクにお任せ！
+    - 目が離せないお嬢様たち
+    - 語り合いたい！
+
+Scenario: Grand Live
+  Events With Choices (4)
+    - 提案ッ！新曲プロデュース！
+    - 集まれ！のど自慢
+    - できることから
+    - あなたと私をつなげるライブ
+
+Scenario: Grand Masters
+  Events With Choices (1)
+    - 今を駆ける者たちの祖
+  Events Without Choices (6)
+    - グロウアップレースの後に・勝利
+    - グロウアップレースの後に・敗北
+    - WBCの後に・勝利
+    - WBCの後に・敗北
+    - SWBCの後に・勝利
+    - SWBCの後に・敗北
+
+Scenario: Project L'Arc
+  Events With Choices (1)
+    - With
+  Events Without Choices (13)
+    - 代表交流戦第4戦の後に・発揮
+    - ロマンを求めて
+    - フォワ賞の後に・勝利
+    - Trust＜From Condor＞
+    - Trust＜From Festa＞
+    - Trust＜From Ship＞
+    - Trust＜From Diamond＞
+    - Trust＜From Cafe＞
+    - Trust＜From Sirius＞
+    - Trust＜From Tap＞
+    - Trust＜From Speed＞
+    - Trust＜From Orfevre＞
+    - Trust＜From Blast＞
+
+Scenario: U.A.F. Ready GO!
+  Events With Choices (3)
+    - いっしょに遊ぼ！
+    - さすらいの道場破ラー
+    - 張り切る理由は……
+  Events Without Choices (28)
+    - ちゃっかりマーちゃん
+    - ちっちゃい先輩's、がんばるっ
+    - 土の氣、水の氣
+    - やりすぎ注意！
+    - ルールは事前に確認しましょう
+    - ヒミツの全力応援
+    - 皆それぞれの冴えたやりかた
+    - 白黒ぼうやの大冒険
+    - 好きなら好きと
+    - 好きこそものの
+    - 三流派、並び立つ
+    - 燃やせ！根性とお腹周りのアレ
+    - 呼吸を整えるんですのよ～
+    - ヒシアケボノ部屋の教え
+    - つっぱれ！ビコーペガサス！
+    - ふたりは名師範
+    - YAWARA ROAD
+    - 上様といえど構わん！
+    - とっておきの冴えた（？）やりかた
+    - 大切なことは！
+    - バクシン的特訓を、みなさんと！
+    - あたまのうえのお友だち
+    - その思考までも
+    - かっ飛べ！アオハル
+    - こればっかりはどうしても
+    - ゆるっと☆プール遊び
+    - 狼とお節介焼き
+    - 弓取りの如く！

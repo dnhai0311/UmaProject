@@ -5,6 +5,12 @@ const path = require('path');
 const dataDir = path.resolve(__dirname, '..', 'data');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
 
+const supportFile = path.join(dataDir, 'support_card.json');
+if (fs.existsSync(supportFile)) {
+  fs.unlinkSync(supportFile);
+  console.log('🗑️ Deleted old support_card.json');
+}
+
 function cleanEventName(rawName) {
     if (!rawName) return '';
     
@@ -104,7 +110,7 @@ function cleanEventName(rawName) {
     // ----------------------------------------------
     // Scrape info directly from the list page
     // ----------------------------------------------
-    const supportsData = await page.evaluate(() => {
+    let supportsData = await page.evaluate(() => {
       function getRarity(text, anchor) {
         // 1) Look for explicit token in provided text
         const m = text.match(/\b(SSR|SR|R)\b/i);
@@ -171,6 +177,16 @@ function cleanEventName(rawName) {
           };
         }).filter(Boolean);
     });
+
+    {
+      const seen = new Set();
+      supportsData = supportsData.filter(s => {
+        if (!s) return false;
+        if (seen.has(s.id)) return false;
+        seen.add(s.id);
+        return true;
+      });
+    }
 
     // --------------------------------------------------
     // Fetch detail pages to ensure correct rarity & name
