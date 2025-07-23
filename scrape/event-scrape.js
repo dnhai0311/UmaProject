@@ -5,37 +5,6 @@ const path = require('path');
 const DATA_DIR = path.resolve(__dirname, '..', 'data');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 
-// ===== MAPPING FUNCTIONS =====
-// Function to extract ID from imageUrl
-function extractIdFromImageUrl(imageUrl) {
-  if (!imageUrl) return null;
-  
-  // For characters: chara_stand_1023_102301.png -> 102301, hoặc chara_stand_1013_101301.png -> 1013_101301
-  if (imageUrl.includes('chara_stand_')) {
-    // Ưu tiên lấy cả cụm 2 số: chara_stand_1013_101301.png
-    const match = imageUrl.match(/chara_stand_(\d+_\d+)\.png/);
-    if (match) return match[1];
-    // Nếu không có, fallback về số cuối
-    const match2 = imageUrl.match(/chara_stand_\d+_(\d+)\.png/);
-    if (match2) return match2[1];
-  }
-  
-  // For support cards: tex_support_card_30027.png -> 30027
-  if (imageUrl.includes('tex_support_card_')) {
-    const match = imageUrl.match(/tex_support_card_(\d+)\.png/);
-    return match ? match[1] : null;
-  }
-  
-  // For support cards with different format: support_card_s_30027.png -> 30027
-  if (imageUrl.includes('support_card_s_')) {
-    const match = imageUrl.match(/support_card_s_(\d+)\.png/);
-    return match ? match[1] : null;
-  }
-  
-  return null;
-}
-
-// Function to load and parse JSON file
 function loadJsonFile(filePath) {
   try {
     const data = fs.readFileSync(filePath, 'utf8');
@@ -46,206 +15,24 @@ function loadJsonFile(filePath) {
   }
 }
 
-// Function to create mapping from uma events
-function createUmaMapping(umaData) {
-  const mapping = new Map();
-  
-  umaData.forEach(character => {
-    const id = extractIdFromImageUrl(character.imageUrl);
-    if (id) {
-      mapping.set(id, {
-        name: character.name,
-        imageUrl: character.imageUrl,
-        url_detail: character.url_detail,
-        rarity: character.rarity,
-        type: 'character'
-      });
-    }
-    
-    // Also try to map by name as fallback
-    if (character.name) {
-      mapping.set(character.name, {
-        name: character.name,
-        imageUrl: character.imageUrl,
-        url_detail: character.url_detail,
-        rarity: character.rarity,
-        type: 'character'
-      });
-    }
-  });
-  
-  return mapping;
-}
-
-// Function to create mapping from support events
-function createSupportMapping(supportData) {
-  const mapping = new Map();
-  
-  supportData.forEach(support => {
-    const id = extractIdFromImageUrl(support.imageUrl);
-    if (id) {
-      mapping.set(id, {
-        name: support.name,
-        imageUrl: support.imageUrl,
-        url_detail: support.url_detail,
-        rarity: support.rarity,
-        type: 'support'
-      });
-    }
-    
-    // Also try to map by name as fallback
-    if (support.name) {
-      mapping.set(support.name, {
-        name: support.name,
-        imageUrl: support.imageUrl,
-        url_detail: support.url_detail,
-        rarity: support.rarity,
-        type: 'support'
-      });
-    }
-  });
-  
-  return mapping;
-}
-
-// Function to find best match for a card/character
-function findBestMatch(item, mapping) {
-  const itemId = item.id;
-  const itemName = item.name;
-  
-  // Try direct ID match
-  let match = mapping.get(itemId);
-  if (match) return match;
-  
-  // Try name match
-  if (itemName && itemName !== itemId) {
-    match = mapping.get(itemName);
-    if (match) return match;
-  }
-  
-  // Try extracted ID from name
-  if (itemName) {
-    const extractedId = extractIdFromImageUrl(itemName);
-    if (extractedId) {
-      match = mapping.get(extractedId);
-      if (match) return match;
-    }
-  }
-  
-  // Try numeric ID match
-  if (itemId && /^\d+$/.test(itemId)) {
-    match = mapping.get(itemId);
-    if (match) return match;
-  }
-  
-  // Try partial name matching
-  if (itemName) {
-    for (const [key, value] of mapping.entries()) {
-      if (key.includes(itemName) || itemName.includes(key)) {
-        return value;
-      }
-    }
-  }
-  
-  // Try fuzzy matching for support cards
-  if (itemName && itemName.length > 3) {
-    for (const [key, value] of mapping.entries()) {
-      const keyLower = key.toLowerCase();
-      const nameLower = itemName.toLowerCase();
-      
-      // Check if key contains the name or vice versa
-      if (keyLower.includes(nameLower) || nameLower.includes(keyLower)) {
-        return value;
-      }
-      
-      // Check for common patterns
-      if (keyLower.includes('support card') && nameLower.includes('support card')) {
-        return value;
-      }
-    }
-  }
-  
-  return null;
-}
-
-// Function to enhance training events data with character/support info
-function enhanceTrainingEventsData(trainingData, umaMapping, supportMapping) {
-  const enhancedData = {
-    ...trainingData,
-    characters: [],
-    supportCards: [],
-    scenarios: trainingData.scenarios || [],
-    events: trainingData.events || [],
-    progress: trainingData.progress || {},
-    timestamp: trainingData.timestamp || new Date().toISOString()
-  };
-
-  // Enhance characters with detailed info
-  trainingData.characters.forEach(char => {
-    const umaInfo = findBestMatch(char, umaMapping);
-    
-    if (umaInfo) {
-      enhancedData.characters.push({
-        ...char,
-        name: umaInfo.name,
-        imageUrl: umaInfo.imageUrl,
-        url_detail: umaInfo.url_detail,
-        rarity: umaInfo.rarity
-      });
-    } else {
-      // Fallback if not found in uma mapping
-      enhancedData.characters.push({
-        ...char,
-        name: char.id,
-        imageUrl: null,
-        url_detail: null,
-        rarity: null
-      });
-    }
-  });
-
-  // Enhance support cards with detailed info
-  trainingData.supportCards.forEach(card => {
-    const supportInfo = findBestMatch(card, supportMapping);
-    
-    if (supportInfo) {
-      enhancedData.supportCards.push({
-        ...card,
-        name: supportInfo.name,
-        imageUrl: supportInfo.imageUrl,
-        url_detail: supportInfo.url_detail,
-        rarity: supportInfo.rarity
-      });
-    } else {
-      // Fallback if not found in support mapping
-      enhancedData.supportCards.push({
-        ...card,
-        name: card.id,
-        imageUrl: null,
-        url_detail: null,
-        rarity: null
-      });
-    }
-  });
-
-  return enhancedData;
-}
-
-// ===== END MAPPING FUNCTIONS =====
 
 
-const SPEED_FACTOR = 1.5;
+const SPEED_FACTOR = 0.3;
 function waitTimeout(ms) {
   return new Promise(resolve => setTimeout(resolve, ms * SPEED_FACTOR));
 }
 
-// ==============================================
-// NEW HELPER – ensure all event items are loaded
-// ==============================================
+function stableStringify(obj) {
+  const keys = [];
+  JSON.stringify(obj, (k, v) => {
+    keys.push(k);
+    return v;
+  });
+  keys.sort();
+  return JSON.stringify(obj, keys);
+}
+
 async function collectAllEventHandles(page) {
-  // Scroll the Event Viewer list until no new items appear so that
-  // all lazily-rendered events are present in the DOM, then return
-  // every ".compatibility_viewer_item__SWULM" element handle.
   let prevCount = -1;
   let stableCycles = 0;
   const MAX_CYCLES = 10;
@@ -271,20 +58,16 @@ async function collectAllEventHandles(page) {
 
   return await page.$$('.compatibility_viewer_item__SWULM');
 }
-// Helper function to scroll to element and ensure it's visible before clicking
 async function scrollToAndClick(page, selector, description = 'element') {
   console.log(`  🎯 Scrolling to and clicking ${description} (${selector})`);
   
-  // Wait for element to be available with shorter timeout
   await page.waitForSelector(selector, { timeout: 8000 });
   
-  // Find element
   const element = await page.$(selector);
   if (!element) {
     throw new Error(`${description} not found: ${selector}`);
   }
   
-  // Check if element is visible and clickable (giảm thời gian check)
   const isVisible = await element.evaluate(el => {
     const rect = el.getBoundingClientRect();
     const style = window.getComputedStyle(el);
@@ -300,7 +83,6 @@ async function scrollToAndClick(page, selector, description = 'element') {
     throw new Error(`${description} is not visible or clickable: ${selector}`);
   }
   
-  // Scroll element into view with more precise positioning
   await page.evaluate((el) => {
     const rect = el.getBoundingClientRect();
     const scrollTop = window.pageYOffset + rect.top - (window.innerHeight / 2);
@@ -310,10 +92,8 @@ async function scrollToAndClick(page, selector, description = 'element') {
     });
   }, element);
   
-  // Giảm wait time cho scroll
   await waitTimeout(400);
   
-  // Click the element with retry logic (giảm xuống 1 attempt)
   try {
     await element.click({ timeout: 5000 });
     console.log(`  ✅ Successfully clicked ${description}`);
@@ -327,12 +107,14 @@ async function scrapeTrainingEvents(headlessMode = true) {
   console.log('🚀 Starting Training Event Helper scraper...');
   console.log(`📱 Running in ${headlessMode ? 'headless' : 'visible'} mode`);
   
-  // Xóa file kết quả cũ nếu có
   const fs = require('fs');
   const outputFile = path.join(DATA_DIR, 'events.json');
+  let previousData = null;
   if (fs.existsSync(outputFile)) {
-    fs.unlinkSync(outputFile);
-    console.log('🗑️ Deleted old results file');
+    previousData = loadJsonFile(outputFile);
+    if(previousData){
+      console.log(`🔄 Loaded previous events database with ${previousData.events?.length||0} events`);
+    }
   }
   
   const browser = await puppeteer.launch({
@@ -357,11 +139,9 @@ async function scrapeTrainingEvents(headlessMode = true) {
   try {
     const page = await browser.newPage();
     
-    // Set page-level timeouts (giảm xuống)
     page.setDefaultTimeout(20000);
     page.setDefaultNavigationTimeout(30000);
     
-    // Navigate to the Training Event Helper page
     console.log('📱 Navigating to Training Event Helper page...');
     await page.goto('https://gametora.com/umamusume/training-event-helper', {
       waitUntil: 'domcontentloaded', // Thay đổi từ networkidle2 sang domcontentloaded để nhanh hơn
@@ -370,23 +150,12 @@ async function scrapeTrainingEvents(headlessMode = true) {
 
     await waitTimeout(2000); // Giảm wait time
 
-    // Get available options
     const options = await getAvailableOptions(page);
     console.log(`✅ Found ${options.supportCards.length} support cards, ${options.scenarios.length} scenarios, ${options.characters.length} characters`);
     
-    // Skip writing training_options.json per preference
 
-    // === 1. REPLACE old combination creation logic ===
-    // find section after options retrieved where combinations created; we'll insert new block and comment old (not deleting for now)
-    // Locate marker: "// Lấy toàn bộ dữ liệu: tất cả support cards, nhân vật, scenarios" - replace logic below until before const combinations = [] existing.
-    // We'll insert easier by redefining combinations before it's used
-    // Add after we fetch options (right after console logs)
-    // ------------------------------
-    // Build combinations (new logic)
-    // ------------------------------
     const combinations = [];
 
-    // Phase 1: each character with scenario (cycling) ; first N (scenario count) allowScenarioEvent true
     options.characters.forEach((char, idx) => {
       const scenario = options.scenarios[idx % options.scenarios.length] || 'URA Finals';
       combinations.push({
@@ -397,7 +166,6 @@ async function scrapeTrainingEvents(headlessMode = true) {
       });
     });
 
-    // Phase 2: each support card alone with scenario cycling
     options.supportCards.forEach((card, idx) => {
       const scenario = options.scenarios[idx % options.scenarios.length] || 'URA Finals';
       combinations.push({
@@ -410,29 +178,53 @@ async function scrapeTrainingEvents(headlessMode = true) {
 
     console.log(`📊 Total combinations generated: ${combinations.length}`);
 
-    // === old combination generation block skipped ===
-    /*
-    ...
-    */
+    const extractId = (obj)=>{
+      if(!obj) return null;
+      if(obj.id) return String(obj.id);
+      const str=(obj.src||obj.alt||obj.title||'');
+      const nums=str.match(/\d+/g);
+      if(!nums||nums.length===0) return null;
+      nums.sort((a,b)=>b.length-a.length);
+      return nums[0];
+    };
+    let doneCharIds = new Set();
+    let doneCardIds = new Set();
+
+    if(previousData){
+      doneCharIds = new Set((previousData.characters||[]).map(c=>String(c.id)));
+      doneCardIds = new Set((previousData.supportCards||[]).map(s=>String(s.id)));
+      
+      const before = combinations.length;
+      const filtered = combinations.filter(comb=>{
+        const cid = comb.character ? extractId(comb.character) : null;
+        if(cid && doneCharIds.has(cid)) return false;
+        const sid = (comb.cards && comb.cards.length>0) ? extractId(comb.cards[0]) : null;
+        if(sid && doneCardIds.has(sid)) return false;
+        return true;
+      });
+      combinations.length=0; combinations.push(...filtered);
+      console.log(`🪄 Filtered combinations: removed ${before - combinations.length}, remaining ${combinations.length}`);
+    }
 
     const allEvents = [];
     let combinationCount = 0;
+    const totalCombinations = combinations.length;
 
     for (const combination of combinations) {
+      const cid = combination.character ? extractId(combination.character) : null;
+      const sid = (combination.cards && combination.cards.length>0) ? extractId(combination.cards[0]) : null;
+      console.log(`   🔍 Compare IDs - cid=${cid} ; sid=${sid}`);
       combinationCount++;
-      console.log(`\n🔄 Testing combination ${combinationCount}/${combinations.length}`);
+      console.log(`\n🔄 Testing combination ${combinationCount}/${totalCombinations}`);
       console.log(`   🎴 Testing: ${combination.cards.length} cards + ${combination.scenario} + ${combination.character?.alt || combination.character?.title || 'Unknown'}`);
 
       try {
-        // Xóa state hiện tại trước khi chọn mới
         await clearCurrentState(page);
         
-        // Select cards (nếu có)
         if (combination.cards.length > 0) {
           for (let i = 0; i < combination.cards.length; i++) {
             try {
               await selectCard(page, i, combination.cards[i]);
-              // Giảm wait time giữa các card selections
               if (i < combination.cards.length - 1) await waitTimeout(300);
             } catch (cardError) {
               console.log(`   ⚠️ Error selecting card ${i + 1}: ${cardError.message}`);
@@ -440,7 +232,6 @@ async function scrapeTrainingEvents(headlessMode = true) {
           }
         }
         
-        // Select scenario
         try {
           await selectScenario(page, combination.scenario);
           await waitTimeout(400);
@@ -448,7 +239,6 @@ async function scrapeTrainingEvents(headlessMode = true) {
           console.log(`   ⚠️ Error selecting scenario: ${scenarioError.message}`);
         }
         
-        // Select character if present
         if (combination.character) {
           try {
             await selectCharacter(page, combination.character);
@@ -458,10 +248,8 @@ async function scrapeTrainingEvents(headlessMode = true) {
           }
         }
         
-        // Wait a bit for Event Viewer to load
         await waitTimeout(3000);
         
-        // Debug: Check what's on the page
         const pageContent = await page.evaluate(() => {
           const allElements = document.querySelectorAll('*');
           const classNames = new Set();
@@ -476,9 +264,7 @@ async function scrapeTrainingEvents(headlessMode = true) {
           });
           return Array.from(classNames);
         });
-        console.log(`  🔍 Found classes: ${pageContent.join(', ')}`);
         
-        // Scrape events (now owner-aware, needs combination context)
         const events = await scrapeEvents(page, combination);
         
         if (events.length > 0) {
@@ -492,8 +278,7 @@ async function scrapeTrainingEvents(headlessMode = true) {
           events
         });
         
-        // Save progress to JSON after each successful combination
-        saveResultsToJSON(allEvents, combinationCount, combinations.length);
+        saveResultsToJSON(allEvents, combinationCount, totalCombinations, previousData);
         
       } catch (error) {
         console.error(`❌ Error testing combination: ${error.message}`);
@@ -503,10 +288,8 @@ async function scrapeTrainingEvents(headlessMode = true) {
           error: error.message
         });
         
-        // Save progress to JSON even if there's an error
-        saveResultsToJSON(allEvents, combinationCount, combinations.length);
+        saveResultsToJSON(allEvents, combinationCount, totalCombinations, previousData);
         
-        // Try to reset the page state by refreshing if there's a serious error
         if (error.message.includes('timeout') || error.message.includes('detached')) {
           console.log('🔄 Attempting to refresh page to reset state...');
           try {
@@ -519,18 +302,15 @@ async function scrapeTrainingEvents(headlessMode = true) {
       }
     }
 
-    // Final save to ensure all data is saved
-    saveResultsToJSON(allEvents, combinationCount, combinations.length);
+    saveResultsToJSON(allEvents, combinationCount, totalCombinations, previousData);
 
     console.log('\n🎉 Scraping completed!');
     console.log(`📊 Total combinations tested: ${combinationCount}`);
     console.log(`📊 Total event combinations found: ${allEvents.filter(e => e.events.length > 0).length}`);
     
-    // Load final results from JSON to display summary
     try {
       const finalResults = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'events.json'), 'utf8'));
       
-      // Hiển thị thông tin chi tiết về kết quả
       console.log('\n📋 Final Results summary:');
       console.log(`   👤 Characters with events: ${finalResults.characters.length}`);
       console.log(`   🎴 Support cards with events: ${finalResults.supportCards.length}`);
@@ -544,7 +324,6 @@ async function scrapeTrainingEvents(headlessMode = true) {
       console.log(`   📖 Scenarios with events: ${allEvents.filter(e => e.events.length > 0).length}`);
     }
     
-    // Hiển thị chi tiết từng combination
     console.log('\n📋 Combination details:');
     allEvents.forEach((result, index) => {
       console.log(`   Combination ${index + 1}:`);
@@ -572,24 +351,19 @@ async function getAvailableOptions(page) {
   console.log('🔍 Getting available options...');
   const options = { supportCards: [], scenarios: [], characters: [] };
   try {
-    // Get support cards from modal (need to click a support slot first)
     console.log('  📋 Getting support cards from modal...');
     
-    // Scroll to and click support slot to open modal
     await scrollToAndClick(page, '#boxSupport1', 'support slot 1');
     await waitTimeout(2000); // Giảm wait time cho modal load
     
-    // Wait for modal to appear
     await page.waitForSelector('[role="dialog"]', { timeout: 10000 });
     
-    // Check if support modal is available
     const modalCount = await page.evaluate(() => {
       return document.querySelectorAll('[role="dialog"]').length;
     });
     
     console.log(`  🔍 Found ${modalCount} modal(s) after clicking support slot`);
     
-    // Get all visible support cards directly without scrolling
     const supportCards = await page.evaluate(() => {
       const modals = document.querySelectorAll('[role="dialog"]');
       for (const modal of modals) {
@@ -597,7 +371,6 @@ async function getAvailableOptions(page) {
         if (supportImgs.length > 0) {
           console.log('Getting visible cards from modal with', supportImgs.length, 'total images');
           
-          // Get all visible cards
           const visibleCards = Array.from(modal.querySelectorAll('img')).filter(img => {
             if (!img.src.includes('support_card_s_')) return false;
             
@@ -614,10 +387,8 @@ async function getAvailableOptions(page) {
           console.log('Found', visibleCards.length, 'visible cards');
           
           return visibleCards.map(img => {
-            // Tìm tên card từ parent elements
             let cardName = img.alt || img.title || '';
             
-            // Tìm tên trong parent container
             const parent = img.closest('[class*="card"], [class*="support"], [class*="item"]');
             if (parent) {
               const nameElement = parent.querySelector('[class*="name"], [class*="title"], [class*="text"]');
@@ -626,7 +397,6 @@ async function getAvailableOptions(page) {
               }
             }
             
-            // Nếu vẫn không có tên, lấy từ URL
             if (!cardName) {
               const urlParts = img.src.split('/');
               const fileName = urlParts[urlParts.length - 1];
@@ -647,19 +417,10 @@ async function getAvailableOptions(page) {
     options.supportCards = supportCards;
     console.log(`  ✅ Final total: ${supportCards.length} support cards found`);
     
-    // Debug: Hiển thị một số tên cards đầu tiên
-    if (supportCards.length > 0) {
-      console.log('  �� Sample card names:');
-      supportCards.slice(0, 5).forEach((card, index) => {
-        console.log(`     ${index + 1}. ${card.alt || card.title || 'No name'}`);
-      });
-    }
     
-    // Close support modal properly
     await page.keyboard.press('Escape');
     await waitTimeout(1000); // Giảm wait time
     
-    // Check if page is still accessible
     try {
       await page.evaluate(() => {
         return document.readyState;
@@ -670,7 +431,6 @@ async function getAvailableOptions(page) {
       await waitTimeout(3000);
     }
     
-    // Get character images
     console.log('  👤 Getting characters from modal...');
     let characterImgs = [];
     
@@ -678,17 +438,14 @@ async function getAvailableOptions(page) {
       await scrollToAndClick(page, '#boxChar', 'character box');
       await waitTimeout(1500); // Giảm wait time
       
-      // Wait for modal to appear
       await page.waitForSelector('[role="dialog"]', { timeout: 10000 });
       
-      // Get all visible characters directly without scrolling
       characterImgs = await page.evaluate(() => {
         const modals = document.querySelectorAll('[role="dialog"]');
         console.log('Found', modals.length, 'modals');
         
         if (modals.length === 0) return [];
         
-        // Find the modal that contains character images
         let charModal = null;
         for (let i = 0; i < modals.length; i++) {
           const modal = modals[i];
@@ -702,13 +459,11 @@ async function getAvailableOptions(page) {
         
         if (!charModal) {
           console.log('No character modal found, trying alternative selectors...');
-          // Try alternative selectors
           for (let i = 0; i < modals.length; i++) {
             const modal = modals[i];
             const allImgs = modal.querySelectorAll('img');
             console.log(`Modal ${i}: Total images: ${allImgs.length}`);
             
-            // Check if any image contains character-like URLs
             const charImgs = Array.from(allImgs).filter(img => 
               img.src.includes('character') || 
               img.src.includes('chara') ||
@@ -729,7 +484,6 @@ async function getAvailableOptions(page) {
         }
         
         const imgs = Array.from(charModal.querySelectorAll('img')).filter(img => {
-          // Accept any image that might be a character
           const isCharacter = img.src.includes('/characters/thumb/chara_stand_') ||
                              img.src.includes('character') ||
                              img.src.includes('chara') ||
@@ -749,13 +503,10 @@ async function getAvailableOptions(page) {
         console.log('Final character images found:', imgs.length);
         
         return imgs.map(img => {
-          // Tìm tên character từ parent elements
           let charName = img.alt || img.title || '';
           
-          // Tìm tên trong parent container - cải thiện logic tìm kiếm
           const parent = img.closest('[class*="character"], [class*="chara"], [class*="item"], [class*="card"]');
           if (parent) {
-            // Tìm tên trong các phần tử con
             const nameSelectors = [
               '[class*="name"]',
               '[class*="title"]', 
@@ -769,7 +520,6 @@ async function getAvailableOptions(page) {
               const nameElement = parent.querySelector(selector);
               if (nameElement && nameElement.textContent.trim() && nameElement.textContent.trim().length > 0) {
                 const text = nameElement.textContent.trim();
-                // Kiểm tra xem text có vẻ là tên nhân vật không (không quá dài, không chứa ký tự đặc biệt)
                 if (text.length > 0 && text.length < 50 && !text.includes('http') && !text.includes('www')) {
                   charName = text;
                   break;
@@ -777,7 +527,6 @@ async function getAvailableOptions(page) {
               }
             }
             
-            // Nếu vẫn không tìm được, tìm trong các phần tử anh em
             if (!charName || charName === '') {
               const siblings = Array.from(parent.parentElement?.children || []);
               for (const sibling of siblings) {
@@ -792,7 +541,6 @@ async function getAvailableOptions(page) {
             }
           }
           
-          // Nếu vẫn không có tên, lấy từ URL
           if (!charName || charName === '') {
             const urlParts = img.src.split('/');
             const fileName = urlParts[urlParts.length - 1];
@@ -817,7 +565,6 @@ async function getAvailableOptions(page) {
       characterImgs = [];
     }
     
-    // Fallback: nếu không tìm thấy nhân vật nào, sử dụng nhân vật mặc định
     if (characterImgs.length === 0) {
       console.log('  ⚠️ No characters found, using default characters');
       characterImgs = [
@@ -830,19 +577,10 @@ async function getAvailableOptions(page) {
     options.characters = characterImgs;
     console.log(`  ✅ Final total: ${characterImgs.length} characters found`);
     
-    // Debug: Hiển thị một số tên characters đầu tiên
-    if (characterImgs.length > 0) {
-      console.log('  👤 Sample character names:');
-      characterImgs.slice(0, 5).forEach((char, index) => {
-        console.log(`     ${index + 1}. ${char.alt || char.title || 'No name'}`);
-      });
-    }
     
-    // Get scenarios from modal
     console.log('  📖 Getting scenarios from modal...');
     let scenarios = [];
     
-    // Try different selectors for scenario box
     const scenarioSelectors = ['#boxScenario', '[id*="scenario"]', '[id*="Scenario"]'];
     let scenarioBox = null;
     
@@ -861,7 +599,6 @@ async function getAvailableOptions(page) {
         
         scenarios = await page.evaluate(() => {
           try {
-            // Use the correct selector for scenario names
             const scenarioSelector = '.tooltips_tooltip_striped__0p4n9 > div > div > .fVBhhN.sc-9ae1b094-0 > .fpCljy.sc-9ae1b094-1 > span';
             const scenarioElements = document.querySelectorAll(scenarioSelector);
             
@@ -872,7 +609,6 @@ async function getAvailableOptions(page) {
           } catch (error) {
             console.log('Error with user selector, falling back to old method');
             
-            // Fallback to old method if user selector fails
             const modals = document.querySelectorAll('[role="dialog"]');
             let scenarioModal = null;
             
@@ -934,14 +670,12 @@ async function selectCard(page, cardIndex, cardObj) {
     await scrollToAndClick(page, cardSelector, `support slot ${cardIndex + 1}`);
     await waitTimeout(800); // Giảm wait time
     
-    // Wait for modal to appear with shorter timeout
     await page.waitForSelector('[role="dialog"]', { timeout: 8000 });
     
     const selected = await page.evaluate((targetSrc) => {
       const modals = document.querySelectorAll('[role="dialog"]');
       if (modals.length === 0) return false;
       
-      // Find the modal that contains support cards
       let supportModal = null;
       for (const modal of modals) {
         const supportImgs = modal.querySelectorAll('img[src*="support_card_s_"]');
@@ -968,7 +702,6 @@ async function selectCard(page, cardIndex, cardObj) {
     
     await waitTimeout(400); // Giảm wait time
     
-    // Close modal if still open
     try {
       await page.keyboard.press('Escape');
       await waitTimeout(300);
@@ -977,12 +710,10 @@ async function selectCard(page, cardIndex, cardObj) {
     }
     
   } catch (error) {
-    // Try to close any open modals before throwing error
     try {
       await page.keyboard.press('Escape');
       await waitTimeout(300);
     } catch (closeError) {
-      // Ignore close errors
     }
     throw new Error(`Failed to select card: ${error.message}`);
   }
@@ -997,7 +728,6 @@ async function selectScenario(page, scenarioName) {
     
     const selected = await page.evaluate((targetName) => {
       try {
-        // Use the correct selector for scenario options
         const scenarioSelector = '.tooltips_tooltip_striped__0p4n9 > div > div > .fVBhhN.sc-9ae1b094-0 > .fpCljy.sc-9ae1b094-1 > span';
         const scenarioElements = document.querySelectorAll(scenarioSelector);
         
@@ -1006,7 +736,6 @@ async function selectScenario(page, scenarioName) {
         });
         
         if (targetElement) {
-          // Click on the scenario element
           targetElement.click();
           return true;
         }
@@ -1015,7 +744,6 @@ async function selectScenario(page, scenarioName) {
       } catch (error) {
         console.log('Error with scenario selector:', error.message);
         
-        // Fallback to old method
         const modals = document.querySelectorAll('[role="dialog"]');
         if (modals.length === 0) return false;
         
@@ -1076,412 +804,145 @@ async function scrapeEvents(page, combination) {
 }
 
 async function scrapeEventsFromEventViewer(page, combination) {
-  console.log('  📋 Scraping events from Event Viewer...');
+  console.log('  📋 Collecting events by cycling owner icons (rev2)');
   try {
-    // Wait for any Event Viewer to appear
     await page.waitForSelector('.compatibility_result_box__OpJCO', { timeout: 15000 });
     
-    // Get all Event Viewer boxes
-    const eventViewers = await page.$$('.compatibility_result_box__OpJCO');
-    console.log(`  📦 Found ${eventViewers.length} Event Viewer boxes`);
-    
-    // If no Event Viewers found, try to find any event-related content
-    if (eventViewers.length === 0) {
-      console.log('  🔍 No Event Viewer boxes found, looking for alternative selectors...');
-      
-      // Try alternative selectors
-      const alternativeSelectors = [
-        '[class*="compatibility"]',
-        '[class*="event"]',
-        '[class*="result"]',
-        '.compatibility_result_box',
-        '.event-viewer',
-        '.result-box'
-      ];
-      
-      for (const selector of alternativeSelectors) {
-        const elements = await page.$$(selector);
-        console.log(`  🔍 Selector "${selector}": ${elements.length} elements`);
-        if (elements.length > 0) {
-          eventViewers.push(...elements);
-        }
-      }
-      
-      if (eventViewers.length === 0) {
-        console.log('  ⚠️ No event-related content found');
+    let iconHandles = await page.$$('div.filters_viewer_image__TifjQ, div.filters_viewer_image_active__DA901');
+    if (iconHandles.length === 0) {
+      console.log('  ⚠️  No owner icons found');
         return [];
-      }
     }
-    
-    // Find the Event Viewer that contains images (usually the last one)
-    let targetViewer = null;
-    let maxImages = 0;
-    
-    for (let i = 0; i < eventViewers.length; i++) {
-      const images = await eventViewers[i].$$('img');
-      console.log(`  📋 Event Viewer ${i + 1}: ${images.length} images`);
-      if (images.length > maxImages) {
-        maxImages = images.length;
-        targetViewer = eventViewers[i];
-      }
-    }
-    
-    if (!targetViewer) {
-      console.log('  ⚠️ No Event Viewer with images found');
-      return [];
-    }
-    
-    // Get all images in the target Event Viewer
-    const imageHandles = await targetViewer.$$('img');
-    console.log(`  🖱️ Found ${imageHandles.length} images in target Event Viewer`);
-    
-    let allEvents = [];
-    
-    const allowScenario = combination.allowScenarioEvent;
-    const finalIndex = allowScenario ? imageHandles.length : imageHandles.length - 1;
 
-    // Click through relevant images sequentially
-    for (let i = 0; i < finalIndex; i++) {
-      // Scope owner variables inside loop to avoid bleed-over
-      let ownerType;
-      let ownerName;
-      // Determine who this icon represents
-      const isScenarioIcon = allowScenario && i === imageHandles.length - 1;
-
-      if (isScenarioIcon) {
-        ownerType = 'scenario';
-        ownerName = combination.scenario;
-      } else if (combination.character && i === 0) {
-        ownerType = 'character';
-        ownerName = combination.character?.alt || combination.character?.title || 'Unknown';
-      } else {
-        // support icon
-        const offset = combination.character ? i - 1 : i;
-        const cardObj = combination.cards[offset];
-        ownerType = 'support';
-        ownerName = cardObj ? (cardObj.alt || cardObj.title || 'Unknown') : 'Unknown';
+    const uniqueIcons = [];
+    const seenIds = new Set();
+    for (const h of iconHandles) {
+      const id = await (await h.getProperty('id')).jsonValue();
+      if (!seenIds.has(id)) {
+        uniqueIcons.push(h);
+        seenIds.add(id);
       }
-      console.log(`  🎯 Clicking image ${i + 1}/${imageHandles.length}`);
-      
+    }
+
+    console.log(`  📸 Found ${uniqueIcons.length} owner icons to iterate`);
+
+    const allEvents = [];
+
+    for (let idx = 0; idx < uniqueIcons.length; idx++) {
+      const icon = uniqueIcons[idx];
       try {
-        // Scroll into view and click
-        await imageHandles[i].evaluate(el => el.scrollIntoView({behavior: 'auto', block: 'center'}));
-        await waitTimeout(300);
-        await imageHandles[i].click();
-        await waitTimeout(800);
-        
-        // Get event items after clicking (use helper to load all lazily rendered items)
-        const eventHandles = await collectAllEventHandles(page);
-        console.log(`    📋 Found ${eventHandles.length} events for image ${i + 1}`);
-        
-        for (let j = 0; j < eventHandles.length; j++) {
-          try {
-            await eventHandles[j].evaluate(el => el.scrollIntoView({behavior: 'auto', block: 'center'}));
+        await icon.evaluate(el => el.scrollIntoView({ behavior: 'auto', block: 'center' }));
             await waitTimeout(200);
-            await eventHandles[j].click();
-            await waitTimeout(500);
-            
-            // Get popup detail (tooltip)
-            const detail = await page.evaluate(() => {
-              // Function to clean event names by removing unwanted prefixes
-              function cleanEventName(rawName) {
-                if (!rawName) return '';
-                
-                let cleaned = rawName.trim();
-                
-                // Loại bỏ comment hoặc dòng bắt đầu bằng //
-                if (cleaned.startsWith('//')) {
-                  return null; // Bỏ qua dòng comment
-                }
-                
-                // Loại bỏ prefix là giờ (HH:MM /)
-                cleaned = cleaned.replace(/^\d{1,2}:\d{2}\s*\/\s*/, '');
-                
-                // Loại bỏ prefix là số trong ngoặc (9999)
-                cleaned = cleaned.replace(/^\(\d+\)\s*/, '');
-                
-                // Loại bỏ prefix là số và dấu /
-                cleaned = cleaned.replace(/^\d+\s*\/\s*/, '');
-                
-                // Loại bỏ // ở đầu (nếu còn sót)
-                cleaned = cleaned.replace(/^\/\/+/, '');
-                
-                // Nếu sau khi làm sạch mà vẫn còn // ở đầu hoặc quá ngắn, bỏ qua
-                if (cleaned.startsWith('//') || cleaned.length < 2) {
-                  return null;
-                }
-                
-                return cleaned;
-              }
+        await icon.click();
+        await waitTimeout(800); // allow viewer switch
+      } catch (clickErr) {
+        console.log(`  ⚠️  Cannot click icon ${idx + 1}: ${clickErr.message}`);
+        continue;
+      }
 
-              const tippy = document.querySelector('.tippy-box');
-              if (!tippy) return null;
-              const eventName = tippy.querySelector('.tooltips_ttable_heading__jlJcE')?.textContent?.trim() || '';
+      const ownerHtmlId = await (await icon.getProperty('id')).jsonValue();
 
-              // Tìm event type từ các event groups
-              let type = 'Unknown';
-              let eventItem = document.querySelector('.compatibility_viewer_item__SWULM.clicked') || 
-                             document.querySelector('.compatibility_viewer_item__SWULM:hover') ||
-                             document.querySelector('.compatibility_viewer_item__SWULM');
-              
-              if (eventItem) {
-                // Tìm kiếm type trong các phần tử cha
-                let el = eventItem.parentElement;
-                let level = 1;
-                
-                while (el && el !== document.body && level <= 10) {
-                  // Kiểm tra xem có phải là header/type không
-                  if (el.tagName === 'H1' || el.tagName === 'H2' || el.tagName === 'H3' || el.tagName === 'H4') {
-                    type = el.textContent.trim();
-                    break;
-                  }
-                  
-                  // Kiểm tra class có chứa từ khóa type
-                  if (el.className && (
-                    el.className.includes('type') || 
-                    el.className.includes('group') || 
-                    el.className.includes('category') ||
-                    el.className.includes('header') ||
-                    el.className.includes('title')
-                  )) {
-                    type = el.textContent.trim();
-                    break;
-                  }
-                  
-                  // Kiểm tra text có chứa từ khóa event type - TÌM KIẾM CÁC EVENT GROUPS
-                  const text = el.textContent.trim();
-                  if (text) {
-                    // Tìm các event groups cụ thể
-                    const eventGroups = [
-                      'Costume Events',
-                      'Events With Choices', 
-                      'Date Events',
-                      'Special Events',
-                      'After a Race',
-                      'Events Without Choices',
-                      'Chain Events',
-                      'Random Events',
-                      'Secret Events'
-                    ];
-                    
-                    for (const group of eventGroups) {
-                      if (text.includes(group)) {
-                        type = group;
-                        break;
-                      }
-                    }
-                    
-                    if (type !== 'Unknown') break;
-                  }
-                  
-                  el = el.parentElement;
-                  level++;
-                }
-                
-                // Nếu vẫn chưa tìm được type, tìm kiếm trong các phần tử anh em
-                if (type === 'Unknown') {
-                  let sibling = eventItem.previousElementSibling;
-                  while (sibling && type === 'Unknown') {
-                    if (sibling.tagName === 'H1' || sibling.tagName === 'H2' || sibling.tagName === 'H3' || sibling.tagName === 'H4') {
-                      type = sibling.textContent.trim();
-                      break;
-                    }
-                    
-                    // Kiểm tra text của sibling có chứa event groups không
-                    const siblingText = sibling.textContent.trim();
-                    if (siblingText) {
-                      const eventGroups = [
-                        'Costume Events',
-                        'Events With Choices', 
-                        'Date Events',
-                        'Special Events',
-                        'After a Race',
-                        'Events Without Choices',
-                        'Chain Events',
-                        'Random Events',
-                        'Secret Events'
-                      ];
-                      
-                      for (const group of eventGroups) {
-                        if (siblingText.includes(group)) {
-                          type = group;
-                          break;
-                        }
-                      }
-                      
-                      if (type !== 'Unknown') break;
-                    }
-                    
-                    sibling = sibling.previousElementSibling;
-                  }
-                }
-                
-                // Nếu vẫn chưa tìm được, tìm kiếm trong toàn bộ Event Viewer
-                if (type === 'Unknown') {
-                  const eventViewer = document.querySelector('.compatibility_result_box__OpJCO');
-                  if (eventViewer) {
-                    const allText = eventViewer.textContent;
-                    const eventGroups = [
-                      'Costume Events',
-                      'Events With Choices', 
-                      'Date Events',
-                      'Special Events',
-                      'After a Race',
-                      'Events Without Choices',
-                      'Chain Events',
-                      'Random Events',
-                      'Secret Events'
-                    ];
-                    
-                    for (const group of eventGroups) {
-                      if (allText.includes(group)) {
-                        // Kiểm tra xem event hiện tại có thuộc group này không
-                        const eventIndex = Array.from(eventViewer.querySelectorAll('.compatibility_viewer_item__SWULM')).indexOf(eventItem);
-                        const groupElements = Array.from(eventViewer.querySelectorAll('*')).filter(el => 
-                          el.textContent && el.textContent.includes(group)
-                        );
-                        
-                        // Nếu tìm thấy group và event gần nhau, coi như thuộc group đó
-                        if (groupElements.length > 0) {
-                          type = group;
-                          break;
-                        }
-                      }
-                    }
-                  }
-                }
-              }
+      const ownerInfo = await page.evaluate(() => {
+        const top = document.querySelector('.eventhelper_viewer_top_label__0DVa0');
+        const name = top ? (top.querySelector('b')?.textContent?.trim() || 'Unknown') : 'Unknown';
+        const a = top ? top.querySelector('a[href]') : null;
+        let type = 'scenario';
+        let url = a ? a.href : null;
+        if (url) {
+          if (url.includes('/characters/')) type = 'character';
+          else if (url.includes('/supports/')) type = 'support';
+        }
+        const activeIcon = document.querySelector('.filters_viewer_image_active__DA901 img');
+        const imageSrc = activeIcon ? activeIcon.src : null;
+        return { name, type, url, imageSrc };
+      });
 
-              /* ---------------- NEW CHOICE / EFFECT PARSER ---------------- */
-              const parseEffectLine = (txt) => {
-                const statMatch = txt.match(/^([A-Za-z ]+?)\s*([+-]?-?\d+)/);
-                if (statMatch) {
-                  const stat = statMatch[1].trim();
-                  return { kind: 'stat', raw: txt, stat, amount: parseInt(statMatch[2]) };
-                }
+        let ownerId = null;
+      if (ownerInfo.url) {
+        const m = ownerInfo.url.match(/(\d+)/);
+        if (m) ownerId = m[1];
+      }
+      if (!ownerId && ownerHtmlId) {
+        const m = ownerHtmlId.match(/(\d+)/);
+        if (m) ownerId = m[1];
+      }
+      if (!ownerId) ownerId = ownerHtmlId || ownerInfo.name;
 
-                const lower = txt.toLowerCase();
-                if (lower.startsWith('obtain') && lower.includes('skill')) {
-                  return { kind: 'skill', raw: txt };
-                }
-                if (lower.includes('status')) {
-                  return { kind: 'status', raw: txt };
-                }
+      console.log(`    ▶ Owner ${idx + 1}/${uniqueIcons.length}: ${ownerInfo.type} – ${ownerInfo.name} (id=${ownerId})`);
 
-                return { kind: 'text', raw: txt };
-              };
+      const viewerBox = await page.$('.compatibility_result_box__OpJCO');
+      if (!viewerBox) {
+        console.log('      ⚠️  No viewer after activation');
+        continue;
+      }
+      let prevCount = -1;
+      let stable = 0;
+      while (stable < 2) {
+        await viewerBox.evaluate(el => el.scrollBy(0, el.scrollHeight));
+        await waitTimeout(250);
+        const cur = await viewerBox.evaluate(el => el.querySelectorAll('.compatibility_viewer_item__SWULM').length);
+        if (cur === prevCount) stable++; else { prevCount = cur; stable = 0; }
+      }
 
-              const pushSegmentsFromText = (arr, text) => {
-                const parts = text.split(/\s+or\s+/i);
-                  if (parts.length > 1) {
-                  arr.push(parseEffectLine(parts[0]));
-                  arr.push({ kind: 'divider_or', raw: 'or' });
-                  parts.slice(1).forEach(p => arr.push(parseEffectLine(p)));
-                } else {
-                  arr.push(parseEffectLine(text));
-                }
-              };
+      const eventItems = await viewerBox.$$('.compatibility_viewer_item__SWULM');
+      console.log(`      • Events found: ${eventItems.length}`);
 
-              let choices = [];
-              const tableEl = tippy.querySelector('table.tooltips_ttable__dvIzv');
+      for (let eIdx = 0; eIdx < eventItems.length; eIdx++) {
+        try {
+          const ev = eventItems[eIdx];
+          await ev.evaluate(el => el.scrollIntoView({ behavior: 'auto', block: 'center' }));
+          await waitTimeout(100);
+          await ev.click();
+          await waitTimeout(400);
 
-              if (tableEl) {
-                tableEl.querySelectorAll('tr').forEach(tr => {
-                  const tds = tr.querySelectorAll('td');
-                  if (tds.length < 2) return;
-                  const optionName = tds[0].textContent.trim();
-                  const effectCell = tds[1];
-                  const segs = [];
-
-                  effectCell.childNodes.forEach(node => {
-                    const txt = node.textContent.trim();
-                    if (!txt) return;
-                    if (node.className && node.className.includes('eventhelper_random_text')) {
-                      segs.push({ kind: 'random_header', raw: txt });
-                    } else if (node.className && node.className.includes('eventhelper_divider_or')) {
-                      segs.push({ kind: 'divider_or', raw: txt || 'or' });
-                          } else {
-                      pushSegmentsFromText(segs, txt);
-                        }
-                  });
-
-                  if (segs.length) choices.push({ choice: optionName, effects: segs });
-                });
-                      } else {
-                const singleCell = tippy.querySelector('.tooltips_ttable_cell___3NMF');
-                if (singleCell) {
-                  const segs = [];
-                  Array.from(singleCell.querySelectorAll('div')).forEach(d => {
-                    const t = d.textContent.trim();
-                    if (t) pushSegmentsFromText(segs, t);
-                  });
-                  if (segs.length) choices.push({ choice: '', effects: segs });
-                      }
-                    }
-              /* ---------------- END NEW PARSER ---------------- */
-              const cleanedEventName = cleanEventName(eventName);
-              if (cleanedEventName) {
-                return { event: cleanedEventName, type, choices };
-              } else {
-                return null; // Bỏ qua event có tên null sau khi clean
-              }
+          const detail = await page.evaluate(() => {
+            function clean(name) {
+              if (!name) return ''; let t = name.trim(); if (t.startsWith('//')) return null; t = t.replace(/^(\d{1,2}:\d{2}|\(\d+\)|\d+)\s*\/\s*/, ''); t = t.replace(/^\/\/+/, ''); if (t.length < 2) return null; return t;
+            }
+            const tippy = document.querySelector('.tippy-box'); if (!tippy) return null;
+            const eventName = tippy.querySelector('.tooltips_ttable_heading__jlJcE')?.textContent?.trim() || '';
+            const groups = ['Costume Events','Events With Choices','Date Events','Special Events','After a Race','Events Without Choices','Chain Events','Random Events','Secret Events'];
+            let type = 'Unknown';
+            const clicked = document.querySelector('.compatibility_viewer_item__SWULM.clicked') || document.querySelector('.compatibility_viewer_item__SWULM:hover');
+            if (clicked) {
+              let p = clicked.parentElement;
+              while (p && p !== document.body) {
+                const txt = p.textContent; if (groups.some(g=>txt.includes(g))) { type = groups.find(g=>txt.includes(g)); break; } p = p.parentElement; }
+            }
+            const parseLine = txt => { const m = txt.match(/^([A-Za-z ]+?)\s*([+-]?-?\d+)/); if (m) return { kind:'stat',raw:txt,stat:m[1].trim(),amount:parseInt(m[2])}; const l = txt.toLowerCase(); if (l.startsWith('obtain')&&l.includes('skill')) return {kind:'skill',raw:txt}; if (l.includes('status')) return {kind:'status',raw:txt}; return {kind:'text',raw:txt}; };
+            const pushSeg = (arr, t) => { const parts = t.split(/\s+or\s+/i); if (parts.length>1){arr.push(parseLine(parts[0]));arr.push({kind:'divider_or',raw:'or'});parts.slice(1).forEach(p=>arr.push(parseLine(p)));} else arr.push(parseLine(t));};
+            let choices=[]; const tbl=tippy.querySelector('table.tooltips_ttable__dvIzv'); if(tbl){tbl.querySelectorAll('tr').forEach(tr=>{const tds=tr.querySelectorAll('td');if(tds.length<2)return;const opt=tds[0].textContent.trim();const segs=[];tds[1].childNodes.forEach(n=>{const txt=n.textContent.trim();if(!txt)return;if(n.className&&n.className.includes('eventhelper_random_text'))segs.push({kind:'random_header',raw:txt});else if(n.className&&n.className.includes('eventhelper_divider_or'))segs.push({kind:'divider_or',raw:txt||'or'});else pushSeg(segs,txt);});if(segs.length)choices.push({choice:opt,effects:segs});});} else {const cell=tippy.querySelector('.tooltips_ttable_cell___3NMF');if(cell){const segs=[];cell.querySelectorAll('div').forEach(d=>{const t=d.textContent.trim();if(t)pushSeg(segs,t);});if(segs.length)choices.push({choice:'',effects:segs});}}
+            const cleanName=clean(eventName); if(!cleanName) return null; return {event:cleanName,type,choices};
             });
             
             if (detail && detail.event) {
-              // Get owner image src
-              const ownerImageSrc = await imageHandles[i].evaluate(el => el.src);
-              // Build owner detail URL based on image ID
-              let ownerUrl = null;
-              const extractedId = extractIdFromImageUrl(ownerImageSrc);
-              if (extractedId) {
-                if (ownerType === 'character') {
-                  ownerUrl = `https://gametora.com/umamusume/characters/${extractedId.replace(/_.*/, '')}`;
-                } else if (ownerType === 'support') {
-                  ownerUrl = `https://gametora.com/umamusume/supports/${extractedId}`;
-                }
-              }
-
-              allEvents.push({
-                ownerType,
-                ownerName,
-                ownerImage: ownerImageSrc,
-                ownerUrl,
-                event: detail
-              });
-              console.log(`      ✅ Added event: ${detail.event} (Type: ${detail.type}) -> ${ownerType}: ${ownerName}`);
-            } else if (detail && !detail.event) {
-              console.log(`      ⏭️ Skipping event with invalid name`);
-            }
-            
-            // Close tooltip
-            await page.keyboard.press('Escape');
-            await waitTimeout(100);
-          } catch (eventError) {
-            console.log(`    ⚠️ Error processing event ${j + 1}: ${eventError.message}`);
+            allEvents.push({ ownerId, ownerType: ownerInfo.type, ownerName: ownerInfo.name, ownerImage: ownerInfo.imageSrc, ownerUrl: ownerInfo.url, event: detail });
+            console.log(`        ✅ ${detail.event}`);
           }
+
+            await page.keyboard.press('Escape');
+          await page.mouse.click(10, 10);
+          await waitTimeout(60);
+        } catch (evErr) {
+          console.log(`        ⚠️  Event ${eIdx + 1}: ${evErr.message}`);
         }
-      } catch (imageError) {
-        console.log(`  ⚠️ Error clicking image ${i + 1}: ${imageError.message}`);
       }
     }
     
     return allEvents;
-  } catch (error) {
-    console.log('  ❌ Error scraping events:', error.message);
+  } catch (err) {
+    console.log('  ❌ Error in event collection rev2:', err.message);
     return [];
   }
 }
 
-// Helper to clear current state (click delete button and confirm)
 async function clearCurrentState(page) {
   try {
     console.log('  🗑️ Clearing current state...');
     
-    // Close any open modals first
     await page.keyboard.press('Escape');
     await waitTimeout(300);
     
-    // Try to close any remaining modals
     await page.evaluate(() => {
       const modals = document.querySelectorAll('[role="dialog"]');
       modals.forEach(modal => {
@@ -1493,7 +954,6 @@ async function clearCurrentState(page) {
     });
     await waitTimeout(500);
     
-    // Look for delete button and click it
     const deleteButton = await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button, [role="button"]'));
       const deleteBtn = buttons.find(btn => 
@@ -1521,7 +981,6 @@ async function clearCurrentState(page) {
       });
       await waitTimeout(1000);
       
-      // Look for confirmation dialog and click Yes/OK
       const confirmButton = await page.evaluate(() => {
         const buttons = Array.from(document.querySelectorAll('button, [role="button"]'));
         const confirmBtn = buttons.find(btn => 
@@ -1551,7 +1010,6 @@ async function clearCurrentState(page) {
       }
     } else {
       console.log('  ⚠️ No delete button found, refreshing page...');
-      // Fallback: refresh page if no delete button found
       await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
       await waitTimeout(3000);
     }
@@ -1568,15 +1026,11 @@ async function clearCurrentState(page) {
   }
 }
 
-// Helper to save results to JSON file after each combination
-function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
+function saveResultsToJSON(allEvents, combinationCount, totalCombinations, previousData) {
   try {
     console.log(`  💾 Saving progress to JSON (${combinationCount}/${totalCombinations})...`);
     
-    // Load mapping data
-    // (Old inline dynamic mapping block removed – we now use mapping files later)
 
-    // Tạo cấu trúc tối ưu
     const optimizedData = {
       events: [], // unique events pool
       characters: [],
@@ -1590,11 +1044,43 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
       timestamp: new Date().toISOString()
     };
 
-    // 1. Thu thập event và đồng thời gắn vào owner group (cho phép trùng lặp)
     let eventCounter = 0;
     const charMap = new Map();
     const cardMap = new Map();
     const scenarioMap = new Map();
+    const eventDedupMap = new Map(); // Track unique events
+
+    if(previousData){
+      if(Array.isArray(previousData.events)){
+        previousData.events.forEach(ev=>{
+          optimizedData.events.push(ev);
+          const num=parseInt((ev.id||'').split('_')[1]);
+          if(!isNaN(num) && num>eventCounter) eventCounter=num;
+          const dkey=stableStringify({event:ev.event,type:ev.type,choices:ev.choices});
+          eventDedupMap.set(dkey, ev.id);
+        });
+      }
+
+      const mergeOwner = (sourceArr, targetMap)=>{
+        if(Array.isArray(sourceArr)){
+          sourceArr.forEach(rec=>{
+            if(!targetMap.has(rec.id)){
+              const gMap = new Map(rec.eventGroups.map(g=>[g.type,new Set(g.eventIds)]));
+              targetMap.set(rec.id,{id:rec.id,name:rec.name,groups:gMap});
+            } else {
+              const existing=targetMap.get(rec.id);
+              rec.eventGroups.forEach(g=>{
+                if(!existing.groups.has(g.type)) existing.groups.set(g.type,new Set());
+                g.eventIds.forEach(eid=> existing.groups.get(g.type).add(eid));
+              });
+            }
+          });
+        }
+      };
+      mergeOwner(previousData.characters,charMap);
+      mergeOwner(previousData.supportCards,cardMap);
+      mergeOwner(previousData.scenarios,scenarioMap);
+    }
 
     allEvents.forEach(result => {
       if (result.events && result.events.length > 0) {
@@ -1602,57 +1088,69 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
           const ev = evObj.event;
           const ownerType = evObj.ownerType;
           const ownerName = evObj.ownerName;
+          const ownerId = evObj.ownerId;
 
-          const eventId = `event_${++eventCounter}`;
-          optimizedData.events.push({ id: eventId, ...ev });
+          const dedupKey = stableStringify({
+            event: ev.event,
+            type: ev.type,
+            choices: ev.choices
+          });
 
-          const eventType = ev.type || 'Unknown';
-          const targetMap = ownerType === 'character' ? charMap : ownerType === 'support' ? cardMap : ownerType === 'scenario' ? scenarioMap : null;
-          if (!targetMap) return;
+          const addOwnerLink = (targetMap, eventType, eid) => {
+            if (!targetMap.has(ownerId)) {
+              targetMap.set(ownerId, { id: ownerId, name: ownerName, groups: new Map() });
+            }
+            const rec = targetMap.get(ownerId);
+            if (!rec.groups.has(eventType)) rec.groups.set(eventType, new Set());
+            rec.groups.get(eventType).add(eid);
+          };
 
-          if (!targetMap.has(ownerName)) targetMap.set(ownerName, {});
-          if (!targetMap.get(ownerName)[eventType]) targetMap.get(ownerName)[eventType] = new Set();
-          targetMap.get(ownerName)[eventType].add(eventId);
+          if (eventDedupMap.has(dedupKey)) {
+            const existingEventId = eventDedupMap.get(dedupKey);
+            const eventType = ev.type || 'Unknown';
+            const targetMap = ownerType === 'character' ? charMap : ownerType === 'support' ? cardMap : ownerType === 'scenario' ? scenarioMap : null;
+            if (targetMap) addOwnerLink(targetMap, eventType, existingEventId);
+          } else {
+            const eventId = `event_${++eventCounter}`;
+            eventDedupMap.set(dedupKey, eventId);
+            optimizedData.events.push({ id: eventId, ...ev });
+
+            const eventType = ev.type || 'Unknown';
+            const targetMap = ownerType === 'character' ? charMap : ownerType === 'support' ? cardMap : ownerType === 'scenario' ? scenarioMap : null;
+            if (targetMap) addOwnerLink(targetMap, eventType, eventId);
+          }
         });
       }
     });
-    console.log(`  ✅ Collected ${optimizedData.events.length} events and linked to owners (duplicates allowed)`);
+    console.log(`  ✅ Collected ${optimizedData.events.length} unique events and linked to owners (duplicates filtered)`);
 
-    // Convert maps to arrays for optimizedData
-    charMap.forEach((groups, charName) => {
+    charMap.forEach(record => {
       optimizedData.characters.push({
-        id: charName,
-        eventGroups: Object.entries(groups).map(([type, ids]) => ({ type, eventIds: Array.from(ids) }))
+        id: record.id,
+        name: record.name,
+        eventGroups: Array.from(record.groups.entries()).map(([type, ids]) => ({ type, eventIds: Array.from(ids) }))
       });
     });
 
-    cardMap.forEach((groups, cardName) => {
+    cardMap.forEach(record => {
       optimizedData.supportCards.push({
-        id: cardName,
-        eventGroups: Object.entries(groups).map(([type, ids]) => ({ type, eventIds: Array.from(ids) }))
+        id: record.id,
+        name: record.name,
+        eventGroups: Array.from(record.groups.entries()).map(([type, ids]) => ({ type, eventIds: Array.from(ids) }))
       });
     });
 
-    scenarioMap.forEach((groups, scenarioName) => {
+    scenarioMap.forEach(record => {
       optimizedData.scenarios.push({
-        id: scenarioName,
-        eventGroups: Object.entries(groups).map(([type, ids]) => ({ type, eventIds: Array.from(ids) }))
+        id: record.id,
+        name: record.name,
+        eventGroups: Array.from(record.groups.entries()).map(([type, ids]) => ({ type, eventIds: Array.from(ids) }))
       });
     });
 
-    // --------------------
-    // Enhance with mapping from existing data files
-    // --------------------
-    const umaDataMap = loadJsonFile(path.join(DATA_DIR, 'uma_char.json')) || [];
-    const supportDataMap = loadJsonFile(path.join(DATA_DIR, 'support_card.json')) || [];
-    const umaMapping = createUmaMapping(umaDataMap);
-    const supportMapping = createSupportMapping(supportDataMap);
+    const enhancedData = optimizedData;
 
-    const enhancedData = enhanceTrainingEventsData(optimizedData, umaMapping, supportMapping);
 
-    // Now continue detail mapping for skills/status on enhancedData.events
-
-    // Load skills and status data for detail mapping
     console.log('  🔧 Loading skills & status database for detail mapping...');
     const skillsDB = loadJsonFile(path.join(DATA_DIR, 'skills.json')) || [];
     const statusDB = loadJsonFile(path.join(DATA_DIR, 'conditions.json')) || { positive_conditions: [], negative_conditions: [] };
@@ -1669,17 +1167,22 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
       return statusList.find(st => lower.includes(st.condition.toLowerCase()));
     };
 
-    // Add detail to segments inside enhancedData events
     enhancedData.events.forEach(ev => {
       if (ev.choices) {
         ev.choices.forEach(ch => {
           if (ch && Array.isArray(ch.effects)) {
             ch.effects.forEach(seg => {
+              if (seg && /hint/i.test(seg.raw || '')) {
+                // Treat any effect containing "hint" as a skill regardless of initial kind
+                seg.kind = 'skill';
+                const hm = seg.raw.match(/hint\s*\+?(-?\d+)/i);
+                if (hm) seg.hint = parseInt(hm[1]);
+              }
               if (seg && !seg.detail) {
                 if (seg.kind === 'skill') {
                   const skill = findSkill(seg.raw);
                   if (skill) {
-                    seg.detail = { effect: skill.effect, name: skill.name, imageUrl: skill.imageUrl };
+                    seg.detail = { effect: skill.effect, name: skill.name };
                   }
                 } else if (seg.kind === 'status') {
                   const st = findStatus(seg.raw);
@@ -1691,8 +1194,7 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
                   const skillMatch = skillsDB.find(s => lower.includes(s.name.toLowerCase()));
                   if (skillMatch) {
                     seg.kind = 'skill';
-                    seg.detail = { effect: skillMatch.effect, name: skillMatch.name, imageUrl: skillMatch.imageUrl };
-                    // Detect hint amount if present
+                    seg.detail = { effect: skillMatch.effect, name: skillMatch.name };
                     const hm = seg.raw.match(/hint\s*\+?(-?\d+)/i);
                     if (hm) {
                       seg.hint = parseInt(hm[1]);
@@ -1712,32 +1214,22 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
       }
     });
 
-    // Apply mapping to enhance data with names and imageUrls
-    // Mapping already applied above; using enhancedData
     
-    // Calculate mapping statistics
-    const mappedCharacters = enhancedData.characters.filter(c => c.name !== c.id).length;
-    const mappedCards = enhancedData.supportCards.filter(c => c.name !== c.id).length;
-    
-    // Save enhanced data to file
     fs.writeFileSync(
       path.join(DATA_DIR, 'events.json'),
       JSON.stringify(enhancedData, null, 2)
     );
 
-    // -------------------- VALIDATION --------------------
     const linkedIds = new Set();
     [...enhancedData.characters, ...enhancedData.supportCards, ...enhancedData.scenarios]
       .forEach(owner => owner.eventGroups.forEach(g => g.eventIds.forEach(id => linkedIds.add(id))));
     const unlinked = enhancedData.events.filter(ev => !linkedIds.has(ev.id));
     console.log(`  🔎 Validation: ${unlinked.length} / ${enhancedData.events.length} events chưa gắn owner`);
-    // -----------------------------------------------------
 
-    // (Removed block that previously wrote event.txt)
 
     console.log(`  ✅ Progress saved: ${combinationCount}/${totalCombinations} (${enhancedData.progress.percentage}%)`);
-    console.log(`     👤 Characters: ${enhancedData.characters.length} (mapped: ${mappedCharacters}/${enhancedData.characters.length})`);
-    console.log(`     🎴 Support Cards: ${enhancedData.supportCards.length} (mapped: ${mappedCards}/${enhancedData.supportCards.length})`);
+    console.log(`     👤 Characters: ${enhancedData.characters.length}`);
+    console.log(`     🎴 Support Cards: ${enhancedData.supportCards.length}`);
     console.log(`     📖 Scenarios: ${enhancedData.scenarios.length}`);
     console.log(`     📦 Unique events: ${enhancedData.events.length}`);
   } catch (error) {
@@ -1745,7 +1237,4 @@ function saveResultsToJSON(allEvents, combinationCount, totalCombinations) {
   }
 }
 
-// Run the scraper
-// Để chạy headless: scrapeTrainingEvents(true)
-// Để chạy visible: scrapeTrainingEvents(false)
 scrapeTrainingEvents(true).catch(console.error); 

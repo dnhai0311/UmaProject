@@ -317,8 +317,7 @@ class TrainingEventsTab(QWidget):
                 seen_ids.add(event_id)
                 
         self.display_events()
-        
-        
+
     def display_events(self):
         """Display filtered events in the text area"""
         if not self.filtered_events:

@@ -71,7 +71,7 @@ class EventDatabase:
         self.reload_events()
 
     # ----------------------------- public API -----------------------------
-    def find_matching_event(self, texts: List[str]) -> Optional[Dict]:
+    def find_matching_event(self, texts: List[str], character_id_filter: Optional[str] = None) -> Optional[Dict]:
         """Return the best matching event dictionary or *None*.
 
         The algorithm:
@@ -109,40 +109,52 @@ class EventDatabase:
         # ------------------------------------------------------------
         # 2) Event-level fuzzy matching (token_set_ratio)
         # ------------------------------------------------------------
-        best = process.extractOne(
+        # Get top candidates
+        candidates = process.extract(
             corrected_query,
             list(self._events.keys()),
             scorer=fuzz.token_set_ratio,
+            limit=10,
         )
 
-        if best:
-            best_name, best_score, _ = best
-            if best_score >= self.THRESHOLD_SCORE:
-                variants = self._events[best_name]
-                if len(variants) == 1:
-                    Logger.info(f"Matched event '{best_name}' with score {best_score:.1f}% (unique variant)")
-                    return variants[0]
+        for cand_name, cand_score, _ in candidates:
+            if cand_score < self.THRESHOLD_SCORE:
+                break
+            all_variants = self._events[cand_name]
 
-                # Choose variant with highest source frequency
+            selected_variants = all_variants
+            if character_id_filter:
+                matches = [
+                    v for v in all_variants
+                    if any(
+                        s.get('type') == 'character' and str(s.get('id', '')) == character_id_filter
+                        for s in v.get('sources', [])
+                    )
+                ]
+                Logger.debug(
+                    f"Character id={character_id_filter}: {len(matches)} / {len(all_variants)} variants match (event='{cand_name}')"
+                )
+                if matches:
+                    selected_variants = matches  # prefer variants matching character id
+
+            # Choose from selected_variants
+            if selected_variants:
+                if len(selected_variants) == 1:
+                    Logger.info(f"Matched event '{cand_name}' with score {cand_score:.1f}% (unique variant)")
+                    return selected_variants[0]
+
                 def variant_score(var: Dict):
                     srcs = var.get('sources', [])
                     if not srcs:
                         return 0
-                    # Safely retrieve name, default to empty string if missing
-                    return max(
-                        self._source_freq.get(s.get('name', ''), 0)
-                        for s in srcs
-                    )
+                    return max(self._source_freq.get(s.get('name',''),0) for s in srcs)
 
-                variants_sorted = sorted(variants, key=variant_score, reverse=True)
+                variants_sorted = sorted(selected_variants, key=variant_score, reverse=True)
                 chosen = variants_sorted[0]
-                # Safely determine the first source name (if any) to avoid IndexError when the list is empty
-                sources = chosen.get('sources', []) or []
-                first_source_name = sources[0].get('name', '?') if sources else '?'
-
+                first_source = chosen.get('sources', [])
+                first_name = first_source[0]['name'] if first_source else '?'
                 Logger.info(
-                    f"Matched event '{best_name}' ({len(variants)} variants) – chosen source "
-                    f"{first_source_name} with score {best_score:.1f}%"
+                    f"Matched event '{cand_name}' ({len(selected_variants)} variants) – chosen source {first_name} with score {cand_score:.1f}%"
                 )
                 return chosen
 
@@ -253,9 +265,10 @@ class EventDatabase:
         def add_source(section: str, entry_type: str):
             for ent in data.get(section, []):
                 src_name = ent.get("name") or ent.get("id", "Unknown")
+                src_id = str(ent.get("id", ""))
                 for group in ent.get("eventGroups", []):
                     for eid in group.get("eventIds", []):
-                        sources_map[eid].append({"type": entry_type, "name": src_name})
+                        sources_map[eid].append({"type": entry_type, "name": src_name, "id": src_id})
 
         add_source("characters", "character")
         add_source("supportCards", "support")

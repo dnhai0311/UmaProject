@@ -5,9 +5,16 @@ const DATA_DIR = path.resolve(__dirname, '..', 'data');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 
 const skillsFile = path.join(DATA_DIR, 'skills.json');
+let cachedSkills = [];
+let cachedMap = new Map();
 if (fs.existsSync(skillsFile)) {
-  fs.unlinkSync(skillsFile);
-  console.log('🗑️ Deleted old skills.json');
+  try {
+    cachedSkills = JSON.parse(fs.readFileSync(skillsFile, 'utf8'));
+    cachedMap = new Map(cachedSkills.map(s => [s.name, s]));
+  } catch (e) {
+    cachedSkills = [];
+    cachedMap = new Map();
+  }
 }
 
 (async () => {
@@ -36,24 +43,19 @@ if (fs.existsSync(skillsFile)) {
   try {
     page = await browser.newPage();
     
-    // Set user agent to avoid detection
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
     
-    // Set viewport
     await page.setViewport({ width: 1920, height: 1080 });
     
     const listUrl = 'https://gametora.com/umamusume/skills';
     console.log('📄 Navigating to Skill List page...');
     await page.goto(listUrl, { waitUntil: 'networkidle2' });
 
-    // Sử dụng waitForSelector để chờ một phần tử cụ thể
     await page.waitForSelector('.skills_skill_table___bTic');
 
-    // Get all skill data with updated selector
     let skills = await page.evaluate(() => {
       const skillElements = Array.from(document.querySelectorAll('.skills_skill_table___bTic .skills_table_row_ja__pAfOT, .skills_table_row_ja__pAfOT.skills_stripes__Ka1Md'))
         .filter(element => {
-          // Kiểm tra xem element có đang hiển thị không
           const rect = element.getBoundingClientRect();
           const style = window.getComputedStyle(element);
           return rect.width > 0 && rect.height > 0 && 
@@ -81,24 +83,22 @@ if (fs.existsSync(skillsFile)) {
     }
     console.log(`🔗 Found ${skills.length} skills.`);
 
-    // Build output with a simple progress display
     const total = skills.length;
-    const output = [];
+    const dataPath = path.join(DATA_DIR, 'skills.json');
     for (let i = 0; i < total; i++) {
-      output.push(skills[i]);
-      if ((i+1) % 10 === 0 || i === total-1) {
-        process.stdout.write(`Processing: ${i+1}/${total}\r`);
+      const sk = skills[i];
+      if (!cachedMap.has(sk.name)) {
+        cachedMap.set(sk.name, sk);
+        fs.writeFileSync(dataPath, JSON.stringify(Array.from(cachedMap.values()), null, 2), 'utf-8');
+      }
+      if ((i + 1) % 10 === 0 || i === total - 1) {
+        process.stdout.write(`Processing: ${i + 1}/${total}\r`);
       }
     }
     console.log();
-
-    const dataPath = path.join(DATA_DIR, 'skills.json');
-    fs.writeFileSync(dataPath, JSON.stringify(output, null, 2), 'utf-8');
     console.log(`💾 Saved skills to ${dataPath}`);
     
-    // (copy-data step removed)
     
-    // Success - exit with code 0
     console.log('🎉 Skill scraping completed successfully!');
     process.exit(0);
     

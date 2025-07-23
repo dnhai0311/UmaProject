@@ -24,6 +24,7 @@ from PyQt6.QtGui import QFont, QPixmap, QImage
 from event_scanner.core import ImageProcessor, EventDatabase, OCREngine
 from event_scanner.services import SettingsManager, HistoryManager
 from event_scanner.ui import RegionSelector, StatRecommendationsTab
+from event_scanner.ui.character_select_dialog import CharacterSelectDialog
 # from event_scanner.ui.ai_learning_dialog import AILearningDialog  # Removed AI feature
 from event_scanner.ui.training_events_tab import TrainingEventsTab
 from event_scanner.utils import Logger
@@ -36,6 +37,27 @@ except ImportError:
     GPU_CONFIG_AVAILABLE = False
     Logger.warning("GPU config not available - using default settings")
 
+STAT_COLORS = {
+    "Speed": "#3498DB",       # Blue sky
+    "Stamina": "#E74C3C",     # Red (toned)
+    "Power": "#F1C40F",       # Warm yellow
+    "Guts": "#E67E22",        # Warm orange
+    "Wisdom": "#1ABC9C",      # Teal
+}
+
+EFFECT_COLORS = {
+    "skill": "#8E44AD",  # Purple (darker)
+    "bond": "#FF6BB5",   # Pink stronger
+    "status": "#9B59B6",  # Default for dark; will change per theme
+}
+
+DETAIL_FONT_PT = 13  # Font size for detail panel (pt)
+
+# Summary panel style
+SUMMARY_FONT_PT = 13
+SUMMARY_NAME_COLOR = '#F39C12'   # Orange-gold
+SUMMARY_TYPE_COLOR = '#9B59B6'   # Purple
+SUMMARY_OWNER_COLOR = '#16A085'  # Teal
 
 class MainWindow(QMainWindow):
     """Main window for Uma Event Scanner"""
@@ -60,6 +82,8 @@ class MainWindow(QMainWindow):
         # Track an event name that the user manually dismissed so we don't immediately reopen it
         self.dismissed_event_name: Optional[str] = None
         self.ocr_engine = None
+        self.selected_character_name: Optional[str] = None
+        self.selected_character_id: Optional[str] = None
         self.image_processor = ImageProcessor()
         
         from collections import Counter
@@ -183,14 +207,14 @@ class MainWindow(QMainWindow):
         preview_btn = QPushButton("👁️ Preview")
         preview_btn.clicked.connect(self.preview_region)
 
-        # Button to clear the last/dismissed event so pop-up can re-appear
-        clear_event_btn = QPushButton("🧹 Clear Event")
-        clear_event_btn.clicked.connect(self.clear_last_event)
-        
+        # Button to pick character filter
+        select_char_btn = QPushButton("🧑‍🎤 Select Uma")
+        select_char_btn.clicked.connect(self.choose_character)
+
         # Add buttons to layout
         region_layout.addWidget(select_btn)
         region_layout.addWidget(preview_btn)
-        region_layout.addWidget(clear_event_btn)
+        region_layout.addWidget(select_char_btn)
         # add group to tab
         tab_layout.addWidget(region_group)
         
@@ -227,6 +251,7 @@ class MainWindow(QMainWindow):
         splitter.setOrientation(Qt.Orientation.Horizontal)
         splitter.setHandleWidth(2)
         splitter.setStyleSheet("QSplitter::handle { background-color: #555; }")
+        self.result_splitter = splitter
 
         # Event summary (centered labels)
         self.summary_widget = QWidget()
@@ -240,20 +265,26 @@ class MainWindow(QMainWindow):
         self.lbl_type.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_owner = QLabel()
         self.lbl_owner.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_owner.setWordWrap(True)
         sum_layout.addWidget(self.lbl_name)
         sum_layout.addWidget(self.lbl_type)
         sum_layout.addWidget(self.lbl_owner)
         sum_layout.addStretch(1)
         splitter.addWidget(self.summary_widget)
 
-        # Detail panel (similar layout to summary)
+        # Detail panel with scroll
         self.detail_widget = QWidget()
         detail_layout = QVBoxLayout(self.detail_widget)
-        detail_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        detail_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
         detail_layout.addStretch(1)
         self.detail_layout = detail_layout  # keep for update
         detail_layout.addStretch(1)
-        splitter.addWidget(self.detail_widget)
+
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        scroll_area.setWidget(self.detail_widget)
+        splitter.addWidget(scroll_area)
 
         # Hidden log text to maintain update_results without refactor
         from PyQt6.QtWidgets import QTextEdit
@@ -261,7 +292,13 @@ class MainWindow(QMainWindow):
         # Keep for logging but not added to layout to avoid extra splitter handle
         self.result_text.hide()
 
-        splitter.setSizes([200, 400])
+        # Restore splitter sizes from settings if available
+        saved_sizes = self.settings.get('splitter_sizes')
+        if saved_sizes and isinstance(saved_sizes, list) and len(saved_sizes)==2:
+            splitter.setSizes([int(saved_sizes[0]), int(saved_sizes[1])])
+        else:
+            splitter.setSizes([200, 400])
+
         results_layout.addWidget(splitter)
 
         tab_layout.addWidget(results_group)
@@ -285,12 +322,12 @@ class MainWindow(QMainWindow):
         refresh_btn = QPushButton("🔄 Refresh")
         refresh_btn.clicked.connect(self.refresh_history)
 
-        clear_btn = QPushButton("🗑️ Clear")
-        clear_btn.clicked.connect(self.clear_history)
+        choose_btn = QPushButton("🔍 Chọn")
+        choose_btn.clicked.connect(self.choose_character)
 
         controls_layout.addStretch(1)
         controls_layout.addWidget(refresh_btn)
-        controls_layout.addWidget(clear_btn)
+        controls_layout.addWidget(choose_btn)
         
         tab_layout.addWidget(controls_group)
         
@@ -433,16 +470,32 @@ class MainWindow(QMainWindow):
     
     def position_window(self):
         """Position the window on the screen"""
+        saved = self.settings.get('window_position')
+
         screen = QApplication.primaryScreen()
         if not screen:
             return
-            
-        self.resize(560, self.height())
 
-        screen_geometry = screen.geometry()
-        
-        # Position on the right side of the screen
-        x = screen_geometry.width() - self.width() - 20
+        if saved and isinstance(saved, str) and 'x' in saved and '+' in saved:
+            try:
+                dims, pos = saved.split('+', 1)
+                w, h = map(int, dims.split('x'))
+                x, y = map(int, pos.split('+')) if '+' in pos else (0, 0)
+
+                # Validate within current screen bounds
+                sg = screen.geometry()
+                if 50 <= w <= sg.width() and 50 <= h <= sg.height():
+                    self.resize(w, h)
+                if 0 <= x <= sg.width() - 50 and 0 <= y <= sg.height() - 50:
+                    self.move(x, y)
+                    return  # successfully restored
+            except Exception:
+                pass  # fall back if parsing fails
+
+        # Default position: right-top corner
+        self.resize(560, self.height())
+        sg = screen.geometry()
+        x = sg.width() - self.width() - 20
         y = 20
         self.move(x, y)
     
@@ -656,8 +709,8 @@ class MainWindow(QMainWindow):
                     # Emit signal to update UI in main thread
                     self.update_results_signal.emit(texts)
                     
-                    # Check if the texts match an event
-                    event = self.event_db.find_matching_event(texts)
+                    # Check if texts match an event, considering selected character id
+                    event = self.event_db.find_matching_event(texts, self.selected_character_id)
                     if event:
                         # Skip if this event was recently dismissed by the user
                         if self.dismissed_event_name == event['name']:
@@ -715,16 +768,38 @@ class MainWindow(QMainWindow):
             self.result_text.append("No event matched.\n")
             return
 
-        owners = ", ".join(s.get('name','') for s in event.get('sources', []) if s.get('name')) or "?"
+        # No skipping here – database already preferred variant; just show
 
-        self.lbl_name.setText(f"<b>{event.get('name','Unknown')}</b>")
+        src_list = event.get('sources', []) or []
+        match_selected = False
+        if self.selected_character_id:
+            match_selected = any(str(s.get('id')) == self.selected_character_id for s in src_list)
+
+        if match_selected:
+            owners = self.selected_character_name or "?"
+        else:
+            owners = ", ".join(s.get('name','') for s in src_list if s.get('name')) or "?"
+
+        # Do not skip on name mismatch; database already handled preference
+
+        # Apply colored, larger text for summary labels
+        self.lbl_name.setText(
+            f"<span style='color:{SUMMARY_NAME_COLOR}; font-size:{SUMMARY_FONT_PT}pt;'><b>{event.get('name','Unknown')}</b></span>"
+        )
         self.lbl_name.setTextFormat(Qt.TextFormat.RichText)
+        self.lbl_name.setFont(QFont('Arial', SUMMARY_FONT_PT, QFont.Weight.Bold))
 
-        self.lbl_type.setText(f"<i>{event.get('type','')}</i>")
+        self.lbl_type.setText(
+            f"<span style='color:{SUMMARY_TYPE_COLOR}; font-size:{SUMMARY_FONT_PT}pt;'><i>{event.get('type','')}</i></span>"
+        )
         self.lbl_type.setTextFormat(Qt.TextFormat.RichText)
+        self.lbl_type.setFont(QFont('Arial', SUMMARY_FONT_PT))
 
-        self.lbl_owner.setText(f"<b>{owners}</b>")
+        self.lbl_owner.setText(
+            f"<span style='color:{SUMMARY_OWNER_COLOR}; font-size:{SUMMARY_FONT_PT}pt;'><b>{owners}</b></span>"
+        )
         self.lbl_owner.setTextFormat(Qt.TextFormat.RichText)
+        self.lbl_owner.setFont(QFont('Arial', SUMMARY_FONT_PT))
 
         self.show_event_details(event)
 
@@ -742,16 +817,60 @@ class MainWindow(QMainWindow):
         # Build labels
         choices = event.get('choices',[])
         if choices:
-            for ch in choices:
+            for idx, ch in enumerate(choices):
                 lbl_choice = QLabel(f"<b>{ch.get('choice','')}</b>")
+                lbl_choice.setWordWrap(True)
                 lbl_choice.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 lbl_choice.setTextFormat(Qt.TextFormat.RichText)
+                lbl_choice.setFont(QFont("Arial", DETAIL_FONT_PT, QFont.Weight.Bold))
                 self.detail_layout.insertWidget(self.detail_layout.count()-1, lbl_choice)
 
                 for seg in ch.get('effects', []):
-                    eff = QLabel(f"– {seg.get('raw','')}")
+                    raw_text = seg.get('raw', '')
+                    color = None
+                    kind_raw = str(seg.get('kind', '')).lower()
+                    if kind_raw == 'stat':
+                        stat_name = seg.get('stat', '')
+                        if 'bond' in stat_name.lower():
+                            color = EFFECT_COLORS['bond']
+                        else:
+                            color = STAT_COLORS.get(stat_name)
+                    elif 'skill' in kind_raw:
+                        color = EFFECT_COLORS['skill']
+                    elif 'bond' in kind_raw:
+                        color = EFFECT_COLORS['bond']
+                    elif kind_raw == 'status':
+                        color = EFFECT_COLORS['status']
+                    if color:
+                        html = f"<span style='color:{color}; font-size:{DETAIL_FONT_PT}pt;'>{raw_text}</span>"
+                    else:
+                        html = f"<span style='font-size:{DETAIL_FONT_PT}pt;'>{raw_text}</span>"
+                    eff = QLabel(html)
+                    eff.setWordWrap(True)
                     eff.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                    eff.setTextFormat(Qt.TextFormat.RichText)
+                    eff.setFont(QFont("Arial", DETAIL_FONT_PT))
                     self.detail_layout.insertWidget(self.detail_layout.count()-1, eff)
+
+                    # Show detail under skill/status
+                    if kind_raw in {"skill", "status"} and seg.get("detail"):
+                        det = seg["detail"].get("effect") or ", ".join(str(v) for v in seg["detail"].values())
+                        det_html = f"<span style='color:#95A5A6; font-style:italic; font-size:{DETAIL_FONT_PT - 1}pt;'>{det}</span>"
+                        det_lbl = QLabel(det_html)
+                        det_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                        det_lbl.setTextFormat(Qt.TextFormat.RichText)
+                        det_font = QFont("Arial", DETAIL_FONT_PT - 1)
+                        det_font.setItalic(True)
+                        det_lbl.setFont(det_font)
+                        self.detail_layout.insertWidget(self.detail_layout.count()-1, det_lbl)
+
+                # Insert separator between choices (except after last)
+                if idx < len(choices) - 1:
+                    sep = QLabel("<span style='color:#666;'>──────────────</span>")
+                    sep.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                    sep.setTextFormat(Qt.TextFormat.RichText)
+                    sep.setFont(QFont("Arial", DETAIL_FONT_PT))
+                    self.detail_layout.insertWidget(self.detail_layout.count()-1, sep)
 
     # Event popup removed – no-op
     def show_event_popup(self, *args, **kwargs):
@@ -852,6 +971,11 @@ class MainWindow(QMainWindow):
         
         window_geometry = f"{self.width()}x{self.height()}+{self.x()}+{self.y()}"
         self.settings.set('window_position', window_geometry)
+        # Save splitter sizes
+        try:
+            self.settings.set('splitter_sizes', self.result_splitter.sizes())
+        except Exception:
+            pass
         self.settings.save_settings()
         
         event.accept()
@@ -867,6 +991,35 @@ class MainWindow(QMainWindow):
                 QApplication.instance().setStyleSheet(fh.read())
         else:
             QApplication.instance().setStyleSheet("")
+
+        # Update status color for current theme
+        global EFFECT_COLORS
+        if theme_name == 'dark':
+            EFFECT_COLORS['status'] = '#9B59B6'  # Lavender-dark
+        else:
+            EFFECT_COLORS['status'] = '#5D8AA8'  # Steel blue-light
+
+    def choose_character(self):
+        """Open dialog to select character filter."""
+        char = CharacterSelectDialog.get_character(self)
+        if not char:
+            return
+
+        if char.get("clear"):
+            # Clear filter
+            self.selected_character_name = None
+            self.selected_character_id = None
+            self.status_label.setText("Filter cleared")
+            Logger.info("Character filter cleared")
+            QMessageBox.information(self, "Cleared", "Character filter cleared.")
+            return
+
+        # Normal selection
+        self.selected_character_name = char["name"].split("(")[0].strip()
+        self.selected_character_id = str(char.get("id"))
+        self.status_label.setText(f"Filtering: {self.selected_character_name}")
+        QMessageBox.information(self, "Selected", f"Selected character: {self.selected_character_name}")
+        Logger.info(f"Character filter set to '{self.selected_character_name}' (id={self.selected_character_id})")
 
 
 # For testing purposes

@@ -1,0 +1,800 @@
+[
+  {
+    "id": "30031",
+    "name": "Yukino Bijin (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30031-yukino-bijin",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30031.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30028",
+    "name": "Kitasan Black (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30028-kitasan-black",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30028.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30029",
+    "name": "Satono Diamond (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30029-satono-diamond",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30029.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30030",
+    "name": "Matikanetannhauser (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30030-matikanetannhauser",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30030.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30027",
+    "name": "Mejiro Palmer (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30027-mejiro-palmer",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30027.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30026",
+    "name": "Twin Turbo (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30026-twin-turbo",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30026.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30024",
+    "name": "Oguri Cap (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30024-oguri-cap",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30024.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30025",
+    "name": "Special Week (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30025-special-week",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30025.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30001",
+    "name": "Special Week (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30001-special-week",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30001.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30002",
+    "name": "Silence Suzuka (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30002-silence-suzuka",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30002.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30003",
+    "name": "Tokai Teio (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30003-tokai-teio",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30003.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30004",
+    "name": "Gold Ship (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30004-gold-ship",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30004.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30005",
+    "name": "Vodka (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30005-vodka",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30005.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30006",
+    "name": "Grass Wonder (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30006-grass-wonder",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30006.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30007",
+    "name": "El Condor Pasa (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30007-el-condor-pasa",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30007.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30008",
+    "name": "Seiun Sky (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30008-seiun-sky",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30008.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30009",
+    "name": "Tamamo Cross (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30009-tamamo-cross",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30009.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30010",
+    "name": "Fine Motion (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30010-fine-motion",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30010.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30011",
+    "name": "Ines Fujin (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30011-ines-fujin",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30011.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30012",
+    "name": "Winning Ticket (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30012-winning-ticket",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30012.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30013",
+    "name": "Air Shakur (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30013-air-shakur",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30013.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30014",
+    "name": "Gold City (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30014-gold-city",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30014.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30015",
+    "name": "Sakura Bakushin O (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30015-sakura-bakushin-o",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30015.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30016",
+    "name": "Super Creek (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30016-super-creek",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30016.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30017",
+    "name": "Smart Falcon (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30017-smart-falcon",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30017.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30018",
+    "name": "Nishino Flower (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30018-nishino-flower",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30018.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30019",
+    "name": "Haru Urara (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30019-haru-urara",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30019.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30020",
+    "name": "Biko Pegasus (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30020-biko-pegasus",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30020.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30021",
+    "name": "Tazuna Hayakawa (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30021-tazuna-hayakawa",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30021.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30022",
+    "name": "Mejiro McQueen (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30022-mejiro-mcqueen",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30022.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "30023",
+    "name": "Rice Shower (SSR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/30023-rice-shower",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_30023.png",
+    "rarity": "SSR"
+  },
+  {
+    "id": "20027",
+    "name": "Nishino Flower (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20027-nishino-flower",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20027.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20026",
+    "name": "Nice Nature (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20026-nice-nature",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20026.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20025",
+    "name": "Ikuno Dictus (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20025-ikuno-dictus",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20025.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20024",
+    "name": "Daitaku Helios (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20024-daitaku-helios",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20024.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20023",
+    "name": "Sweep Tosho (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20023-sweep-tosho",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20023.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20001",
+    "name": "Fuji Kiseki (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20001-fuji-kiseki",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20001.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20002",
+    "name": "Daiwa Scarlet (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20002-daiwa-scarlet",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20002.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20003",
+    "name": "Hishi Amazon (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20003-hishi-amazon",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20003.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20004",
+    "name": "Air Groove (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20004-air-groove",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20004.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20005",
+    "name": "Agnes Digital (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20005-agnes-digital",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20005.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20006",
+    "name": "Biwa Hayahide (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20006-biwa-hayahide",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20006.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20007",
+    "name": "Mayano Top Gun (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20007-mayano-top-gun",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20007.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20008",
+    "name": "Manhattan Cafe (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20008-manhattan-cafe",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20008.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20009",
+    "name": "Mihono Bourbon (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20009-mihono-bourbon",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20009.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20010",
+    "name": "Mejiro Ryan (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20010-mejiro-ryan",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20010.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20011",
+    "name": "Yukino Bijin (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20011-yukino-bijin",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20011.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20012",
+    "name": "Agnes Tachyon (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20012-agnes-tachyon",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20012.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20013",
+    "name": "Eishin Flash (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20013-eishin-flash",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20013.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20014",
+    "name": "Narita Taishin (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20014-narita-taishin",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20014.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20015",
+    "name": "Marvelous Sunday (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20015-marvelous-sunday",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20015.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20016",
+    "name": "Matikanefukukitaru (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20016-matikanefukukitaru",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20016.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20017",
+    "name": "Meisho Doto (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20017-meisho-doto",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20017.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20018",
+    "name": "Mejiro Dober (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20018-mejiro-dober",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20018.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20019",
+    "name": "Nice Nature (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20019-nice-nature",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20019.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20020",
+    "name": "King Halo (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20020-king-halo",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20020.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "20021",
+    "name": "Aoi Kiryuin (SR) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/20021-aoi-kiryuin",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_20021.png",
+    "rarity": "SR"
+  },
+  {
+    "id": "10055",
+    "name": "Kitasan Black (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10055-kitasan-black",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10055.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10056",
+    "name": "Satono Diamond (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10056-satono-diamond",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10056.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10057",
+    "name": "Matikanetannhauser (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10057-matikanetannhauser",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10057.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10053",
+    "name": "Ikuno Dictus (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10053-ikuno-dictus",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10053.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10054",
+    "name": "Mejiro Palmer (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10054-mejiro-palmer",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10054.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10051",
+    "name": "Twin Turbo (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10051-twin-turbo",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10051.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10052",
+    "name": "Daitaku Helios (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10052-daitaku-helios",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10052.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10050",
+    "name": "Sweep Tosho (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10050-sweep-tosho",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10050.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10001",
+    "name": "Special Week (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10001-special-week",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10001.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10002",
+    "name": "Silence Suzuka (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10002-silence-suzuka",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10002.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10003",
+    "name": "Tokai Teio (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10003-tokai-teio",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10003.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10004",
+    "name": "Maruzensky (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10004-maruzensky",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10004.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10005",
+    "name": "Oguri Cap (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10005-oguri-cap",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10005.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10006",
+    "name": "Gold Ship (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10006-gold-ship",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10006.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10007",
+    "name": "Vodka (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10007-vodka",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10007.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10008",
+    "name": "Taiki Shuttle (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10008-taiki-shuttle",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10008.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10009",
+    "name": "Grass Wonder (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10009-grass-wonder",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10009.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10010",
+    "name": "Mejiro McQueen (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10010-mejiro-mcqueen",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10010.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10011",
+    "name": "El Condor Pasa (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10011-el-condor-pasa",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10011.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10012",
+    "name": "TM Opera O (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10012-tm-opera-o",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10012.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10013",
+    "name": "Symboli Rudolf (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10013-symboli-rudolf",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10013.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10014",
+    "name": "Seiun Sky (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10014-seiun-sky",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10014.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10015",
+    "name": "Rice Shower (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10015-rice-shower",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10015.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10016",
+    "name": "Winning Ticket (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10016-winning-ticket",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10016.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10017",
+    "name": "Gold City (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10017-gold-city",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10017.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10018",
+    "name": "Sakura Bakushin O (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10018-sakura-bakushin-o",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10018.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10019",
+    "name": "Super Creek (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10019-super-creek",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10019.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10020",
+    "name": "Haru Urara (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10020-haru-urara",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10020.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10021",
+    "name": "Tazuna Hayakawa (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10021-tazuna-hayakawa",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10021.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10022",
+    "name": "Aoi Kiryuin (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10022-aoi-kiryuin",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10022.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10023",
+    "name": "Daiwa Scarlet (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10023-daiwa-scarlet",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10023.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10024",
+    "name": "Hishi Amazon (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10024-hishi-amazon",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10024.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10025",
+    "name": "Air Groove (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10025-air-groove",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10025.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10026",
+    "name": "Agnes Digital (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10026-agnes-digital",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10026.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10027",
+    "name": "Tamamo Cross (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10027-tamamo-cross",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10027.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10028",
+    "name": "Fine Motion (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10028-fine-motion",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10028.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10029",
+    "name": "Biwa Hayahide (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10029-biwa-hayahide",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10029.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10030",
+    "name": "Mayano Top Gun (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10030-mayano-top-gun",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10030.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10031",
+    "name": "Manhattan Cafe (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10031-manhattan-cafe",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10031.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10032",
+    "name": "Mihono Bourbon (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10032-mihono-bourbon",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10032.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10033",
+    "name": "Mejiro Ryan (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10033-mejiro-ryan",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10033.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10034",
+    "name": "Yukino Bijin (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10034-yukino-bijin",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10034.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10035",
+    "name": "Ines Fujin (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10035-ines-fujin",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10035.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10036",
+    "name": "Agnes Tachyon (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10036-agnes-tachyon",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10036.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10037",
+    "name": "Air Shakur (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10037-air-shakur",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10037.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10038",
+    "name": "Eishin Flash (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10038-eishin-flash",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10038.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10039",
+    "name": "Smart Falcon (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10039-smart-falcon",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10039.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10040",
+    "name": "Narita Taishin (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10040-narita-taishin",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10040.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10041",
+    "name": "Nishino Flower (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10041-nishino-flower",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10041.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10042",
+    "name": "Biko Pegasus (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10042-biko-pegasus",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10042.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10043",
+    "name": "Marvelous Sunday (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10043-marvelous-sunday",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10043.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10044",
+    "name": "Matikanefukukitaru (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10044-matikanefukukitaru",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10044.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10045",
+    "name": "Meisho Doto (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10045-meisho-doto",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10045.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10046",
+    "name": "Mejiro Dober (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10046-mejiro-dober",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10046.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10047",
+    "name": "Nice Nature (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10047-nice-nature",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10047.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10048",
+    "name": "King Halo (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10048-king-halo",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10048.png",
+    "rarity": "R"
+  },
+  {
+    "id": "10049",
+    "name": "Fuji Kiseki (R) Support Card",
+    "url_detail": "https://gametora.com/umamusume/supports/10049-fuji-kiseki",
+    "imageUrl": "https://gametora.com/images/umamusume/supports/support_card_s_10049.png",
+    "rarity": "R"
+  }
+]
