@@ -14,16 +14,18 @@ echo 1. Start Event Scanner
 echo 2. Scrape Data
 echo 3. Install Dependencies
 echo 4. Delete Data
-echo 5. Exit
+echo 5. Build Executable
+echo 6. Exit
 echo.
 echo ========================================
-set /p choice="Enter your choice (1-5): "
+set /p choice="Enter your choice (1-6): "
 
 if "%choice%"=="1" goto start_scanner
 if "%choice%"=="2" goto scrape_data
 if "%choice%"=="3" goto install_deps
 if "%choice%"=="4" goto delete_data
-if "%choice%"=="5" goto exit
+if "%choice%"=="5" goto build_exe
+if "%choice%"=="6" goto exit
 goto menu
 
 :start_scanner
@@ -51,6 +53,12 @@ goto menu
 cls
 echo Launching Delete Data Tool...
 call run\delete_data.bat
+goto menu
+
+:build_exe
+cls
+echo Building Executable...
+call run\build_executable.bat
 goto menu
 
 :exit
