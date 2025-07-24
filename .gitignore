@@ -50,3 +50,5 @@ yarn-error.log
 #release
 release/
 builder/
+
+*node.exe

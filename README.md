@@ -156,7 +156,8 @@ const SPEED_FACTOR = 0.3;
 ### Xử Lý Sự Cố Thường Gặp
 - **Lỗi "OCR engine not initialized"**: Đảm bảo rằng bạn đã cài đặt đầy đủ các thư viện cần thiết với `pip install -r requirements.txt`
 - **Không thể nhận diện văn bản**: Hãy thử điều chỉnh khu vực quét và đảm bảo rằng văn bản rõ ràng, không bị chồng lấn với các yếu tố khác
-- **Chương trình chạy chậm**: Nếu có GPU, hãy bật tùy chọn sử dụng GPU trong cài đặt
+- **Program runs slowly**: If you have a GPU, enable the GPU option in settings
+- **Display scaling >100 %**: Khi Windows đặt Scale & layout lớn hơn 100 %, toạ độ chụp có thể lệch nhẹ; hãy chọn vùng quét rộng hơn một chút để đảm bảo bao phủ đầy đủ.
 - **Lỗi khi cài đặt EasyOCR**: Cần đảm bảo cài đặt đầy đủ các thư viện phụ thuộc như Torch
 - **Lỗi khi chạy scraper**: Đảm bảo đã cài đặt Node.js và các thư viện npm cần thiết bằng lệnh `npm install` trong thư mục `/scrape`
 
@@ -333,6 +334,7 @@ const SPEED_FACTOR = 0.3;
 - **Error "OCR engine not initialized"**: Make sure you have installed all required libraries with `pip install -r requirements.txt`
 - **Cannot recognize text**: Try adjusting the scan region and ensure that the text is clear, not overlapping with other elements
 - **Program runs slowly**: If you have a GPU, enable the GPU option in settings
+- **Display scaling >100 %**: Khi Windows đặt Scale & layout lớn hơn 100 %, toạ độ chụp có thể lệch nhẹ; hãy chọn vùng quét rộng hơn một chút để đảm bảo bao phủ đầy đủ.
 - **Error installing EasyOCR**: Make sure to install all dependencies like Torch
 - **Error running scrapers**: Make sure you have installed Node.js and the required npm packages by running `npm install` in the `/scrape` directory
 

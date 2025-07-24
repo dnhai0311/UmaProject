@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import (
     QTreeWidget, QTreeWidgetItem, QSizePolicy
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSize
-from PyQt6.QtGui import QFont, QPixmap, QImage
+from PyQt6.QtGui import QFont, QPixmap, QImage, QIcon
 
 from event_scanner.core import ImageProcessor, EventDatabase, OCREngine
 from event_scanner.services import SettingsManager, HistoryManager
@@ -28,10 +28,11 @@ from event_scanner.ui.character_select_dialog import CharacterSelectDialog
 # from event_scanner.ui.ai_learning_dialog import AILearningDialog  # Removed AI feature
 from event_scanner.ui.training_events_tab import TrainingEventsTab
 from event_scanner.utils import Logger
-import os
+import os, sys
 import subprocess
 from event_scanner.utils.paths import get_base_dir
 from event_scanner.ui.update_dialog import UpdateDialog
+import pathlib
 
 # Import GPU configuration if available
 try:
@@ -118,6 +119,9 @@ class MainWindow(QMainWindow):
         empty_sb.setStyleSheet("QStatusBar{background:transparent;border:none;}")
         self.setStatusBar(empty_sb)
 
+        icon_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'resources', 'icon.ico'))
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
         # Apply theme from settings (dark default)
         theme_name = self.settings.get('theme', 'dark')
         self.apply_theme(theme_name)
@@ -1004,16 +1008,19 @@ class MainWindow(QMainWindow):
         ]
         scrape_dir = os.path.join(get_base_dir(), "scrape")
 
-        for name, js_file in scripts:
+        portable_node = pathlib.Path(get_base_dir()) / "runtime" / "node.exe"
+        node_cmd = str(portable_node) if portable_node.exists() else "node"
+
+        for name, file_name in scripts:
             dialog.append_signal.emit(f"Running {name} scraper…")
-            cmd_path = os.path.join(scrape_dir, js_file)
+            cmd_path = os.path.join(scrape_dir, file_name)
             if not os.path.exists(cmd_path):
                 dialog.append_signal.emit(f"⚠️  Script not found: {cmd_path}\n")
                 continue
             try:
-                proc = subprocess.Popen([
-                    "node", cmd_path
-                ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
+                cmd_list = [node_cmd, cmd_path]
+                work_dir = pathlib.Path(sys.executable).parent if getattr(sys, "frozen", False) else get_base_dir()
+                proc = subprocess.Popen(cmd_list, cwd=str(work_dir), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
                 if proc.stdout:
                     for line in proc.stdout:
                         dialog.append_signal.emit(line.rstrip())

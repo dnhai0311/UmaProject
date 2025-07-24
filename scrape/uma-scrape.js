@@ -2,8 +2,8 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
-const dataDir = path.resolve(__dirname, '..', 'data');
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
+const dataDir = path.resolve(process.cwd(), 'data');
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, {recursive:true});
 
 const umaFile = path.join(dataDir, 'uma_char.json');
 let cachedChars=[];

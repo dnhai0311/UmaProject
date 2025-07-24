@@ -16,6 +16,12 @@ def main():
         # Create the application
         app = QApplication(sys.argv)
 
+        # Set application icon
+        icon_path = os.path.join(os.path.dirname(__file__), 'resources', 'icon.ico')
+        if os.path.exists(icon_path):
+            from PyQt6.QtGui import QIcon
+            app.setWindowIcon(QIcon(icon_path))
+
         # Load global stylesheet
         qss_path = os.path.join(os.path.dirname(__file__), 'resources', 'style.qss')
         if os.path.exists(qss_path):
