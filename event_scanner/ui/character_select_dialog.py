@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QLineEdit, QListWidget, QListWidgetItem,
     QLabel, QPushButton, QHBoxLayout
 )
-from PyQt6.QtGui import QPixmap, QImage
+from PyQt6.QtGui import QPixmap, QImage, QIcon
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
 
 DATA_DIR = get_data_dir()
@@ -127,7 +127,7 @@ class CharacterSelectDialog(QDialog):
         """Update list item with loaded image (called in UI thread)"""
         item = self.list_widget.item(index)
         if item:
-            item.setIcon(pixmap)
+            item.setIcon(QIcon(pixmap))
 
     def _populate_list(self, filter_text: str = ""):
         """Synchronous version for search filtering (uses cache)"""
@@ -141,7 +141,7 @@ class CharacterSelectDialog(QDialog):
             # Use cached image if available
             url = char.get("imageUrl", "")
             if url in self._image_cache:
-                item.setIcon(self._image_cache[url])
+                item.setIcon(QIcon(self._image_cache[url]))
             
             item.setData(Qt.ItemDataRole.UserRole, char)
             self.list_widget.addItem(item)
