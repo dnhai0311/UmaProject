@@ -47252,9 +47252,9 @@
     }
   ],
   "progress": {
-    "completed": 88,
-    "total": 88,
-    "percentage": 100
+    "completed": 0,
+    "total": 0,
+    "percentage": null
   },
-  "timestamp": "2025-07-23T16:28:13.156Z"
+  "timestamp": "2025-07-24T11:19:06.089Z"
 }

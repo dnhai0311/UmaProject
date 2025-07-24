@@ -14,6 +14,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QPalette, QColor
 
 from event_scanner.utils import Logger
+from event_scanner.utils.paths import get_data_dir
 
 
 class StatRecommendationsTab(QWidget):
@@ -63,8 +64,7 @@ class StatRecommendationsTab(QWidget):
         """Load recommendations from JSON file"""
         try:
             # Get the path to the recommendations file
-            current_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            file_path = os.path.join(current_dir, "data", "stat_recommendations.json")
+            file_path = os.path.join(get_data_dir(), "stat_recommendations.json")
             
             if os.path.exists(file_path):
                 with open(file_path, 'r', encoding='utf-8') as f:

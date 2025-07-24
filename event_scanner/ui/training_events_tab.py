@@ -1,5 +1,6 @@
 import json
 import os
+from event_scanner.utils.paths import get_data_dir
 import re
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, 
@@ -15,7 +16,8 @@ from typing import Dict, List, Optional, Any
 class TrainingEventsTab(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.data_file = "data/events.json"
+        # Get the correct path for data file
+        self.data_file = os.path.join(get_data_dir(), "events.json")
         self.training_data = None
         self.filtered_events = []
         self.selected_event_type = None

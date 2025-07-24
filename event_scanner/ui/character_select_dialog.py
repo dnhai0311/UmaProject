@@ -4,6 +4,7 @@ import json
 import os
 import urllib.request
 from pathlib import Path
+from event_scanner.utils.paths import get_data_dir
 from typing import Optional, List, Dict
 import threading
 
@@ -14,7 +15,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QPixmap, QImage
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
 
-DATA_DIR = Path(__file__).resolve().parents[2] / "data"
+DATA_DIR = get_data_dir()
 CHAR_FILE = DATA_DIR / "uma_char.json"
 # Create a cache directory for character images
 CACHE_DIR = Path(__file__).resolve().parents[2] / "cache" / "characters"

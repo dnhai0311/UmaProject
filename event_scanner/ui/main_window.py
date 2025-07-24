@@ -28,6 +28,10 @@ from event_scanner.ui.character_select_dialog import CharacterSelectDialog
 # from event_scanner.ui.ai_learning_dialog import AILearningDialog  # Removed AI feature
 from event_scanner.ui.training_events_tab import TrainingEventsTab
 from event_scanner.utils import Logger
+import os
+import subprocess
+from event_scanner.utils.paths import get_base_dir
+from event_scanner.ui.update_dialog import UpdateDialog
 
 # Import GPU configuration if available
 try:
@@ -406,6 +410,15 @@ class MainWindow(QMainWindow):
         scanner_layout.addLayout(gpu_layout)
         
         tab_layout.addWidget(scanner_group)
+
+        update_group = QGroupBox("🔄 Data Update")
+        update_group.setFont(QFont("Arial", 10, QFont.Weight.Bold))
+        update_layout = QHBoxLayout(update_group)
+        self.update_btn = QPushButton("🔄 Update")
+        self.update_btn.clicked.connect(self.on_update_data)
+        update_layout.addWidget(self.update_btn)
+        update_layout.addStretch(1)
+        tab_layout.addWidget(update_group)
         
         # Popup settings group
         popup_group = QGroupBox("🔔 Popup Settings")
@@ -969,6 +982,50 @@ class MainWindow(QMainWindow):
                 self.init_ocr()
         else:
             QMessageBox.critical(self, "Error", "Failed to save settings")
+    
+    def on_update_data(self):
+        """Handle update button click – run scraping tasks"""
+        self.update_btn.setEnabled(False)
+        self.status_label.setText("🔄 Updating data…")
+
+        dlg = UpdateDialog(self)
+        dlg.show()
+
+        thread = threading.Thread(target=self.run_update_scripts, args=(dlg,), daemon=True)
+        thread.start()
+
+    def run_update_scripts(self, dialog: 'UpdateDialog'):
+        """Worker thread: run Node.js scraper scripts sequentially and log output"""
+        scripts = [
+            ("Skills", "skill-scrape.js"),
+            ("Uma Characters", "uma-scrape.js"),
+            ("Support Cards", "support-scrape.js"),
+            ("Events", "event-scrape.js"),
+        ]
+        scrape_dir = os.path.join(get_base_dir(), "scrape")
+
+        for name, js_file in scripts:
+            dialog.append_signal.emit(f"Running {name} scraper…")
+            cmd_path = os.path.join(scrape_dir, js_file)
+            if not os.path.exists(cmd_path):
+                dialog.append_signal.emit(f"⚠️  Script not found: {cmd_path}\n")
+                continue
+            try:
+                proc = subprocess.Popen([
+                    "node", cmd_path
+                ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
+                if proc.stdout:
+                    for line in proc.stdout:
+                        dialog.append_signal.emit(line.rstrip())
+                proc.wait()
+                dialog.append_signal.emit(f"{name} scraping completed with exit code {proc.returncode}\n")
+            except Exception as e:
+                dialog.append_signal.emit(f"Error running {name} scraper: {e}\n")
+
+        dialog.append_signal.emit("All scraping tasks completed.")
+        dialog.enable_close_signal.emit()
+
+        QTimer.singleShot(0, lambda: [self.update_btn.setEnabled(True), self.status_label.setText("Ready")])
     
     def closeEvent(self, event):
         """Handle application closing"""

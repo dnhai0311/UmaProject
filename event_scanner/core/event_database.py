@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+from event_scanner.utils.paths import get_data_dir
 from typing import Dict, List, Optional, Set
 from collections import defaultdict, Counter
 
@@ -30,7 +31,7 @@ except ImportError as exc:  # pragma: no cover
     ) from exc
 
 
-DATA_DIR = Path(__file__).resolve().parents[2] / "data"
+DATA_DIR = get_data_dir()
 
 # User yêu cầu chỉ dùng file training (đã bao phủ đủ)
 SUPPORTED_FILES = ["events.json"]
