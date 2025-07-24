@@ -185,3 +185,5 @@ temp/
 # Project specific
 event_scanner/event_history.pkl
 scanner_settings.json
+event_scanner/scanner_settings.json
+./scanner_settings.json
